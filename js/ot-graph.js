@@ -1,4 +1,4 @@
-// js/ot-graph.js – Órdenes de Trabajo con Import/Export/Clear + modos de vista
+// js/ot-graph.js – Órdenes de Trabajo con Import/Export/Clear + modos de vista + impresión + validación
 import { gs_getCollection, gs_putCollection } from "./graph-store.js";
 
 let ETAG = "";
@@ -40,6 +40,7 @@ const fDesc    = () => document.getElementById("o-desc");
 
 const itemsBox   = () => document.getElementById("items-container");
 const btnAddItem = () => document.getElementById("btn-add-item");
+const dlClientes = () => document.getElementById("dl-clientes");
 
 // ==== Utils ====
 const fmtDate = (s) => { if(!s) return ""; const d=new Date(s); return isNaN(d)?"":d.toISOString().slice(0,10); };
@@ -143,11 +144,27 @@ function readForm(){
   };
 }
 
+// ==== Cargar clientes para autocompletar (opcional) ====
+async function loadClientesDatalist(){
+  try{
+    const { items } = await gs_getCollection("clientes"); // clientes.json
+    if (!dlClientes()) return;
+    const lista = Array.isArray(items) ? items : [];
+    dlClientes().innerHTML = lista
+      .filter(c => c && (c.nombre || c.name))
+      .map(c => `<option value="${(c.nombre || c.name).toString().replace(/"/g,'&quot;')}"></option>`)
+      .join("");
+  }catch(_){ /* si no existe clientes.json, no pasa nada */ }
+}
+
 // ==== Graph IO ====
 async function load(){
   const { etag, items } = await gs_getCollection("ot"); // ordenes_trabajo.json
   ETAG = etag; LIST = Array.isArray(items) ? items : [];
   renderCount(); renderList();
+
+  // Cargar datalist de clientes (si existe)
+  loadClientesDatalist();
 }
 async function save(){
   ETAG = await gs_putCollection("ot", LIST, ETAG);
@@ -224,6 +241,7 @@ async function clearAll(){
   if (!confirm("¿Vaciar todas las Órdenes de Trabajo?")) return;
   LIST = []; await save();
 }
+
 // ====== Utilidades de impresión ======
 function fmtDateHuman(s){
   if (!s) return "";
@@ -275,9 +293,7 @@ function buildPrintHTML(rec){
   .badge { display:inline-block; padding:3px 8px; border-radius:999px; font-size:12px; border:1px solid #bbf7d0; background:#ecfdf5; color:#166534; font-weight:700; }
   .chip  { display:inline-block; padding:3px 8px; border-radius:999px; font-size:12px; border:1px solid #dbeafe; background:#eff6ff; color:#1e40af; font-weight:700; }
   .sep { height:10px; }
-  @media print {
-    .no-print { display:none !important; }
-  }
+  @media print { .no-print { display:none !important; } }
 </style>
 </head>
 <body>
@@ -332,7 +348,6 @@ function buildPrintHTML(rec){
   </div>
 
   <script>
-    // Abre el diálogo de impresión automáticamente
     window.addEventListener('load', () => setTimeout(()=>window.print(), 120));
   </script>
 </body>
@@ -340,9 +355,9 @@ function buildPrintHTML(rec){
 }
 
 function printOT(rec){
-  // Validación mínima
   if (!rec || !rec.cliente) {
-    alert("Completa al menos el cliente antes de imprimir.");
+    alert("Completa al menos el CLIENTE antes de imprimir.");
+    fCliente()?.focus();
     return;
   }
   const html = buildPrintHTML(rec);
@@ -374,9 +389,17 @@ function mountEvents(){
 
   btnAddItem()?.addEventListener("click", ()=> addItemRow());
 
-  // GUARDAR → guardar y volver a lista
+  // GUARDAR → validar, guardar y volver a lista
   btnGuardar()?.addEventListener("click", async ()=>{
     const rec = readForm();
+
+    // VALIDACIÓN: cliente obligatorio
+    if (!rec.cliente || !rec.cliente.trim()){
+      alert("El campo CLIENTE es obligatorio.");
+      fCliente()?.focus();
+      return;
+    }
+
     if (editingIndex >= 0) LIST[editingIndex] = rec; else LIST.push(rec);
     try {
       await save();
@@ -386,6 +409,7 @@ function mountEvents(){
     } catch(e){ alert("Error al guardar: " + e.message); }
   });
 
+  // BUSCAR
   elBuscar()?.addEventListener("input", renderList);
 
   // EDITAR → modo split (lista + form)
@@ -403,6 +427,12 @@ function mountEvents(){
         save().catch(err=>alert(err.message));
       }
     }
+  });
+
+  // IMPRIMIR/PDF → imprime el contenido del formulario actual
+  btnImprimir()?.addEventListener("click", ()=>{
+    const rec = readForm();
+    printOT(rec);
   });
 
   // Importar
@@ -429,3 +459,4 @@ document.addEventListener("DOMContentLoaded", ()=>{
   mountEvents();
   load().catch(err => { console.error(err); alert("Error cargando OT: " + err.message); });
 });
+
