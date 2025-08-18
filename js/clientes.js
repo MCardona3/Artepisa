@@ -1,9 +1,12 @@
-// js/clientes.js (versión mejorada con modo form-only)
+// js/clientes.js (versión mejorada con modo form-only + móvil)
 (function () {
   const $ = (s) => document.querySelector(s);
   let cache = [];
   let editingKey = null; // clave de edición = nombre normalizado
   const LS_KEY = "clients"; // espejo localStorage
+
+  // Media query para reconocer móvil (coincide con el CSS)
+  const mqlMobile = window.matchMedia("(max-width: 820px)");
 
   // ---------- Helpers UI ----------
   function showForm(show) {
@@ -15,9 +18,24 @@
       // Lleva el scroll arriba para que se vea el form completo
       setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
     } else {
-      layout.classList.remove("form-only"); // vuelve a solo lista
+      layout.classList.remove("form-only"); // vuelve a mostrar la lista
+      // Reaplica la lógica móvil de mostrar/ocultar lista según el buscador
+      updateMobileListVisibility();
       // focus al buscador si existe
       $("#c-buscar")?.focus();
+    }
+  }
+
+  // Mostrar/ocultar lista en móvil según el valor del buscador
+  function updateMobileListVisibility() {
+    const layout = $("#layout");
+    if (!layout) return;
+    const q = ($("#c-buscar")?.value || "").trim();
+    if (mqlMobile.matches) {
+      if (!q) layout.classList.add("mobile-hide-list");
+      else layout.classList.remove("mobile-hide-list");
+    } else {
+      layout.classList.remove("mobile-hide-list");
     }
   }
 
@@ -235,6 +253,15 @@
       })
       .sort(compareByIdAsc);
 
+    // En móvil: si hay EXACTAMENTE 1 resultado, abrir la ficha directamente
+    if (mqlMobile.matches && needle && list.length === 1) {
+      fillForm(list[0]);
+      return;
+    }
+
+    // Actualiza visibilidad móvil (si no hay query, oculta lista)
+    updateMobileListVisibility();
+
     if (!list.length) {
       const tr = document.createElement("tr");
       const tdEmpty = document.createElement("td");
@@ -272,7 +299,7 @@
       acc.appendChild(btn);
       tr.appendChild(acc);
 
-      // Doble click = editar
+      // Doble click = editar (desktop)
       tr.addEventListener("dblclick", () => fillForm(c));
 
       tb.appendChild(tr);
@@ -449,6 +476,9 @@
   document.addEventListener("DOMContentLoaded", async () => {
     await load();
 
+    // Reaccionar a cambios de tamaño (por si rotan el teléfono)
+    mqlMobile.addEventListener?.("change", updateMobileListVisibility);
+
     // Activar máscaras de teléfono
     attachPhoneMaskMulti(document.getElementById("c-telefono"));
     attachPhoneMaskMulti(document.getElementById("c-contacto-tel"));
@@ -561,10 +591,12 @@
       }
     });
 
-    // Buscar (con debounce)
+    // Buscar (con debounce) + visibilidad móvil
     $("#c-buscar").addEventListener(
       "input",
-      debounce((e) => render(e.target.value), 200)
+      debounce((e) => {
+        render(e.target.value);
+      }, 200)
     );
 
     // Exportar
@@ -723,4 +755,3 @@
     });
   });
 })();
-
