@@ -16,16 +16,16 @@
       clientId: CFG.clientId,
       authority: `https://login.microsoftonline.com/${CFG.tenantId}`,
       redirectUri: CFG.redirectUri,
-      postLogoutRedirectUri: CFG.redirectUri,
-      navigateToLoginRequestUrl: false,
+      postLogoutRedirectUri: CFG.postLogoutRedirectUri || CFG.redirectUri,
+      navigateToLoginRequestUrl: false
     },
     cache: {
       cacheLocation: "sessionStorage",     // seguro para SPA
-      storeAuthStateInCookie: false,       // pon true solo si Safari ITP molesta
+      storeAuthStateInCookie: false        // true solo si Safari ITP molesta
     },
     system: {
-      loggerOptions: { loggerCallback: () => {}, piiLoggingEnabled: false },
-    },
+      loggerOptions: { loggerCallback: () => {}, piiLoggingEnabled: false }
+    }
   };
 
   const LOGIN_REQUEST = { scopes: CFG.scopes || ["User.Read"] };
@@ -34,12 +34,15 @@
 
   // ===== 2) Utilidades =====
   const LS_SESSION_KEY = "artepisa_account";
-  const INTERACTION_FLAG = "msal_interaction_in_progress";
+  const INTERACTION_FLAG = "artepisa_interaction_lock"; // propio (no usamos la clave interna de MSAL)
 
-  const inPopupWindow = !!window.opener || window !== window.top;
+  const inIframe = () => window !== window.parent;
+  const inPopup  = () => !!window.opener && window.opener !== window;
+  const isMobile = () => /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
   const isGithubPages = /\.github\.io$/i.test(location.host);
-  // Forzamos redirect si estamos en popup/iframe o en GitHub Pages (evita block_nested_popups)
-  const SHOULD_USE_REDIRECT = inPopupWindow || isGithubPages;
+
+  // Forzamos redirect si: móvil, o ya estamos en popup/iframe, o algunos navegadores en GitHub Pages
+  const SHOULD_USE_REDIRECT = isMobile() || inPopup() || inIframe() || isGithubPages;
 
   function setSessionAccount(account) {
     if (!account) {
@@ -53,7 +56,7 @@
         username: account.username,
         name: account.name,
         env: account.environment,
-        ts: Date.now(),
+        ts: Date.now()
       })
     );
   }
@@ -117,12 +120,12 @@
             goDashboardIfLoginPage();
             return res.account;
           }
-        } catch (_) { /* sigue interactivo */ }
+        } catch (_) { /* continúa a interactivo */ }
       }
 
-      // 3.2 Interactivo: preferir redirect si estamos en popup/iframe/GitHub Pages
+      // 3.2 Interactivo: redirect o popup según el entorno
       if (SHOULD_USE_REDIRECT) {
-        await pca.loginRedirect(LOGIN_REQUEST); // la ejecución continúa tras volver del redirect
+        await pca.loginRedirect(LOGIN_REQUEST); // vuelta por redirect a index.html
         return null;
       } else {
         const res = await pca.loginPopup(LOGIN_REQUEST);
@@ -133,7 +136,15 @@
         return res.account;
       }
     } catch (e) {
-      // Mensajes típicos: block_nested_popups, interaction_in_progress
+      // Si detecta nested popup, forzamos redirect
+      if (String(e?.errorCode || e?.message || "").includes("block_nested_popups")) {
+        try {
+          await pca.loginRedirect(LOGIN_REQUEST);
+          return null;
+        } catch (er) {
+          console.error("loginRedirect fallback error:", er);
+        }
+      }
       console.error("Error de login:", e);
       uiMsg(`Error de login: ${e?.message || e}`, true);
       throw e;
@@ -157,7 +168,7 @@
       if (SHOULD_USE_REDIRECT) {
         sessionStorage.setItem(INTERACTION_FLAG, "1");
         await pca.acquireTokenRedirect(req);
-        return ""; // volverá del redirect
+        return ""; // volverá por redirect
       } else {
         const i = await pca.acquireTokenPopup(req);
         return i.accessToken;
@@ -208,12 +219,9 @@
         pca.setActiveAccount(res.account);
         setSessionAccount(res.account);
         uiMsg(`Conectado como ${res.account.name || res.account.username || ""}`);
-        // venimos de login/obtener token → limpiar flag
         sessionStorage.removeItem(INTERACTION_FLAG);
-        // si estamos en la página de login, vamos al panel
         goDashboardIfLoginPage();
       } else {
-        // No había interacción pendiente: aseguremos cuenta activa si ya existía
         ensureActiveAccount();
       }
     })
@@ -235,7 +243,7 @@
     logout,
     getToken,
     requireAuth,
-    getAccount,
+    getAccount
   };
 
   // ===== 9) Botón de login (si existe en la página) =====
