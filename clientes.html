@@ -29,10 +29,15 @@
         grid-template-columns: 1fr;
       }
     }
-
   </style>
 </head>
 <body>
+  <!-- GUARDIA DE SESIÓN: si no hay sesión, regresa a index -->
+  <script>
+    const __acct = JSON.parse(sessionStorage.getItem('artepisa_account')||'null');
+    if(!__acct){ location.href = 'index.html'; }
+  </script>
+
 <header class="brand">
   <div class="logo">
     <img class="brandlogo" src="./img/arte.png?v=1" alt="ARTEPISA SLP">
@@ -43,7 +48,6 @@
   </div>
   <a class="btn ghost" href="dashboard.html">Volver</a>
 </header>
-
 
   <!-- NOTA: por defecto NO tiene la clase 'split', así el formulario no aparece -->
   <main class="container" id="layout">
@@ -87,46 +91,45 @@
           <small>Se conserva el ID del archivo importado; si falta, se genera.</small>
         </div>
 
-       <div class="field"><span>Nombre</span>
-  <input id="c-nombre" placeholder="Razón social o nombre comercial">
-</div>
+        <div class="field"><span>Nombre</span>
+          <input id="c-nombre" placeholder="Razón social o nombre comercial">
+        </div>
 
-<div class="field"><span>Teléfono</span>
-  <input id="c-telefono"
-         inputmode="numeric"
-         autocomplete="tel"
-         maxlength="27"
-         data-phone-mask
-         placeholder="4441234567 o 4441234567/4449876543">
-  <small class="muted-sm">10 dígitos o 2 teléfonos (20 dígitos) separados por “/”.</small>
-</div>
+        <div class="field"><span>Teléfono</span>
+          <input id="c-telefono"
+                 inputmode="numeric"
+                 autocomplete="tel"
+                 maxlength="27"
+                 data-phone-mask
+                 placeholder="4441234567 o 4441234567/4449876543">
+          <small class="muted-sm">10 dígitos o 2 teléfonos (20 dígitos) separados por “/”.</small>
+        </div>
 
-<div class="field"><span>Dirección</span>
-  <input id="c-direccion" placeholder="Calle, #, Colonia, Ciudad">
-</div>
+        <div class="field"><span>Dirección</span>
+          <input id="c-direccion" placeholder="Calle, #, Colonia, Ciudad">
+        </div>
 
-<div class="field"><span>RFC</span>
-  <input id="c-rfc" placeholder="ABC123456XYZ">
-</div>
+        <div class="field"><span>RFC</span>
+          <input id="c-rfc" placeholder="ABC123456XYZ">
+        </div>
 
-<div class="field"><span>Estado</span>
-  <input id="c-estado" placeholder="San Luis Potosí">
-</div>
+        <div class="field"><span>Estado</span>
+          <input id="c-estado" placeholder="San Luis Potosí">
+        </div>
 
-<div class="field"><span>Nombre de Contacto</span>
-  <input id="c-contacto" placeholder="Persona de contacto">
-</div>
+        <div class="field"><span>Nombre de Contacto</span>
+          <input id="c-contacto" placeholder="Persona de contacto">
+        </div>
 
-<div class="field"><span>Teléfono de Contacto</span>
-  <input id="c-contacto-tel"
-         inputmode="numeric"
-         autocomplete="tel"
-         maxlength="27"
-         data-phone-mask
-         placeholder="4441234567 o 4441234567/4449876543">
-  <small class="muted-sm">10 dígitos o 2 teléfonos (20 dígitos) separados por “/”.</small>
-</div>
-
+        <div class="field"><span>Teléfono de Contacto</span>
+          <input id="c-contacto-tel"
+                 inputmode="numeric"
+                 autocomplete="tel"
+                 maxlength="27"
+                 data-phone-mask
+                 placeholder="4441234567 o 4441234567/4449876543">
+          <small class="muted-sm">10 dígitos o 2 teléfonos (20 dígitos) separados por “/”.</small>
+        </div>
 
         <div class="actions" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <button class="btn" id="c-guardar" type="button">Guardar</button>
