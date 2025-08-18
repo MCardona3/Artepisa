@@ -101,13 +101,13 @@
     return (Array.isArray(arr) ? arr : [])
       .filter(x => x && typeof x === "object")
       .map(c => ({
-        IDCliente : S(c.IDCliente || c.idCliente || c.IDcliente || c.id || ""),
-        Nombre    : S(c.Nombre || c.nombre || ""),
-        Telefono  : S(c.Telefono || c.telefono || ""),
-        Direccion : S(c.Direccion || c.direccion || ""),
-        RFC       : S(c.RFC || c.rfc || "").toUpperCase(),
-        Estado    : S(c.Estado || c.estado || ""),
-        NombreCont: S(c.NombreCont || c.NombreContacto || c.contacto || c.contactName || ""),
+        IDCliente  : S(c.IDCliente || c.idCliente || c.IDcliente || c.id || ""),
+        Nombre     : S(c.Nombre || c.nombre || ""),
+        Telefono   : S(c.Telefono || c.telefono || ""),
+        Direccion  : S(c.Direccion || c.direccion || ""),
+        RFC        : S(c.RFC || c.rfc || "").toUpperCase(),
+        Estado     : S(c.Estado || c.estado || ""),
+        NombreCont : S(c.NombreCont || c.NombreContacto || c.contacto || c.contactName || ""),
         TelefonoCon: S(c.TelefonoCon || c.TelefonoContacto || c.contactoTel || c.contactPhone || "")
       }));
   }
@@ -186,23 +186,60 @@
     showForm(true);
   }
 
-  // ---------- Render de tabla ----------
+  // ---------- Render de tabla (pro + responsivo) ----------
   function render(q=""){
     const tb = $("#c-tabla");
     tb.innerHTML = "";
 
     const needle = norm(q);
     const list = sanitizeCache(cache)
-      .filter(c => !needle || norm(c.Nombre).includes(needle))
-      .sort(compareByIdAsc); // ← ordenar por ID ascendente
+      .filter(c => {
+        if (!needle) return true;
+        return (
+          norm(c.Nombre).includes(needle) ||
+          norm(c.Direccion).includes(needle) ||
+          norm(c.RFC).includes(needle) ||
+          norm(c.Estado).includes(needle) ||
+          norm(c.NombreCont).includes(needle)
+        );
+      })
+      .sort(compareByIdAsc); // ordenar por ID
+
+    // helper para crear TD con data-label y title
+    const td = (label, value, className="") => {
+      const cell = document.createElement("td");
+      cell.setAttribute("data-label", label);
+      const v = S(value);
+      cell.textContent = v;
+      cell.title = v; // tooltip en desktop
+      if (className) cell.className = className;
+      return cell;
+    };
 
     list.forEach(c=>{
       const tr = document.createElement("tr");
-      tr.innerHTML =
-        `<td>${S(c.IDCliente)}</td><td>${S(c.Nombre)}</td><td>${formatPhonePair(S(c.Telefono))}</td>` +
-        `<td>${S(c.Estado)}</td><td>${S(c.NombreCont)}</td>` +
-        `<td class="table-actions"><button class="btn ghost btn-edit">Editar</button></td>`;
-      tr.querySelector(".btn-edit").addEventListener("click", ()=> fillForm(c));
+
+      // columnas: ID | Nombre | Teléfono | Dirección | RFC | Estado | Nombre Contacto | Teléfono Contacto | Acciones
+      tr.appendChild(td("ID", c.IDCliente));
+      tr.appendChild(td("Nombre", c.Nombre));
+      tr.appendChild(td("Teléfono", formatPhonePair(c.Telefono)));
+      tr.appendChild(td("Dirección", c.Direccion));
+      tr.appendChild(td("RFC", c.RFC));
+      tr.appendChild(td("Estado", c.Estado));
+      tr.appendChild(td("Nombre de Contacto", c.NombreCont));
+      tr.appendChild(td("Teléfono de Contacto", formatPhonePair(c.TelefonoCon)));
+
+      const acc = document.createElement("td");
+      acc.className = "table-actions";
+      const btn = document.createElement("button");
+      btn.className = "btn ghost btn-edit";
+      btn.type = "button";
+      btn.textContent = "Editar";
+      btn.addEventListener("click", ()=> fillForm(c));
+      acc.appendChild(btn);
+
+      tr.appendChild(acc);
+
       tr.addEventListener("dblclick", ()=> fillForm(c));
       tb.appendChild(tr);
     });
