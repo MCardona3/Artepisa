@@ -44,6 +44,12 @@
   </style>
 </head>
 <body>
+  <!-- GUARDIA DE SESIÓN: si no hay sesión, regresa a index -->
+  <script>
+    const __acct = JSON.parse(sessionStorage.getItem('artepisa_account')||'null');
+    if(!__acct){ location.href = 'index.html'; }
+  </script>
+
 <header class="brand">
   <div class="logo">
     <img class="brandlogo" src="./img/arte.png?v=1" alt="ARTEPISA SLP">
