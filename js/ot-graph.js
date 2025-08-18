@@ -1,4 +1,4 @@
-// js/ot-graph.js – Órdenes de Trabajo con Import/Export/Clear (import path fixed)
+// js/ot-graph.js – Órdenes de Trabajo con Import/Export/Clear + modos de vista
 import { gs_getCollection, gs_putCollection } from "./graph-store.js";
 
 let ETAG = "";
@@ -49,6 +49,14 @@ const download = (name, text) => {
   a.href = URL.createObjectURL(blob); a.download = name;
   document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
 };
+
+// Cambiador de modo de layout: '', 'form-only', 'split'
+function setMode(mode){
+  const lay = elLayout();
+  if (!lay) return;
+  lay.classList.remove('form-only','split');
+  if (mode) lay.classList.add(mode);
+}
 
 function renderCount(){ if (elCount()) elCount().textContent = LIST.length; }
 
@@ -219,29 +227,55 @@ async function clearAll(){
 
 // ==== Eventos UI ====
 function mountEvents(){
+  // CREAR / AGREGAR → solo formulario
   btnShowForm()?.addEventListener("click", ()=>{
-    elLayout()?.classList.add("split");
-    elCardForm()?.scrollIntoView({behavior:"smooth"});
     fillForm(null);
+    setMode('form-only');
+    elCardForm()?.scrollIntoView({behavior:"smooth", block:"start"});
   });
-  btnCerrar()?.addEventListener("click", ()=> elLayout()?.classList.remove("split"));
-  btnNuevo()?.addEventListener("click", ()=> fillForm(null));
+
+  // CERRAR → volver a lista
+  btnCerrar()?.addEventListener("click", ()=>{
+    setMode('');
+    window.scrollTo({top:0, behavior:"smooth"});
+  });
+
+  // NUEVO (si lo usas) → solo formulario
+  btnNuevo()?.addEventListener("click", ()=>{
+    fillForm(null);
+    setMode('form-only');
+  });
+
   btnAddItem()?.addEventListener("click", ()=> addItemRow());
+
+  // GUARDAR → guardar y volver a lista
   btnGuardar()?.addEventListener("click", async ()=>{
     const rec = readForm();
     if (editingIndex >= 0) LIST[editingIndex] = rec; else LIST.push(rec);
-    try { await save(); alert("Guardado"); } catch(e){ alert("Error al guardar: " + e.message); }
+    try {
+      await save();
+      alert("Guardado");
+      setMode('');
+      window.scrollTo({top:0, behavior:"smooth"});
+    } catch(e){ alert("Error al guardar: " + e.message); }
   });
+
   elBuscar()?.addEventListener("input", renderList);
 
+  // EDITAR → modo split (lista + form)
   elTable()?.addEventListener("click", (e)=>{
     const btn = e.target.closest("button"); if (!btn) return;
     const i = Number(btn.getAttribute("data-i"));
     const act = btn.getAttribute("data-act");
     if (act === "edit") {
-      fillForm(LIST[i]); elLayout()?.classList.add("split"); elCardForm()?.scrollIntoView({behavior:"smooth"});
+      fillForm(LIST[i]);
+      setMode('split');
+      elCardForm()?.scrollIntoView({behavior:"smooth"});
     } else if (act === "del") {
-      if (confirm("¿Eliminar la OT seleccionada?")) { LIST.splice(i,1); save().catch(err=>alert(err.message)); }
+      if (confirm("¿Eliminar la OT seleccionada?")) {
+        LIST.splice(i,1);
+        save().catch(err=>alert(err.message));
+      }
     }
   });
 
