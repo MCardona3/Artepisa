@@ -11,12 +11,19 @@ body{
   --bg:#f6f8fb;
   --text-900:#0b1220;
   --text-600:#5b6577;
-  --brand-500:#3b82f6;
-  --brand-600:#2563eb;
+
+  /* Marca (verde) */
+  --brand-500:#22c55e;   /* green-500 */
+  --brand-600:#16a34a;   /* green-600 */
+
   --card-bg:#ffffff;
   --card-brd:#e7edf3;
   --shadow-lg:0 12px 36px rgba(16,24,40,.08);
   --radius:18px;
+
+  /* Derivados para focos/sombras verdes */
+  --focus-ring: rgba(34,197,94,.28);
+  --focus-soft: rgba(34,197,94,.14);
 }
 .theme-light{ background:var(--bg); color:var(--text-900); }
 
@@ -55,7 +62,7 @@ body{
   padding:12px 18px; border-radius:12px;
   font-weight:800; letter-spacing:.2px; color:#fff;
   background:linear-gradient(180deg, var(--brand-500), var(--brand-600));
-  box-shadow:0 6px 18px rgba(37,99,235,.28);
+  box-shadow:0 6px 18px rgba(22,163,74,.28);
   transition:transform .08s ease, filter .2s ease, opacity .2s ease;
 }
 .theme-light .btn:hover{ transform:translateY(-1px); filter:saturate(108%); }
@@ -102,12 +109,15 @@ body{
   background:#fff; color:#0b1220; transition:border-color .15s, box-shadow .15s;
 }
 .theme-light .input::placeholder{ color:#9aa7b8; }
-.theme-light .input:focus{ outline:0; border-color:#a7c4ff; box-shadow:0 0 0 4px rgba(59,130,246,.14); }
+.theme-light .input:focus{
+  outline:0; border-color:#bbf7d0;                      /* verde claro */
+  box-shadow:0 0 0 4px var(--focus-soft);
+}
 .theme-light .input[readonly], .theme-light .input:disabled{ background:#f4f6fa; color:#6b7486; }
 
 /* ====== TABLAS (sin scroll horizontal) ====== */
 .theme-light .table-wrap{
-  overflow-x: visible;    /* ver tabla completa */
+  overflow-x: visible;
   overflow-y: auto;
   border:1px solid #e7edf3; border-radius:16px;
   background:#fff; box-shadow:0 10px 28px rgba(16,24,40,.06);
@@ -115,9 +125,9 @@ body{
 }
 .theme-light table.table{
   width:100%;
-  min-width:0;            /* sin ancho mínimo forzado */
+  min-width:0;
   border-collapse:separate; border-spacing:0; font-size:15px;
-  table-layout: fixed;    /* ajusta columnas */
+  table-layout: fixed;
   word-wrap: break-word; overflow-wrap:anywhere; white-space:normal;
 }
 .theme-light .table thead th{
@@ -132,18 +142,19 @@ body{
 .theme-light .table tbody tr:hover{ background:#f5f9ff; }
 .theme-light .table td:last-child, .theme-light .table th:last-child{ text-align:right; }
 .theme-light .table .table-actions{ display:flex; justify-content:flex-end; gap:8px; }
+/* anchos base (se sobreescriben en tablewide) */
 .theme-light table.table th:nth-child(1),
-.theme-light table.table td:nth-child(1){ width:70px; }        /* ID */
+.theme-light table.table td:nth-child(1){ width:70px; }
 .theme-light table.table th:nth-child(3),
-.theme-light table.table td:nth-child(3){ width:170px; }       /* Teléfono */
+.theme-light table.table td:nth-child(3){ width:170px; }
 .theme-light table.table th:nth-child(4),
-.theme-light table.table td:nth-child(4){ width:170px; }       /* Estado */
+.theme-light table.table td:nth-child(4){ width:170px; }
 .theme-light table.table th:nth-child(6),
-.theme-light table.table td:nth-child(6){ width:120px; }       /* Acciones */
+.theme-light table.table td:nth-child(6){ width:120px; }
 .theme-light table.table th:nth-child(2),
 .theme-light table.table td:nth-child(2),
 .theme-light table.table th:nth-child(5),
-.theme-light table.table td:nth-child(5){                       /* Nombre/Contacto flexibles */
+.theme-light table.table td:nth-child(5){
   overflow-wrap:anywhere; word-break:break-word; white-space:normal;
 }
 
@@ -154,7 +165,7 @@ body{
 
 /* ====== ENFOQUE ACCESIBLE ====== */
 .theme-light :focus-visible{
-  outline:3px solid rgba(37,99,235,.45);
+  outline:3px solid var(--focus-ring);
   outline-offset:2px; border-radius:12px;
 }
 
@@ -166,7 +177,7 @@ body{
 }
 
 /* =========================================================
-   PRO PACK: Refinamientos (cards, botones, tabla, tipografía)
+   PRO PACK: Refinamientos
    ========================================================= */
 .theme-light .card{
   padding:32px clamp(20px,4vw,44px);
@@ -177,11 +188,10 @@ body{
 }
 .theme-light .card > .muted{ margin-top:2px; }
 .theme-light .btn{
-  background:linear-gradient(180deg,#3f83f8,#2563eb);
-  box-shadow:0 6px 20px rgba(37,99,235,.25);
+  background:linear-gradient(180deg,var(--brand-500),var(--brand-600));
+  box-shadow:0 6px 20px rgba(22,163,74,.25);
 }
 .theme-light .btn.ghost{ border-radius:999px; padding:9px 16px; border-color:#e4e9f1; }
-.theme-light .btn.danger{ background:linear-gradient(180deg,#f05252,#dc2626); }
 @media (hover:hover){
   .theme-light .card:hover{ box-shadow:0 16px 48px rgba(16,24,40,.10); }
 }
@@ -206,7 +216,7 @@ body{
   background:#fff; border-left:none; border-radius:0 6px 6px 0;
 }
 .theme-light .card-form .form .field input:focus{
-  outline:none; border-color:#93b4ff; box-shadow:inset 0 0 0 2px rgba(59,130,246,.25);
+  outline:none; border-color:#bbf7d0; box-shadow:inset 0 0 0 2px var(--focus-soft);
 }
 .theme-light .card-form .form .field .help{
   display:block; grid-column:1 / -1; padding:6px 14px 10px; color:#6a7386;
@@ -231,87 +241,59 @@ body{
   .theme-light .card-form .actions{ display:flex; flex-wrap:wrap; gap:8px; }
 }
 
-/* ===== Badges (opcional) ===== */
+/* ===== Badges (verdes) ===== */
 .theme-light .badge{
   display:inline-flex; align-items:center; height:28px; padding:0 10px;
   border-radius:999px; font-weight:700; font-size:.85rem;
-  background:#eef3ff; color:#2457d6; border:1px solid #dbe6ff;
-}
-/* ====== MODO ANCHO PARA TABLAS (no truncar, 1 fila por registro) ====== */
-.theme-light .container.tablewide{
-  max-width: 1440px;          /* ancho más grande del layout */
+  background:#ecfdf5;             /* verde muy claro */
+  color:#15803d;                  /* green-700 */
+  border:1px solid #bbf7d0;       /* borde verde claro */
 }
 
-/* La card de la lista ocupa TODO el ancho de su columna */
-.theme-light .container.tablewide #card-list.card{
-  max-width: 100%;
+/* ====== MODO ANCHO PARA TABLAS (1 fila por registro en desktop) ====== */
+.theme-light .container.tablewide{ max-width: 1440px; }
+@media (min-width: 1600px){
+  .theme-light .container.tablewide{ max-width: 1600px; }
 }
-
-/* La tabla usa el ancho completo sin forzar scroll horizontal */
-.theme-light .container.tablewide .table-wrap{
-  overflow-x: hidden !important;
-}
-
-/* La tabla reparte ancho y crece hasta llenar el contenedor */
+.theme-light .container.tablewide #card-list.card{ max-width: 100%; }
+.theme-light .container.tablewide .table-wrap{ overflow-x: hidden !important; }
 .theme-light .container.tablewide table.table{
   width: 100% !important;
   min-width: 0 !important;
   table-layout: fixed !important;
 }
-
-/* === Columnas: evitar saltos de línea en las que te interesa una sola fila === */
-/* Nombre (más espacio), Teléfono, Estado y Contacto en una sola línea */
+/* Evitar saltos en desktop */
 .theme-light .container.tablewide table.table th:nth-child(2),
-.theme-light .container.tablewide table.table td:nth-child(2){ /* Nombre */
-  white-space: nowrap;
-}
+.theme-light .container.tablewide table.table td:nth-child(2),
 .theme-light .container.tablewide table.table th:nth-child(3),
-.theme-light .container.tablewide table.table td:nth-child(3){ /* Teléfono */
-  white-space: nowrap;
-}
+.theme-light .container.tablewide table.table td:nth-child(3),
 .theme-light .container.tablewide table.table th:nth-child(4),
-.theme-light .container.tablewide table.table td:nth-child(4){ /* Estado */
-  white-space: nowrap;
-}
+.theme-light .container.tablewide table.table td:nth-child(4),
 .theme-light .container.tablewide table.table th:nth-child(5),
-.theme-light .container.tablewide table.table td:nth-child(5){ /* Contacto */
-  white-space: nowrap;
-}
-
-/* Anchos propuestos (ajústalos si gustas) */
+.theme-light .container.tablewide table.table td:nth-child(5){ white-space:nowrap; }
+/* Anchos sugeridos */
 .theme-light .container.tablewide table.table th:nth-child(1),
-.theme-light .container.tablewide table.table td:nth-child(1){ width: 72px; }      /* ID */
+.theme-light .container.tablewide table.table td:nth-child(1){ width: 72px; }
 .theme-light .container.tablewide table.table th:nth-child(2),
-.theme-light .container.tablewide table.table td:nth-child(2){ width: 36%; }       /* Nombre */
+.theme-light .container.tablewide table.table td:nth-child(2){ width: 36%; }
 .theme-light .container.tablewide table.table th:nth-child(3),
-.theme-light .container.tablewide table.table td:nth-child(3){ width: 18%; }       /* Teléfono */
+.theme-light .container.tablewide table.table td:nth-child(3){ width: 18%; }
 .theme-light .container.tablewide table.table th:nth-child(4),
-.theme-light .container.tablewide table.table td:nth-child(4){ width: 18%; }       /* Estado */
+.theme-light .container.tablewide table.table td:nth-child(4){ width: 18%; }
 .theme-light .container.tablewide table.table th:nth-child(5),
-.theme-light .container.tablewide table.table td:nth-child(5){ width: 18%; }       /* Contacto */
+.theme-light .container.tablewide table.table td:nth-child(5){ width: 18%; }
 .theme-light .container.tablewide table.table th:nth-child(6),
-.theme-light .container.tablewide table.table td:nth-child(6){ width: 120px; }     /* Acciones */
-
-/* Evitar cortes con "..." ahora que les dimos ancho */
+.theme-light .container.tablewide table.table td:nth-child(6){ width: 120px; }
+/* No cortar con “…” ahora que hay espacio */
 .theme-light .container.tablewide table.table th,
 .theme-light .container.tablewide table.table td{
-  overflow: visible;
-  text-overflow: clip;
+  overflow: visible; text-overflow: clip;
 }
-
-/* Botón en columna de acciones compacto */
+/* Botón acciones compacto */
 .theme-light .container.tablewide .table .table-actions .btn{
-  padding: 8px 12px;
-  border-radius: 10px;
-  white-space: nowrap;
+  padding: 8px 12px; border-radius: 10px; white-space: nowrap;
 }
-
-/* En pantallas MUY anchas, ampliar aún más el contenedor para lujo total */
-@media (min-width: 1600px){
-  .theme-light .container.tablewide{ max-width: 1600px; }
-}
-
-/* En pantallas chicas, volvemos a permitir saltos (usabilidad móvil) */
+/* En móvil permitimos saltos para legibilidad */
 @media (max-width: 900px){
   .theme-light .container.tablewide table.table th:nth-child(2),
   .theme-light .container.tablewide table.table td:nth-child(2),
@@ -320,8 +302,6 @@ body{
   .theme-light .container.tablewide table.table th:nth-child(4),
   .theme-light .container.tablewide table.table td:nth-child(4),
   .theme-light .container.tablewide table.table th:nth-child(5),
-  .theme-light .container.tablewide table.table td:nth-child(5){
-    white-space: normal;           /* que se acomode en varias líneas en móvil */
-  }
+  .theme-light .container.tablewide table.table td:nth-child(5){ white-space: normal; }
 }
 
