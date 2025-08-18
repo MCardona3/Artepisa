@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Artepisa SLP · Login (OneDrive/SharePoint)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+<header class="brand">
+  <div class="logo">
+    <img class="brandlogo" src="./img/arte.png?v=1" alt="ARTEPISA SLP">
+    <div>
+      <div class="brandname">ARTEPISA SLP</div>
+      <div class="muted">Clientes (OneDrive/SharePoint)</div>
+    </div>
+  </div>
+  <a class="btn ghost" href="dashboard.html">Volver</a>
+</header>
+
+  <main class="container">
+    <section class="card">
+      <h1>Iniciar sesión con Microsoft</h1>
+      <p class="muted">Se guardará en una carpeta compartida de OneDrive o en una biblioteca de SharePoint.</p>
+
+      <div class="actions">
+        <button class="btn" id="btn-login">Entrar con Microsoft</button>
+      </div>
+      <p id="login-msg" class="muted"></p>
+
+      <details style="margin-top:10px">
+        <summary>¿Cómo configuro MSAL y la carpeta en la nube?</summary>
+        <ol>
+          <li>Registra una app en <b>Azure Portal → App registrations</b> (tipo SPA).</li>
+          <li>En <b>Authentication</b>, agrega Redirect URI: <code>https://TU_DOMINIO/index.html</code> (y en local <code>http://localhost:5500/index.html</code> por ejemplo).</li>
+          <li>Habilita permisos delegados: <b>User.Read</b>, <b>Files.ReadWrite.All</b> y <b>Sites.ReadWrite.All</b> (consent).</li>
+          <li>Edita <code>js/msal-config.js</code>: pega tu <code>clientId</code>, <code>tenantId</code>, y define si usar <i>OneDrive personal de cada usuario</i> o un <i>SharePoint site</i> compartido.</li>
+        </ol>
+      </details>
+    </section>
+  </main>
+
+  <!-- MSAL (browser) -->
+  <script src="https://alcdn.msauth.net/browser/2.38.1/js/msal-browser.min.js"></script>
+  <!-- Microsoft Graph SDK opcional (no imprescindible); usaremos fetch directo -->
+  <script src="./js/msal-config.js"></script>
+  <script src="./js/auth.js"></script>
+</body>
+</html>

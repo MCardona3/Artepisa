@@ -1,0 +1,44 @@
+:root{
+  --brand:#12a87a; --ink:#101418; --muted:#6b7280;
+  --line:#e5e7eb; --bg:#f6f8fb; --card:#ffffff;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg)}
+body{margin:0;font-family:system-ui,Segoe UI,Arial,sans-serif;color:var(--ink)}
+
+.brand{display:flex;align-items:center;gap:12px;padding:16px 20px;
+  border-bottom:1px solid var(--line);background:#fff}
+.logo{display:flex;align-items:center;gap:10px}
+/* Logo como imagen (reemplaza al svg) */
+.logo img.brandlogo{width:36px;height:36px;object-fit:contain;display:block}
+
+.brandname{font-weight:800;letter-spacing:.3px;font-size:18px}
+.muted{color:var(--muted)}
+
+.container{max-width:980px;margin:24px auto;padding:0 16px;display:grid;gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+h1{margin:0 0 10px} h2{margin:0 0 8px}
+
+.form{display:grid;gap:12px;max-width:560px}
+.field{display:grid;gap:6px}
+input{padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:15px}
+.actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{background:var(--brand);color:#fff;border:none;border-radius:10px;padding:10px 14px;font-weight:600;cursor:pointer}
+.btn.ghost{background:#f3f4f6;color:#111;border:1px solid var(--line)}
+.success{color:#0a7;font-weight:600}
+.error{color:#b33;font-weight:600}
+
+/* tables & dashboard */
+table{width:100%;border-collapse:collapse}
+th,td{border:1px solid var(--line);padding:8px;text-align:left}
+th{background:#eef2f7}
+
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media(max-width:960px){.grid{grid-template-columns:1fr}}
+.tile{display:flex;flex-direction:column;gap:6px;padding:16px;border:1px solid var(--line);
+  border-radius:12px;background:#fff}
+.tile .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.pill{display:inline-block;padding:4px 8px;border-radius:999px;font-size:12px;border:1px solid var(--line);background:#fff}
+.pill.ok{border-color:#12a87a;color:#12a87a}
+.stat{display:flex;align-items:center;justify-content:space-between;border:1px dashed var(--line);
+  border-radius:10px;padding:10px 12px}
