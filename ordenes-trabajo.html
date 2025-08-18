@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>Órdenes de Trabajo · Artepisa SLP (Graph)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="./CSS/style.css" />
+  <link rel="stylesheet" href="./css/style.css" />
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" sizes="32x32" href="./img/arte.png?v=1">
@@ -15,8 +15,7 @@
     main.container.split {
       display:grid;
       grid-template-columns: minmax(380px, 1fr) minmax(420px, 1fr);
-      gap:16px;
-      align-items:start;
+      gap:16px; align-items:start;
     }
     .card-form{ display:none; }
     .split .card-form{ display:block; }
@@ -41,7 +40,8 @@
     .table-print th,.table-print td{ border:1px solid #ccc; padding:6px; font-size:12px; }
   </style>
 </head>
-<body>
+<body class="theme-light">
+  <!-- Guardia: volver al inicio si no hay sesión -->
   <script>
     const __acct = JSON.parse(sessionStorage.getItem('artepisa_account')||'null');
     if(!__acct){ location.href = 'index.html'; }
@@ -58,7 +58,7 @@
   <a class="btn ghost" href="dashboard.html">Volver</a>
 </header>
 
-<main class="container" id="layout">
+<main class="container tablewide" id="layout">
   <!-- LISTADO -->
   <section class="card" id="card-list">
     <h1 style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
@@ -67,27 +67,30 @@
     </h1>
 
     <div class="actions" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
-      <input id="o-buscar" placeholder="Buscar por # OT o cliente" style="flex:1;min-width:220px">
+      <input id="o-buscar" class="input" placeholder="Buscar por # OT o cliente" style="flex:1;min-width:220px">
     </div>
 
-    <table>
-      <thead>
-      <tr>
-        <th># OT</th>
-        <th>Cliente</th>
-        <th>Departamento</th>
-        <th>Encargado</th>
-        <th>Fecha Emisión</th>
-        <th>Fecha Entrega</th>
-        <th>Orden Compra</th>
-        <th>Estatus</th>
-        <th>Prioridad</th>
-        <th>Descripción</th>
-        <th></th>
-      </tr>
-      </thead>
-      <tbody id="o-tabla"></tbody>
-    </table>
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+        <tr>
+          <th># OT</th>
+          <th>Cliente</th>
+          <th>Departamento</th>
+          <th>Encargado</th>
+          <th>Fecha Emisión</th>
+          <th>Fecha Entrega</th>
+          <th>Orden Compra</th>
+          <th>Estatus</th>
+          <th>Prioridad</th>
+          <th>Descripción</th>
+          <th></th>
+        </tr>
+        </thead>
+        <tbody id="o-tabla"></tbody>
+      </table>
+    </div>
+
     <p>Total OT: <strong id="ot-count">0</strong></p>
   </section>
 
@@ -96,23 +99,23 @@
     <h2>Formulario de OT</h2>
     <div class="form" id="ot-form">
       <div class="field"><span># OT</span><input id="o-num" type="number" placeholder="(autogenerado)"></div>
-      <div class="field"><span>Cliente</span><input id="o-cliente" placeholder="Cliente" list="dl-clientes" required><datalist id="dl-clientes"></datalist></div>
-      <div class="field"><span>Departamento</span><input id="o-depto" placeholder="Ej. Maquinados"></div>
-      <div class="field"><span>Encargado</span><input id="o-enc" placeholder="Nombre del responsable"></div>
-      <div class="field"><span>Fecha Emisión</span><input id="o-emision" type="date"></div>
-      <div class="field"><span>Fecha Entrega</span><input id="o-entrega" type="date"></div>
-      <div class="field"><span>Orden de Compra</span><input id="o-oc" placeholder="Número de OC"></div>
+      <div class="field"><span>Cliente</span><input id="o-cliente" class="input" placeholder="Cliente" list="dl-clientes" required><datalist id="dl-clientes"></datalist></div>
+      <div class="field"><span>Departamento</span><input id="o-depto" class="input" placeholder="Ej. Maquinados"></div>
+      <div class="field"><span>Encargado</span><input id="o-enc" class="input" placeholder="Nombre del responsable"></div>
+      <div class="field"><span>Fecha Emisión</span><input id="o-emision" class="input" type="date"></div>
+      <div class="field"><span>Fecha Entrega</span><input id="o-entrega" class="input" type="date"></div>
+      <div class="field"><span>Orden de Compra</span><input id="o-oc" class="input" placeholder="Número de OC"></div>
       <div class="field"><span>Estatus</span>
-        <select id="o-est">
+        <select id="o-est" class="input">
           <option>ABIERTA</option><option>EN PROCESO</option><option>EN ESPERA</option><option>CERRADA</option>
         </select>
       </div>
       <div class="field"><span>Prioridad</span>
-        <select id="o-prio">
+        <select id="o-prio" class="input">
           <option>NORMAL</option><option>ALTA</option><option>URGENTE</option>
         </select>
       </div>
-      <div class="field"><span>Descripción</span><input id="o-desc" placeholder="Trabajo a realizar"></div>
+      <div class="field"><span>Descripción</span><input id="o-desc" class="input" placeholder="Trabajo a realizar"></div>
 
       <div class="items-box">
         <div class="items-head">
