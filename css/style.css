@@ -1,106 +1,91 @@
-/* ---------- Variables y reset ---------- */
-:root{
-  --bg-1:#0b1220;
-  --bg-2:#0e1628;
-  --card:#0f192e;
-  --text:#e8eefb;
-  --muted:#9bb0d6;
-  --brand:#60a5fa;
-  --brand-600:#3b82f6;
-  --radius: 20px;
-  --shadow: 0 10px 40px rgba(0,0,0,.35);
-}
+/* ====== Base (puede usarse en todo el sitio) ====== */
 *{box-sizing:border-box}
 html,body{height:100%}
 body{
   margin:0;
   font-family: ui-sans-serif, system-ui, Segoe UI, Roboto, Inter, Arial, sans-serif;
-  color:var(--text);
-  background:
-    radial-gradient(1000px 600px at 10% -10%, #1b2a52 0%, transparent 60%),
-    radial-gradient(800px 500px at 110% 30%, #1f335f 0%, transparent 60%),
-    linear-gradient(180deg, var(--bg-1), var(--bg-2));
 }
 
-/* ---------- Header/brand ---------- */
-.brand{
-  position:sticky; top:0; z-index:10;
+/* ====== THEME LIGHT (similar a la imagen 2) ====== */
+.theme-light{
+  --bg: #f6f8fb;             /* fondo general */
+  --text-900: #0b1220;        /* texto principal */
+  --text-600: #5b6577;        /* texto muted */
+  --brand-500:#3b82f6;        /* azul botón */
+  --brand-600:#2563eb;
+  --card-bg:#ffffff;          /* tarjeta blanca */
+  --card-brd:#e7edf3;         /* borde sutil */
+  --shadow-lg: 0 12px 36px rgba(16,24,40,.08);
+  --radius: 18px;
+}
+
+/* Fondo y color de texto */
+.theme-light{ background: var(--bg); color: var(--text-900); }
+
+/* Header blanco con sombra sutil */
+.theme-light .brand{
+  background:#fff;
+  border-bottom:1px solid #edf2f7;
+  box-shadow: 0 2px 8px rgba(16,24,40,.04);
+  padding: 12px 18px;
   display:flex; align-items:center; justify-content:space-between;
-  padding:14px 20px;
-  backdrop-filter:saturate(140%) blur(8px);
-  background:linear-gradient(180deg, rgba(10,16,30,.85), rgba(10,16,30,.55));
-  border-bottom:1px solid rgba(255,255,255,.06);
 }
-.logo{display:flex; gap:12px; align-items:center}
-.brandlogo{height:40px; width:auto; border-radius:12px; background:#fff}
-.brandname{font-weight:800; letter-spacing:.4px}
-.muted{color:var(--muted)}
+.theme-light .logo{ display:flex; gap:12px; align-items:center; }
+.theme-light .brandlogo{ height:36px; border-radius:10px }
+.theme-light .brandname{ font-weight:800; letter-spacing:.2px; color:var(--text-900); }
+.theme-light .muted{ color: var(--text-600); }
 
-/* ---------- Layout del main ---------- */
-.container{max-width:1100px;margin:0 auto;padding:28px 16px 80px}
+/* Layout */
+.theme-light .container{ max-width:1100px; margin:0 auto; padding: 24px 16px 80px; }
+.theme-light .hero{ min-height: calc(100vh - 70px); display:grid; place-items:center; }
 
-/* Centrar la tarjeta vertical y horizontalmente */
-.hero{
-  min-height: calc(100vh - 68px); /* alto pantalla menos header */
-  display: grid;
-  place-items: center;
-}
-
-/* ---------- Tarjeta ---------- */
-.card{
-  width:100%;
-  max-width: 720px;
-  margin: 0;
-  padding: 32px clamp(20px, 4vw, 40px);
-  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
-  border:1px solid rgba(255,255,255,.08);
+/* Card blanca */
+.theme-light .card{
+  width:100%; max-width:760px;
+  margin:0;
+  padding: 28px clamp(18px, 4vw, 40px);
+  background: var(--card-bg);
+  border:1px solid var(--card-brd);
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  position:relative;
+  box-shadow: var(--shadow-lg);
 }
-.card::before{
-  content:"";
-  position:absolute; inset:-1px;
-  border-radius: calc(var(--radius) + 1px);
-  background:
-    radial-gradient(1200px 300px at 20% -40%, rgba(96,165,250,.25), transparent 60%),
-    radial-gradient(700px 300px at 110% -10%, rgba(34,197,94,.18), transparent 60%);
-  pointer-events:none; z-index:-1; filter:blur(8px);
+.theme-light h1{
+  margin: 0 0 12px;
+  font-size: clamp(26px, 3vw, 34px);
+  line-height:1.2;
+  color: var(--text-900);
 }
-h1{
-  font-size: clamp(28px, 3vw, 40px);
-  line-height:1.15;
-  margin: 0 0 14px;
-  letter-spacing:.3px;
-  text-shadow: 0 4px 20px rgba(0,0,0,.35);
-}
-.card p{margin:.5rem 0 0}
+.theme-light .card p{ margin:.5rem 0 0; }
 
-/* ---------- Botones ---------- */
-.actions{ display:flex; gap:12px; flex-wrap:wrap; margin-top:18px }
-.btn{
+/* Botones */
+.theme-light .actions{ display:flex; gap:12px; flex-wrap:wrap; margin-top:16px; }
+.theme-light .btn{
   appearance:none; border:0; cursor:pointer;
   display:inline-flex; align-items:center; justify-content:center;
   gap:10px; padding:12px 18px;
   border-radius: 12px;
-  font-weight: 800;
-  letter-spacing:.2px;
-  background: linear-gradient(180deg, var(--brand), var(--brand-600));
-  color:#fff; box-shadow: 0 6px 20px rgba(59,130,246,.35);
-  transition: transform .08s ease, box-shadow .2s ease, filter .2s ease;
+  font-weight:800; letter-spacing:.2px;
+  background: linear-gradient(180deg, var(--brand-500), var(--brand-600));
+  color:#fff;
+  box-shadow: 0 6px 18px rgba(37,99,235,.28);
+  transition: transform .08s ease, filter .2s ease, opacity .2s ease;
 }
-.btn:hover{ transform: translateY(-1px); filter:saturate(110%); }
-.btn:active{ transform: translateY(0); filter:saturate(100%); }
-.btn:disabled{ opacity:.6; cursor:not-allowed }
-.btn.ghost{
-  background:transparent;
-  color:var(--text);
-  border:1px solid rgba(255,255,255,.14);
-  box-shadow:none;
+.theme-light .btn:hover{ transform: translateY(-1px); filter:saturate(108%); }
+.theme-light .btn:active{ transform: translateY(0); }
+.theme-light .btn:disabled{ opacity:.6; cursor:not-allowed; }
+
+.theme-light .btn.ghost{
+  background:#fff;
+  color: var(--text-900);
+  border:1px solid #e6eaf0;
+  border-radius: 14px;
+  padding: 8px 14px;
+  box-shadow: 0 2px 6px rgba(16,24,40,.04);
 }
+.theme-light .btn.ghost:hover{ background:#f8fafc; }
 
 /* Spinner dentro del botón */
-.spinner{
+.theme-light .spinner{
   width:16px; height:16px;
   border:2px solid rgba(255,255,255,.45);
   border-top-color:#fff;
@@ -108,33 +93,33 @@ h1{
   display:none;
   animation: spin .7s linear infinite;
 }
-.spinner.on{ display:inline-block; }
+.theme-light .spinner.on{ display:inline-block; }
 @keyframes spin{ to{ transform: rotate(360deg); } }
 
-/* ---------- Mensajes ---------- */
-#login-msg{
-  margin-top: 18px;
-  color: var(--muted);
-  font-size: 0.98rem;
+/* Acordeón/ayuda */
+.theme-light details{
+  margin-top: 16px;
+  background:#f7f9fc;
+  border:1px solid #e6eaf0;
+  border-radius: 12px;
+  padding: 10px 12px;
 }
+.theme-light summary{ cursor:pointer; user-select:none; }
+.theme-light code{ background:#eef2f7; color:#0b1220; padding:2px 6px; border-radius:8px; }
 
-/* ---------- Footer shadow ---------- */
-body::after{
-  content:""; display:block; height:180px; margin-top:56px;
-  background:linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,.08));
-}
+/* Mensaje */
+.theme-light #login-msg{ margin-top:16px; color: var(--text-600); font-size:.98rem; }
 
-/* ---------- Responsive ---------- */
-@media (max-width: 720px){
-  .brand{padding:12px 14px}
-  .container{padding:18px 12px 56px}
-  .card{padding: 24px 18px}
-}
-
-/* ---------- Accesible focus ---------- */
-:focus-visible{
-  outline: 3px solid rgba(96,165,250,.9);
+/* Focus accesible */
+.theme-light :focus-visible{
+  outline: 3px solid rgba(37,99,235,.45);
   outline-offset: 2px;
   border-radius: 12px;
 }
 
+/* Responsive */
+@media (max-width: 720px){
+  .theme-light .brand{ padding:10px 14px; }
+  .theme-light .container{ padding:18px 12px 56px; }
+  .theme-light .card{ padding:22px 16px; }
+}
