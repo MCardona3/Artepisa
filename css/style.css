@@ -6,177 +6,128 @@ body{
   font-family: ui-sans-serif, system-ui, Segoe UI, Roboto, Inter, Arial, sans-serif;
 }
 
-/* ====== THEME LIGHT (similar a la imagen 2) ====== */
+/* ====== THEME LIGHT ====== */
 .theme-light{
-  --bg: #f6f8fb;             /* fondo general */
-  --text-900: #0b1220;        /* texto principal */
-  --text-600: #5b6577;        /* texto muted */
-  --brand-500:#3b82f6;        /* azul botón */
+  --bg:#f6f8fb;
+  --text-900:#0b1220;
+  --text-600:#5b6577;
+  --brand-500:#3b82f6;
   --brand-600:#2563eb;
-  --card-bg:#ffffff;          /* tarjeta blanca */
-  --card-brd:#e7edf3;         /* borde sutil */
-  --shadow-lg: 0 12px 36px rgba(16,24,40,.08);
-  --radius: 18px;
+  --card-bg:#ffffff;
+  --card-brd:#e7edf3;
+  --shadow-lg:0 12px 36px rgba(16,24,40,.08);
+  --radius:18px;
 }
+.theme-light{ background:var(--bg); color:var(--text-900); }
 
-/* Fondo y color de texto */
-.theme-light{ background: var(--bg); color: var(--text-900); }
-
-/* ====== HEADER (blanco con sombra sutil) ====== */
+/* ====== HEADER ====== */
 .theme-light .brand{
-  background:#fff;
-  border-bottom:1px solid #edf2f7;
-  box-shadow: 0 2px 8px rgba(16,24,40,.04);
-  padding: 12px 18px;
-  display:flex; align-items:center; justify-content:space-between;
+  background:#fff; border-bottom:1px solid #edf2f7;
+  box-shadow:0 2px 8px rgba(16,24,40,.04);
+  padding:12px 18px; display:flex; align-items:center; justify-content:space-between;
 }
 .theme-light .logo{ display:flex; gap:12px; align-items:center; }
 .theme-light .brandlogo{ height:36px; border-radius:10px; }
 .theme-light .brandname{ font-weight:800; letter-spacing:.2px; color:var(--text-900); }
-.theme-light .muted{ color: var(--text-600); }
+.theme-light .muted{ color:var(--text-600); }
 
 /* ====== LAYOUT ====== */
-.theme-light .container{ max-width:1100px; margin:0 auto; padding: 24px 16px 80px; }
-.theme-light .hero{ min-height: calc(100vh - 70px); display:grid; place-items:center; }
+.theme-light .container{ max-width:1100px; margin:0 auto; padding:24px 16px 80px; }
+.theme-light .hero{ min-height:calc(100vh - 70px); display:grid; place-items:center; }
 
 /* ====== CARDS ====== */
 .theme-light .card{
-  width:100%; max-width:760px;
-  margin:0;
-  padding: 28px clamp(18px, 4vw, 40px);
-  background: var(--card-bg);
+  width:100%; max-width:760px; margin:0;
+  padding:28px clamp(18px,4vw,40px);
+  background:var(--card-bg);
   border:1px solid var(--card-brd);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-lg);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow-lg);
 }
-.theme-light h1{
-  margin: 0 0 12px;
-  font-size: clamp(26px, 3vw, 34px);
-  line-height:1.2;
-  color: var(--text-900);
-}
+.theme-light h1{ margin:0 0 12px; font-size:clamp(26px,3vw,34px); line-height:1.2; color:var(--text-900); }
 .theme-light .card p{ margin:.5rem 0 0; }
 
 /* ====== BOTONES ====== */
 .theme-light .actions{ display:flex; gap:12px; flex-wrap:wrap; margin-top:16px; }
 .theme-light .btn{
   appearance:none; border:0; cursor:pointer;
-  display:inline-flex; align-items:center; justify-content:center;
-  gap:10px; padding:12px 18px;
-  border-radius: 12px;
-  font-weight:800; letter-spacing:.2px;
-  background: linear-gradient(180deg, var(--brand-500), var(--brand-600));
-  color:#fff;
-  box-shadow: 0 6px 18px rgba(37,99,235,.28);
-  transition: transform .08s ease, filter .2s ease, opacity .2s ease;
+  display:inline-flex; align-items:center; justify-content:center; gap:10px;
+  padding:12px 18px; border-radius:12px;
+  font-weight:800; letter-spacing:.2px; color:#fff;
+  background:linear-gradient(180deg, var(--brand-500), var(--brand-600));
+  box-shadow:0 6px 18px rgba(37,99,235,.28);
+  transition:transform .08s ease, filter .2s ease, opacity .2s ease;
 }
-.theme-light .btn:hover{ transform: translateY(-1px); filter:saturate(108%); }
-.theme-light .btn:active{ transform: translateY(0); }
+.theme-light .btn:hover{ transform:translateY(-1px); filter:saturate(108%); }
+.theme-light .btn:active{ transform:translateY(0); }
 .theme-light .btn:disabled{ opacity:.6; cursor:not-allowed; }
-
 .theme-light .btn.ghost{
-  background:#fff;
-  color: var(--text-900);
-  border:1px solid #e6eaf0;
-  border-radius: 14px;
-  padding: 8px 14px;
-  box-shadow: 0 2px 6px rgba(16,24,40,.04);
+  background:#fff; color:var(--text-900);
+  border:1px solid #e6eaf0; border-radius:14px; padding:8px 14px;
+  box-shadow:0 2px 6px rgba(16,24,40,.04);
 }
 .theme-light .btn.ghost:hover{ background:#f8fafc; }
-
-/* Botón peligro (eliminar/limpiar) */
 .theme-light .btn.danger{
-  background: linear-gradient(180deg, #ef4444, #dc2626);
-  box-shadow: 0 6px 18px rgba(220,38,38,.28);
+  background:linear-gradient(180deg, #ef4444, #dc2626);
+  box-shadow:0 6px 18px rgba(220,38,38,.28);
 }
 .theme-light .btn.danger:hover{ filter:saturate(110%); transform:translateY(-1px); }
+.theme-light .btn.sm{ padding:8px 12px; border-radius:10px; font-weight:700; }
 
 /* Spinner dentro del botón */
 .theme-light .spinner{
-  width:16px; height:16px;
-  border:2px solid rgba(255,255,255,.45);
-  border-top-color:#fff;
-  border-radius:50%;
-  display:none;
-  animation: spin .7s linear infinite;
+  width:16px; height:16px; border:2px solid rgba(255,255,255,.45);
+  border-top-color:#fff; border-radius:50%; display:none; animation:spin .7s linear infinite;
 }
 .theme-light .spinner.on{ display:inline-block; }
-@keyframes spin{ to{ transform: rotate(360deg); } }
+@keyframes spin{ to{ transform:rotate(360deg); } }
 
 /* ====== ACCORDEON / AYUDA ====== */
 .theme-light details{
-  margin-top: 16px;
-  background:#f7f9fc;
-  border:1px solid #e6eaf0;
-  border-radius: 12px;
-  padding: 10px 12px;
+  margin-top:16px; background:#f7f9fc; border:1px solid #e6eaf0;
+  border-radius:12px; padding:10px 12px;
 }
 .theme-light summary{ cursor:pointer; user-select:none; }
 .theme-light code{ background:#eef2f7; color:#0b1220; padding:2px 6px; border-radius:8px; }
+.theme-light #login-msg{ margin-top:16px; color:var(--text-600); font-size:.98rem; }
 
-/* ====== MENSAJES ====== */
-.theme-light #login-msg{ margin-top:16px; color: var(--text-600); font-size:.98rem; }
-
-/* ====== FORM / INPUTS ====== */
+/* ====== FORM / INPUTS (base) ====== */
 .theme-light .form{ display:grid; gap:12px; }
 .theme-light .field{ display:flex; flex-direction:column; gap:6px; }
 .theme-light .field label{ font-weight:600; color:#394356; }
 .theme-light .help{ color:#5b6577; font-size:.9rem; }
-
 .theme-light .input{
-  width:100%;
-  padding: 10px 12px;
-  border:1px solid #e1e7ef;
-  border-radius: 10px;
-  background:#fff;
-  color:#0b1220;
-  transition: border-color .15s ease, box-shadow .15s ease;
+  width:100%; height:40px; font-size:15px;
+  padding:10px 12px; border:1px solid #e1e7ef; border-radius:12px;
+  background:#fff; color:#0b1220; transition:border-color .15s, box-shadow .15s;
 }
 .theme-light .input::placeholder{ color:#9aa7b8; }
-.theme-light .input:focus{
-  outline:0;
-  border-color:#bfd3ff;
-  box-shadow: 0 0 0 4px rgba(59,130,246,.15);
-}
-.theme-light .input[readonly],
-.theme-light .input:disabled{
-  background:#f4f6fa; color:#6b7486;
-}
+.theme-light .input:focus{ outline:0; border-color:#a7c4ff; box-shadow:0 0 0 4px rgba(59,130,246,.14); }
+.theme-light .input[readonly], .theme-light .input:disabled{ background:#f4f6fa; color:#6b7486; }
 
 /* ====== TABLAS ====== */
 .theme-light .table-wrap{
-  overflow:auto;
-  border:1px solid #e7edf3;
-  border-radius: 12px;
-  background:#fff;
-  box-shadow: 0 4px 14px rgba(16,24,40,.05);
-  -webkit-overflow-scrolling: touch;
+  overflow:auto; border:1px solid #e7edf3; border-radius:16px;
+  background:#fff; box-shadow:0 10px 28px rgba(16,24,40,.06);
+  -webkit-overflow-scrolling:touch;
 }
 .theme-light table.table{
-  width:100%;
-  border-collapse: separate;
-  border-spacing:0;
-  min-width: 760px; /* mejora layout en pantallas chicas con scroll */
+  width:100%; min-width:760px; border-collapse:separate; border-spacing:0; font-size:15px;
 }
 .theme-light .table thead th{
   position:sticky; top:0; z-index:1;
-  background:#f3f6fb;
-  color:#394356;
-  text-align:left;
-  padding:12px 14px;
-  border-bottom:1px solid #e1e7ef;
-  font-weight:700;
+  background:#f2f6fb; color:#394356; text-align:left;
+  padding:12px 14px; border-bottom:1px solid #dfe7f1; font-weight:800;
 }
 .theme-light .table tbody td{
-  padding:12px 14px;
-  border-bottom:1px solid #eef3f8;
-  color:#1c2536;
-  vertical-align:middle;
+  padding:12px 14px; border-bottom:1px solid #eef2f7; color:#1c2536; vertical-align:middle;
 }
-.theme-light .table tbody tr:hover{ background:#f9fbfe; }
-.theme-light .table td:last-child,
-.theme-light .table th:last-child{ text-align:right; }
+.theme-light .table tbody tr:nth-child(even){ background:#fafcff; }
+.theme-light .table tbody tr:hover{ background:#f5f9ff; }
+.theme-light .table td:last-child, .theme-light .table th:last-child{ text-align:right; }
 .theme-light .table .table-actions{ display:flex; justify-content:flex-end; gap:8px; }
+.theme-light .table td:first-child, .theme-light .table th:first-child{ color:#4a5568; width:80px; }
+.theme-light .table td:nth-child(2){ max-width:380px; word-break:break-word; line-height:1.25; }
 
 /* ====== UTILIDADES ====== */
 .theme-light .gap-8{ gap:8px; }
@@ -185,14 +136,99 @@ body{
 
 /* ====== ENFOQUE ACCESIBLE ====== */
 .theme-light :focus-visible{
-  outline: 3px solid rgba(37,99,235,.45);
-  outline-offset: 2px;
-  border-radius: 12px;
+  outline:3px solid rgba(37,99,235,.45);
+  outline-offset:2px; border-radius:12px;
 }
 
-/* ====== RESPONSIVE ====== */
-@media (max-width: 720px){
+/* ====== RESPONSIVE base ====== */
+@media (max-width:720px){
   .theme-light .brand{ padding:10px 14px; }
   .theme-light .container{ padding:18px 12px 56px; }
   .theme-light .card{ padding:22px 16px; }
+}
+
+/* =========================================================
+   PRO PACK: Refinamientos (cards, botones, tabla, tipografía)
+   ========================================================= */
+.theme-light .card{
+  padding:32px clamp(20px,4vw,44px);
+  border-radius:22px; box-shadow:0 14px 44px rgba(16,24,40,.08);
+}
+.theme-light .card h1, .theme-light .card h2, .theme-light .card h3{
+  margin:0 0 10px; letter-spacing:.2px;
+}
+.theme-light .card > .muted{ margin-top:2px; }
+.theme-light .btn{
+  background:linear-gradient(180deg,#3f83f8,#2563eb);
+  box-shadow:0 6px 20px rgba(37,99,235,.25);
+}
+.theme-light .btn.ghost{ border-radius:999px; padding:9px 16px; border-color:#e4e9f1; }
+.theme-light .btn.danger{ background:linear-gradient(180deg,#f05252,#dc2626); }
+@media (hover:hover){
+  .theme-light .card:hover{ box-shadow:0 16px 48px rgba(16,24,40,.10); }
+}
+
+/* =========================================================
+   FORMATO “CELDAS DE TABLA” PARA EL FORMULARIO (card-form)
+   ========================================================= */
+/* Layout tabular para el form dentro de .card-form */
+.theme-light .card-form .form{
+  display:table; width:100%; border-collapse:collapse; gap:0;
+}
+/* Cada campo es una fila */
+.theme-light .card-form .form .field{
+  display:table-row;
+}
+/* Etiqueta (izquierda) y control (derecha) como celdas */
+.theme-light .card-form .form .field label,
+.theme-light .card-form .form .field input{
+  display:table-cell; vertical-align:middle; font-size:15px;
+  padding:10px 14px; border:1px solid #dfe6ef;
+}
+/* Etiquetas con fondo de cabecera */
+.theme-light .card-form .form .field label{
+  font-weight:700; color:#2b3446; background:#f4f7fb;
+  width:220px; border-right:none; border-radius:6px 0 0 6px;
+}
+/* Inputs con borde continuo */
+.theme-light .card-form .form .field input{
+  background:#fff; border-left:none; border-radius:0 6px 6px 0;
+}
+/* Focos */
+.theme-light .card-form .form .field input:focus{
+  outline:none; border-color:#93b4ff; box-shadow:inset 0 0 0 2px rgba(59,130,246,.25);
+}
+/* Texto de ayuda debajo de la fila (estilo tabla: ocupa 2 columnas) */
+.theme-light .card-form .form .field .help{
+  display:block; grid-column:1 / -1; padding:6px 14px 10px; color:#6a7386;
+}
+/* Fila de acciones como fila completa */
+.theme-light .card-form .actions{
+  display:table-row;
+}
+.theme-light .card-form .actions .btn{
+  margin:8px 6px; padding:10px 18px; border-radius:10px; font-weight:700;
+}
+
+/* ===== Responsive del formulario tabular =====
+   En pantallas pequeñas, cambiamos a bloques para que no desborde */
+@media (max-width: 720px){
+  .theme-light .card-form .form{ display:block; }
+  .theme-light .card-form .form .field{ display:block; margin-bottom:10px; }
+  .theme-light .card-form .form .field label,
+  .theme-light .card-form .form .field input{
+    display:block; width:100%; border:1px solid #e1e7ef; border-radius:12px;
+  }
+  .theme-light .card-form .form .field label{
+    background:transparent; border:0; padding:0 0 6px; font-weight:700; color:#2b3446;
+  }
+  .theme-light .card-form .form .field input{ padding:10px 12px; }
+  .theme-light .card-form .actions{ display:flex; flex-wrap:wrap; gap:8px; }
+}
+
+/* ===== Badges (opcional para contadores/estados) ===== */
+.theme-light .badge{
+  display:inline-flex; align-items:center; height:28px; padding:0 10px;
+  border-radius:999px; font-weight:700; font-size:.85rem;
+  background:#eef3ff; color:#2457d6; border:1px solid #dbe6ff;
 }
