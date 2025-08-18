@@ -105,14 +105,20 @@ body{
 .theme-light .input:focus{ outline:0; border-color:#a7c4ff; box-shadow:0 0 0 4px rgba(59,130,246,.14); }
 .theme-light .input[readonly], .theme-light .input:disabled{ background:#f4f6fa; color:#6b7486; }
 
-/* ====== TABLAS ====== */
+/* ====== TABLAS (sin scroll horizontal) ====== */
 .theme-light .table-wrap{
-  overflow:auto; border:1px solid #e7edf3; border-radius:16px;
+  overflow-x: visible;    /* ver tabla completa */
+  overflow-y: auto;
+  border:1px solid #e7edf3; border-radius:16px;
   background:#fff; box-shadow:0 10px 28px rgba(16,24,40,.06);
   -webkit-overflow-scrolling:touch;
 }
 .theme-light table.table{
-  width:100%; min-width:760px; border-collapse:separate; border-spacing:0; font-size:15px;
+  width:100%;
+  min-width:0;            /* sin ancho mínimo forzado */
+  border-collapse:separate; border-spacing:0; font-size:15px;
+  table-layout: fixed;    /* ajusta columnas */
+  word-wrap: break-word; overflow-wrap:anywhere; white-space:normal;
 }
 .theme-light .table thead th{
   position:sticky; top:0; z-index:1;
@@ -126,8 +132,20 @@ body{
 .theme-light .table tbody tr:hover{ background:#f5f9ff; }
 .theme-light .table td:last-child, .theme-light .table th:last-child{ text-align:right; }
 .theme-light .table .table-actions{ display:flex; justify-content:flex-end; gap:8px; }
-.theme-light .table td:first-child, .theme-light .table th:first-child{ color:#4a5568; width:80px; }
-.theme-light .table td:nth-child(2){ max-width:380px; word-break:break-word; line-height:1.25; }
+.theme-light table.table th:nth-child(1),
+.theme-light table.table td:nth-child(1){ width:70px; }        /* ID */
+.theme-light table.table th:nth-child(3),
+.theme-light table.table td:nth-child(3){ width:170px; }       /* Teléfono */
+.theme-light table.table th:nth-child(4),
+.theme-light table.table td:nth-child(4){ width:170px; }       /* Estado */
+.theme-light table.table th:nth-child(6),
+.theme-light table.table td:nth-child(6){ width:120px; }       /* Acciones */
+.theme-light table.table th:nth-child(2),
+.theme-light table.table td:nth-child(2),
+.theme-light table.table th:nth-child(5),
+.theme-light table.table td:nth-child(5){                       /* Nombre/Contacto flexibles */
+  overflow-wrap:anywhere; word-break:break-word; white-space:normal;
+}
 
 /* ====== UTILIDADES ====== */
 .theme-light .gap-8{ gap:8px; }
@@ -171,47 +189,34 @@ body{
 /* =========================================================
    FORMATO “CELDAS DE TABLA” PARA EL FORMULARIO (card-form)
    ========================================================= */
-/* Layout tabular para el form dentro de .card-form */
 .theme-light .card-form .form{
   display:table; width:100%; border-collapse:collapse; gap:0;
 }
-/* Cada campo es una fila */
-.theme-light .card-form .form .field{
-  display:table-row;
-}
-/* Etiqueta (izquierda) y control (derecha) como celdas */
+.theme-light .card-form .form .field{ display:table-row; }
 .theme-light .card-form .form .field label,
 .theme-light .card-form .form .field input{
   display:table-cell; vertical-align:middle; font-size:15px;
   padding:10px 14px; border:1px solid #dfe6ef;
 }
-/* Etiquetas con fondo de cabecera */
 .theme-light .card-form .form .field label{
   font-weight:700; color:#2b3446; background:#f4f7fb;
   width:220px; border-right:none; border-radius:6px 0 0 6px;
 }
-/* Inputs con borde continuo */
 .theme-light .card-form .form .field input{
   background:#fff; border-left:none; border-radius:0 6px 6px 0;
 }
-/* Focos */
 .theme-light .card-form .form .field input:focus{
   outline:none; border-color:#93b4ff; box-shadow:inset 0 0 0 2px rgba(59,130,246,.25);
 }
-/* Texto de ayuda debajo de la fila (estilo tabla: ocupa 2 columnas) */
 .theme-light .card-form .form .field .help{
   display:block; grid-column:1 / -1; padding:6px 14px 10px; color:#6a7386;
 }
-/* Fila de acciones como fila completa */
-.theme-light .card-form .actions{
-  display:table-row;
-}
+.theme-light .card-form .actions{ display:table-row; }
 .theme-light .card-form .actions .btn{
   margin:8px 6px; padding:10px 18px; border-radius:10px; font-weight:700;
 }
 
-/* ===== Responsive del formulario tabular =====
-   En pantallas pequeñas, cambiamos a bloques para que no desborde */
+/* ===== Responsive del formulario tabular ===== */
 @media (max-width: 720px){
   .theme-light .card-form .form{ display:block; }
   .theme-light .card-form .form .field{ display:block; margin-bottom:10px; }
@@ -226,7 +231,7 @@ body{
   .theme-light .card-form .actions{ display:flex; flex-wrap:wrap; gap:8px; }
 }
 
-/* ===== Badges (opcional para contadores/estados) ===== */
+/* ===== Badges (opcional) ===== */
 .theme-light .badge{
   display:inline-flex; align-items:center; height:28px; padding:0 10px;
   border-radius:999px; font-weight:700; font-size:.85rem;
