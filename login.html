@@ -20,7 +20,7 @@
 
 <main class="container">
   <!-- CARD LOGIN -->
-  <section class="card">
+  <section class="card" id="card-login">
     <h1>Iniciar sesión con Microsoft</h1>
     <p class="muted">Se guardará en una carpeta compartida de OneDrive o en una biblioteca de SharePoint.</p>
 
@@ -35,12 +35,12 @@
         <li>Registra una app en <b>Azure Portal → App registrations</b> (tipo SPA).</li>
         <li>En <b>Authentication</b>, agrega Redirect URI: <code>https://TU_DOMINIO/index.html</code> (y en local <code>http://localhost:5500/index.html</code> por ejemplo).</li>
         <li>Habilita permisos delegados: <b>User.Read</b>, <b>Files.ReadWrite.All</b> y <b>Sites.ReadWrite.All</b> (consent).</li>
-        <li>Edita <code>js/msal-config.js</code>: pega tu <code>clientId</code>, <code>tenantId</code>, y define si usar <i>OneDrive personal</i> o un <i>SharePoint site</i> compartido.</li>
+        <li>Edita <code>js/msal-config.js</code>: pega tu <code>clientId</code>, y define si usar <i>OneDrive personal</i> o un <i>SharePoint site</i> compartido.</li>
       </ol>
     </details>
   </section>
 
-  <!-- CARD USUARIOS / PRIVILEGIOS (solo visible para ADMIN) -->
+  <!-- CARD USUARIOS / PRIVILEGIOS (solo visible para ADMIN y si hay sesión) -->
   <section class="card" id="card-roles" style="display:none">
     <h2>Usuarios y privilegios</h2>
     <p class="muted" id="roles-msg"></p>
@@ -90,7 +90,51 @@
 <script src="./js/graph.js"></script>
 <script src="./js/data.js"></script>
 
+<!-- Roles (debe cargarse ANTES de usuarios.js) -->
+<script src="./js/roles.js?v=1"></script>
+
 <!-- Gestión de usuarios/roles -->
 <script src="./js/usuarios.js?v=1"></script>
+
+<script>
+  // Inicializa la página según estado de sesión/rol
+  document.addEventListener("DOMContentLoaded", async () => {
+    const btn = document.getElementById("btn-login");
+    const msg = document.getElementById("login-msg");
+    const rolesCard = document.getElementById("card-roles");
+
+    const acct = (window.MSALApp && MSALApp.getAccount) ? MSALApp.getAccount() : null;
+
+    if (acct) {
+      // Ya hay sesión
+      btn.textContent = "Ir al panel";
+      msg.textContent = `Sesión iniciada como ${acct.name || acct.username || ""}`;
+      btn.onclick = () => location.href = "dashboard.html";
+
+      // Mostrar módulo de usuarios solo si es ADMIN
+      try {
+        await Roles.init();
+        if (Roles.meets("ADMIN")) {
+          rolesCard.style.display = "block";
+          // usuarios.js ya está cargado; su lógica usará ArtepisaData + Graph con la sesión actual
+        }
+      } catch (e) {
+        console.warn("Roles no disponibles aún:", e);
+      }
+    } else {
+      // Sin sesión: botón hace login interactivo
+      btn.onclick = async () => {
+        try {
+          await MSALApp.login();
+          location.href = "dashboard.html";
+        } catch (e) {
+          console.error(e);
+          msg.textContent = "No se pudo iniciar sesión: " + (e && e.message ? e.message : e);
+        }
+      };
+    }
+  });
+</script>
 </body>
 </html>
+
