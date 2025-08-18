@@ -237,3 +237,91 @@ body{
   border-radius:999px; font-weight:700; font-size:.85rem;
   background:#eef3ff; color:#2457d6; border:1px solid #dbe6ff;
 }
+/* ====== MODO ANCHO PARA TABLAS (no truncar, 1 fila por registro) ====== */
+.theme-light .container.tablewide{
+  max-width: 1440px;          /* ancho más grande del layout */
+}
+
+/* La card de la lista ocupa TODO el ancho de su columna */
+.theme-light .container.tablewide #card-list.card{
+  max-width: 100%;
+}
+
+/* La tabla usa el ancho completo sin forzar scroll horizontal */
+.theme-light .container.tablewide .table-wrap{
+  overflow-x: hidden !important;
+}
+
+/* La tabla reparte ancho y crece hasta llenar el contenedor */
+.theme-light .container.tablewide table.table{
+  width: 100% !important;
+  min-width: 0 !important;
+  table-layout: fixed !important;
+}
+
+/* === Columnas: evitar saltos de línea en las que te interesa una sola fila === */
+/* Nombre (más espacio), Teléfono, Estado y Contacto en una sola línea */
+.theme-light .container.tablewide table.table th:nth-child(2),
+.theme-light .container.tablewide table.table td:nth-child(2){ /* Nombre */
+  white-space: nowrap;
+}
+.theme-light .container.tablewide table.table th:nth-child(3),
+.theme-light .container.tablewide table.table td:nth-child(3){ /* Teléfono */
+  white-space: nowrap;
+}
+.theme-light .container.tablewide table.table th:nth-child(4),
+.theme-light .container.tablewide table.table td:nth-child(4){ /* Estado */
+  white-space: nowrap;
+}
+.theme-light .container.tablewide table.table th:nth-child(5),
+.theme-light .container.tablewide table.table td:nth-child(5){ /* Contacto */
+  white-space: nowrap;
+}
+
+/* Anchos propuestos (ajústalos si gustas) */
+.theme-light .container.tablewide table.table th:nth-child(1),
+.theme-light .container.tablewide table.table td:nth-child(1){ width: 72px; }      /* ID */
+.theme-light .container.tablewide table.table th:nth-child(2),
+.theme-light .container.tablewide table.table td:nth-child(2){ width: 36%; }       /* Nombre */
+.theme-light .container.tablewide table.table th:nth-child(3),
+.theme-light .container.tablewide table.table td:nth-child(3){ width: 18%; }       /* Teléfono */
+.theme-light .container.tablewide table.table th:nth-child(4),
+.theme-light .container.tablewide table.table td:nth-child(4){ width: 18%; }       /* Estado */
+.theme-light .container.tablewide table.table th:nth-child(5),
+.theme-light .container.tablewide table.table td:nth-child(5){ width: 18%; }       /* Contacto */
+.theme-light .container.tablewide table.table th:nth-child(6),
+.theme-light .container.tablewide table.table td:nth-child(6){ width: 120px; }     /* Acciones */
+
+/* Evitar cortes con "..." ahora que les dimos ancho */
+.theme-light .container.tablewide table.table th,
+.theme-light .container.tablewide table.table td{
+  overflow: visible;
+  text-overflow: clip;
+}
+
+/* Botón en columna de acciones compacto */
+.theme-light .container.tablewide .table .table-actions .btn{
+  padding: 8px 12px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+/* En pantallas MUY anchas, ampliar aún más el contenedor para lujo total */
+@media (min-width: 1600px){
+  .theme-light .container.tablewide{ max-width: 1600px; }
+}
+
+/* En pantallas chicas, volvemos a permitir saltos (usabilidad móvil) */
+@media (max-width: 900px){
+  .theme-light .container.tablewide table.table th:nth-child(2),
+  .theme-light .container.tablewide table.table td:nth-child(2),
+  .theme-light .container.tablewide table.table th:nth-child(3),
+  .theme-light .container.tablewide table.table td:nth-child(3),
+  .theme-light .container.tablewide table.table th:nth-child(4),
+  .theme-light .container.tablewide table.table td:nth-child(4),
+  .theme-light .container.tablewide table.table th:nth-child(5),
+  .theme-light .container.tablewide table.table td:nth-child(5){
+    white-space: normal;           /* que se acomode en varias líneas en móvil */
+  }
+}
+
