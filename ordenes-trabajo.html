@@ -61,10 +61,17 @@
 <main class="container tablewide" id="layout">
   <!-- LISTADO -->
   <section class="card" id="card-list">
-    <h1 style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <span style="flex:1">Órdenes de Trabajo</span>
-      <button class="btn" id="btn-show-form" type="button">Crear / Agregar</button>
-    </h1>
+  <h1 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+  <span style="flex:1">Órdenes de Trabajo</span>
+  <button class="btn ghost"  id="o-export" type="button">Exportar</button>
+  <button class="btn ghost"  id="o-import" type="button">Importar</button>
+  <button class="btn danger" id="o-clear"  type="button">Limpiar</button>
+  <button class="btn"        id="btn-show-form" type="button">Crear / Agregar</button>
+</h1>
+
+<!-- input de archivo oculto (para Importar) -->
+<input id="o-file" type="file" accept=".json,.csv" hidden>
+
 
     <div class="actions" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
       <input id="o-buscar" class="input" placeholder="Buscar por # OT o cliente" style="flex:1;min-width:220px">
