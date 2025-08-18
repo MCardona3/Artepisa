@@ -1,4 +1,4 @@
-// js/clientes.js (versión mejorada)
+// js/clientes.js (versión mejorada con modo form-only)
 (function () {
   const $ = (s) => document.querySelector(s);
   let cache = [];
@@ -10,12 +10,12 @@
     const layout = $("#layout");
     if (!layout) return;
     if (show) {
-      if (!layout.classList.contains("split")) {
-        layout.classList.add("split"); // activa layout de 2 columnas y muestra form
-        setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
-      }
+      // Modo SOLO formulario: oculta #card-list y centra #card-form
+      layout.classList.add("form-only");
+      // Lleva el scroll arriba para que se vea el form completo
+      setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
     } else {
-      layout.classList.remove("split"); // oculta form
+      layout.classList.remove("form-only"); // vuelve a solo lista
       // focus al buscador si existe
       $("#c-buscar")?.focus();
     }
@@ -197,7 +197,7 @@
     editingKey = c.Nombre ? norm(c.Nombre) : null;
     $("#c-nombre").disabled = !!editingKey;
 
-    showForm(true);
+    showForm(true);           // ← activa modo form-only
     $("#c-nombre")?.focus();
   }
 
@@ -515,7 +515,7 @@
       await save();
       render($("#c-buscar").value);
 
-      // Cierra el recuadro de edición y enfoca buscador
+      // Cierra el formulario (vuelve a lista) y enfoca buscador
       showForm(false);
       $("#c-buscar")?.focus();
 
