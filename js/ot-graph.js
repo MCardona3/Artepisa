@@ -224,6 +224,132 @@ async function clearAll(){
   if (!confirm("¿Vaciar todas las Órdenes de Trabajo?")) return;
   LIST = []; await save();
 }
+// ====== Utilidades de impresión ======
+function fmtDateHuman(s){
+  if (!s) return "";
+  const d = new Date(s);
+  if (isNaN(d)) return s;
+  return d.toLocaleDateString(undefined, { day:"2-digit", month:"2-digit", year:"numeric" });
+}
+
+function buildPrintHTML(rec){
+  const logoURL = new URL("./img/arte.png?v=1", location.href).href;
+  const items = Array.isArray(rec.items) ? rec.items : [];
+
+  const rows = items.length
+    ? items.map((it,i)=>`
+        <tr>
+          <td>${i+1}</td>
+          <td style="text-align:right">${it.cantidad ?? ""}</td>
+          <td>${(it.descripcion ?? "").toString()}</td>
+          <td>${it.plano ?? ""}</td>
+          <td>${it.adjunto ? "Sí" : ""}</td>
+        </tr>
+      `).join("")
+    : `<tr><td colspan="5" style="text-align:center;color:#6b7280">Sin partidas</td></tr>`;
+
+  return `<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>OT ${rec.num || ""} - Artepisa</title>
+<style>
+  @page { size: A4; margin: 16mm; }
+  * { box-sizing: border-box; }
+  body { font-family: ui-sans-serif, system-ui, Segoe UI, Roboto, Arial; color:#111827; }
+  .header { display:flex; align-items:center; gap:16px; margin-bottom:10px; }
+  .header img { height: 56px; }
+  .brand { font-weight:800; font-size:20px; line-height:1.1; }
+  .muted { color:#6b7280; }
+  h1 { font-size:18px; margin: 6px 0 14px; }
+  .grid { display:grid; grid-template-columns: 1fr 1fr; gap:8px 20px; margin-bottom:14px; }
+  .field { display:flex; gap:8px; }
+  .label { width:145px; font-weight:700; }
+  .value { flex:1; border-bottom:1px solid #e5e7eb; padding-bottom:2px; }
+  table { width:100%; border-collapse:collapse; margin-top:8px; }
+  th, td { border:1px solid #e5e7eb; padding:6px 8px; font-size:12.5px; vertical-align:top; }
+  th { background:#f3f4f6; text-align:left; }
+  .footer { margin-top:16px; display:flex; gap:16px; }
+  .sign { flex:1; text-align:center; margin-top:32px; }
+  .sign .line { border-top:1px solid #9ca3af; margin-top:48px; }
+  .badge { display:inline-block; padding:3px 8px; border-radius:999px; font-size:12px; border:1px solid #bbf7d0; background:#ecfdf5; color:#166534; font-weight:700; }
+  .chip  { display:inline-block; padding:3px 8px; border-radius:999px; font-size:12px; border:1px solid #dbeafe; background:#eff6ff; color:#1e40af; font-weight:700; }
+  .sep { height:10px; }
+  @media print {
+    .no-print { display:none !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="header">
+    <img src="${logoURL}" alt="ARTEPISA SLP">
+    <div>
+      <div class="brand">ARTEPISA SLP</div>
+      <div class="muted">Orden de Trabajo ${rec.num ? `· #${rec.num}` : ""}</div>
+    </div>
+  </div>
+
+  <h1>Ficha de Orden de Trabajo</h1>
+
+  <div class="grid">
+    <div class="field"><div class="label">Cliente</div><div class="value">${rec.cliente || "&nbsp;"}</div></div>
+    <div class="field"><div class="label">Departamento</div><div class="value">${rec.depto || "&nbsp;"}</div></div>
+
+    <div class="field"><div class="label">Encargado</div><div class="value">${rec.enc || "&nbsp;"}</div></div>
+    <div class="field"><div class="label">Orden de Compra</div><div class="value">${rec.oc || "&nbsp;"}</div></div>
+
+    <div class="field"><div class="label">Fecha Emisión</div><div class="value">${fmtDateHuman(rec.emision) || "&nbsp;"}</div></div>
+    <div class="field"><div class="label">Fecha Entrega</div><div class="value">${fmtDateHuman(rec.entrega) || "&nbsp;"}</div></div>
+
+    <div class="field"><div class="label">Estatus</div><div class="value">${rec.est ? `<span class="chip">${rec.est}</span>` : "&nbsp;"}</div></div>
+    <div class="field"><div class="label">Prioridad</div><div class="value">${rec.prio ? `<span class="badge">${rec.prio}</span>` : "&nbsp;"}</div></div>
+
+    <div class="field" style="grid-column:1 / -1"><div class="label">Descripción</div><div class="value">${rec.desc || "&nbsp;"}</div></div>
+  </div>
+
+  <div class="sep"></div>
+
+  <table>
+    <thead>
+      <tr><th>#</th><th style="text-align:right">Cant.</th><th>Descripción</th><th>Plano</th><th>Adjunto</th></tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>
+
+  <div class="footer">
+    <div class="sign">
+      <div class="line"></div>
+      <div class="muted">Elaboró</div>
+    </div>
+    <div class="sign">
+      <div class="line"></div>
+      <div class="muted">Autorizó</div>
+    </div>
+    <div class="sign">
+      <div class="line"></div>
+      <div class="muted">Recibió</div>
+    </div>
+  </div>
+
+  <script>
+    // Abre el diálogo de impresión automáticamente
+    window.addEventListener('load', () => setTimeout(()=>window.print(), 120));
+  </script>
+</body>
+</html>`;
+}
+
+function printOT(rec){
+  // Validación mínima
+  if (!rec || !rec.cliente) {
+    alert("Completa al menos el cliente antes de imprimir.");
+    return;
+  }
+  const html = buildPrintHTML(rec);
+  const w = window.open("", "_blank", "noopener,noreferrer");
+  if (!w) { alert("Bloqueado por el navegador. Habilita ventanas emergentes."); return; }
+  w.document.open(); w.document.write(html); w.document.close();
+}
 
 // ==== Eventos UI ====
 function mountEvents(){
