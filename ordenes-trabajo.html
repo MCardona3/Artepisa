@@ -11,7 +11,6 @@
   <link rel="icon" type="image/png" sizes="16x16" href="./img/arte.png?v=1">
 
   <style>
-    /* Layout: lista sola por defecto; formulario aparece al activar 'split' */
     main.container { display:block; }
     main.container.split {
       display:grid;
@@ -26,7 +25,6 @@
       main.container.split{ grid-template-columns:1fr; }
     }
 
-    /* Partidas */
     .items-head, .items-row {
       display:grid;
       grid-template-columns: 110px 1fr 180px 120px 110px;
@@ -44,7 +42,6 @@
   </style>
 </head>
 <body>
-  <!-- GUARDIA DE SESIÓN: si no hay sesión, regresa a index -->
   <script>
     const __acct = JSON.parse(sessionStorage.getItem('artepisa_account')||'null');
     if(!__acct){ location.href = 'index.html'; }
@@ -61,79 +58,69 @@
   <a class="btn ghost" href="dashboard.html">Volver</a>
 </header>
 
-<!-- Por defecto SIN 'split' => solo listado -->
 <main class="container" id="layout">
   <!-- LISTADO -->
   <section class="card" id="card-list">
     <h1 style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <span style="flex:1">Órdenes de Trabajo</span>
-      <button class="btn" id="btn-show-form" type="button" title="Crear o agregar OT">Crear / Agregar</button>
+      <button class="btn" id="btn-show-form" type="button">Crear / Agregar</button>
     </h1>
 
     <div class="actions" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
-      <input id="o-buscar" placeholder="Buscar por # o cliente" style="flex:1;min-width:220px">
+      <input id="o-buscar" placeholder="Buscar por # OT o cliente" style="flex:1;min-width:220px">
     </div>
 
     <table>
       <thead>
       <tr>
-        <th>#OT</th><th>Cliente</th><th>Depto</th><th>Emisión</th>
-        <th>Entrega</th><th>Estatus</th><th>Prioridad</th><th>OC</th><th></th>
+        <th># OT</th>
+        <th>Cliente</th>
+        <th>Departamento</th>
+        <th>Encargado</th>
+        <th>Fecha Emisión</th>
+        <th>Fecha Entrega</th>
+        <th>Orden Compra</th>
+        <th>Estatus</th>
+        <th>Prioridad</th>
+        <th>Descripción</th>
+        <th></th>
       </tr>
       </thead>
       <tbody id="o-tabla"></tbody>
     </table>
+    <p>Total OT: <strong id="ot-count">0</strong></p>
   </section>
 
-  <!-- FORMULARIO (oculto hasta 'split') -->
+  <!-- FORMULARIO -->
   <section class="card card-form" id="card-form">
-    <h2>Formulario</h2>
+    <h2>Formulario de OT</h2>
     <div class="form" id="ot-form">
-      <div class="field"><span># OT</span><input id="o-num" type="number" inputmode="numeric" placeholder="(autogenera)"></div>
-
-      <!-- Cliente con autocompletar desde BD -->
-      <div class="field">
-        <span>Cliente</span>
-        <input id="o-cliente" placeholder="Cliente" list="dl-clientes" autocomplete="off" required>
-        <datalist id="dl-clientes"></datalist>
-      </div>
-
-      <div class="field"><span>Departamento</span><input id="o-depto" placeholder="MAQUINADOS"></div>
+      <div class="field"><span># OT</span><input id="o-num" type="number" placeholder="(autogenerado)"></div>
+      <div class="field"><span>Cliente</span><input id="o-cliente" placeholder="Cliente" list="dl-clientes" required><datalist id="dl-clientes"></datalist></div>
+      <div class="field"><span>Departamento</span><input id="o-depto" placeholder="Ej. Maquinados"></div>
       <div class="field"><span>Encargado</span><input id="o-enc" placeholder="Nombre del responsable"></div>
       <div class="field"><span>Fecha Emisión</span><input id="o-emision" type="date"></div>
       <div class="field"><span>Fecha Entrega</span><input id="o-entrega" type="date"></div>
-      <div class="field"><span>Orden de Compra</span><input id="o-oc" placeholder="OPCIONAL"></div>
-      <div class="field">
-        <span>Estatus</span>
+      <div class="field"><span>Orden de Compra</span><input id="o-oc" placeholder="Número de OC"></div>
+      <div class="field"><span>Estatus</span>
         <select id="o-est">
-          <option value="ABIERTA">ABIERTA</option>
-          <option value="EN PROCESO">EN PROCESO</option>
-          <option value="EN ESPERA">EN ESPERA</option>
-          <option value="CERRADA">CERRADA</option>
+          <option>ABIERTA</option><option>EN PROCESO</option><option>EN ESPERA</option><option>CERRADA</option>
         </select>
       </div>
-      <div class="field">
-        <span>Prioridad</span>
+      <div class="field"><span>Prioridad</span>
         <select id="o-prio">
-          <option value="NORMAL">NORMAL</option>
-          <option value="ALTA">ALTA</option>
-          <option value="URGENTE">URGENTE</option>
+          <option>NORMAL</option><option>ALTA</option><option>URGENTE</option>
         </select>
       </div>
       <div class="field"><span>Descripción</span><input id="o-desc" placeholder="Trabajo a realizar"></div>
 
-      <!-- PARTIDAS -->
       <div class="items-box">
         <div class="items-head">
-          <div>Cantidad</div>
-          <div>Descripción</div>
-          <div>Plano</div>
-          <div>Adjunto</div>
-          <div></div>
+          <div>Cantidad</div><div>Descripción</div><div>Plano</div><div>Adjunto</div><div></div>
         </div>
         <div id="items-container"></div>
         <button class="btn icon" id="btn-add-item" type="button">➕ Agregar partida</button>
-        <div class="muted-sm" style="margin-top:6px">El adjunto se guarda en la OT como DataURL (base64). Archivos grandes pueden hacer pesado el JSON.</div>
+        <div class="muted-sm">El adjunto se guarda en base64. Archivos grandes hacen pesado el JSON.</div>
       </div>
 
       <div class="actions" style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
@@ -141,37 +128,17 @@
         <button class="btn ghost" id="o-nuevo" type="button">Nuevo</button>
         <button class="btn" id="o-imprimir" type="button">Imprimir/PDF</button>
         <span style="flex:1"></span>
-        <button class="btn ghost" id="o-cerrar" type="button" title="Ocultar formulario">Cerrar</button>
+        <button class="btn ghost" id="o-cerrar" type="button">Cerrar</button>
       </div>
     </div>
   </section>
 </main>
 
-<!-- MSAL + módulos (el orden importa) -->
-<!-- Lógica -->
-<p>Total OT: <strong id="ot-count">0</strong></p>
-<table class="table">
-  <thead><tr><th>Folio</th><th>Fecha</th><th>Estado</th><th></th></tr></thead>
-  <tbody id="ot-tbody"></tbody>
-</table>
-<form id="ot-form" class="form">
-  <input id="ot-folio" placeholder="Folio" required>
-  <input id="ot-fecha" type="date" required>
-  <input id="ot-estado" placeholder="Estado" required>
-  <button class="btn">Guardar</button>
-</form>
-
-
-<!-- MSAL config -->
-
-  <!-- MSAL config -->
-  <script src="./js/msal-config.js"></script>
-  <!-- MSAL library -->
-  <script src="https://alcdn.msauth.net/browser/2.38.2/js/msal-browser.min.js"></script>
-  <!-- Auth -->
-  <script src="./js/auth.js"></script>
-  <!-- Órdenes de Trabajo (usa Graph) -->
-  <script type="module" src="./js/ot-graph.js"></script>
+<!-- Scripts -->
+<script src="./js/msal-config.js"></script>
+<script src="https://alcdn.msauth.net/browser/2.38.2/js/msal-browser.min.js"></script>
+<script src="./js/auth.js"></script>
+<script type="module" src="./js/ot-graph.js"></script>
 
 </body>
 </html>
