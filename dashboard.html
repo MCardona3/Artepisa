@@ -2,17 +2,12 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Artepisa SLP · Dashboard (OneDrive/SharePoint)</title>
+  <title>Artepisa SLP · Panel</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="./css/style.css" />
 </head>
-<body>
-  <!-- GUARDIA DE SESIÓN: si no hay sesión iniciada, vuelve a login -->
-  <script>
-    const __acct = JSON.parse(sessionStorage.getItem('artepisa_account')||'null');
-    if(!__acct){ location.href = 'index.html'; }
-  </script>
 
+<body class="theme-light">
 <header class="brand">
   <div class="logo">
     <img class="brandlogo" src="./img/arte.png?v=1" alt="ARTEPISA SLP">
@@ -21,95 +16,41 @@
       <div class="muted">Panel principal (OneDrive/SharePoint)</div>
     </div>
   </div>
-  <button class="btn ghost" id="logout" type="button">Salir</button>
+  <button id="btn-logout" class="btn ghost">Salir</button>
 </header>
 
 <main class="container">
   <section class="card">
-    <h1>Menú principal</h1>
-    <p class="muted">Usuario: <strong id="who">—</strong></p>
-    <div class="grid" style="margin-top:8px">
-      <div class="stat"><div>Clientes</div><strong id="stat-clientes">—</strong></div>
-      <div class="stat"><div>Órdenes de Trabajo</div><strong id="stat-ots">—</strong></div>
-      <div class="stat"><div>Órdenes de Compra</div><strong id="stat-ocs">—</strong></div>
-    </div>
+    <h2>Menú principal</h2>
+    <p>Usuario: <b id="user-name">Mauricio Cardona</b></p>
+
+    <ul>
+      <li>Clientes: <span id="count-clients">0</span></li>
+      <li>Órdenes de Trabajo: <span id="count-ot">0</span></li>
+      <li>Órdenes de Compra: <span id="count-oc">0</span></li>
+    </ul>
   </section>
 
-  <section class="card">
+  <section class="card" style="margin-top:20px">
     <h2>Módulos</h2>
-    <div class="grid" id="tiles">
-      <div class="tile">
-        <h3>Clientes</h3>
-        <p class="muted">Altas/edición.</p>
-        <div class="actions"><a class="btn" href="clientes.html">Entrar</a></div>
-      </div>
-
-      <div class="tile">
-        <h3>Órdenes de Trabajo</h3>
-        <p class="muted">Crear e imprimir.</p>
-        <div class="actions"><a class="btn" href="ot.html">Entrar</a></div>
-      </div>
-
-      <div class="tile">
-        <h3>Órdenes de Compra</h3>
-        <p class="muted">(Próximamente)</p>
-        <div class="actions"><button class="btn" disabled>Entrar</button></div>
-      </div>
-
-      <!-- Solo visible para ADMIN -->
-      <div class="tile" id="tile-usuarios" style="display:none">
-        <h3>Usuarios / Permisos</h3>
-        <p class="muted">Administrar roles y accesos.</p>
-        <div class="actions"><a class="btn" href="usuarios.html">Administrar</a></div>
-      </div>
-    </div>
+    <h3>Clientes</h3>
+    <p>Altas/edición.</p>
+    <a href="clientes.html" class="btn">Entrar</a>
   </section>
 </main>
 
-<!-- MSAL + app base -->
-<script src="https://alcdn.msauth.net/browser/2.38.1/js/msal-browser.min.js"></script>
-<script src="./js/msal-config.js"></script>
 <script src="./js/auth.js"></script>
-<script src="./js/graph.js"></script>
-<script src="./js/data.js"></script>
-
-<!-- Roles (común a todas las páginas) -->
-<script src="./js/roles.js?v=1"></script>
-
 <script>
-  document.addEventListener("DOMContentLoaded", async () => {
-    // Intenta renovar y exige sesión
-    try { if (window.MSALApp?.requireAuth) await MSALApp.requireAuth(); } catch(_) {}
+  // Si ya guardaste la cuenta en sessionStorage en index
+  const acct = JSON.parse(sessionStorage.getItem("artepisa_account") || "null");
+  if (acct) document.getElementById("user-name").textContent = acct.name || acct.username;
 
-    const acct = MSALApp?.getAccount?.() || JSON.parse(sessionStorage.getItem("artepisa_account")||"null");
-    if (!acct) { location.href = "index.html"; return; }
-
-    // Mostrar quién es
-    const who = acct.name || acct.username || acct.idTokenClaims?.preferred_username || "—";
-    document.getElementById("who").textContent = who;
-
-    // Contadores
-    try {
-      const c = await ArtepisaData.counts();
-      document.getElementById("stat-clientes").textContent = c.clients ?? "0";
-      document.getElementById("stat-ots").textContent     = c.ots ?? "0";
-      document.getElementById("stat-ocs").textContent     = c.ocs ?? "0";
-    } catch (e) {
-      console.error(e);
-      alert("Error leyendo datos: " + e.message + "\nRevisa permisos y msal-config.js");
-    }
-
-    // Roles: mostrar tile de Usuarios solo si eres ADMIN
-    try {
-      await Roles.init();
-      if (Roles.meets("ADMIN")) {
-        document.getElementById("tile-usuarios").style.display = "block";
-      }
-    } catch (_) {}
-
-    // Salir
-    document.getElementById("logout").addEventListener("click", MSALApp.logout);
+  document.getElementById("btn-logout")?.addEventListener("click", () => {
+    if (window.MSALApp && MSALApp.logout) MSALApp.logout();
+    sessionStorage.removeItem("artepisa_account");
+    location.href = "index.html";
   });
 </script>
 </body>
 </html>
+
