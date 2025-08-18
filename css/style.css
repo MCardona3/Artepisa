@@ -115,7 +115,7 @@ body{
 }
 .theme-light .input[readonly], .theme-light .input:disabled{ background:#f4f6fa; color:#6b7486; }
 
-/* ====== TABLAS (sin scroll horizontal) ====== */
+/* ====== TABLAS (base) ====== */
 .theme-light .table-wrap{
   overflow-x: visible;
   overflow-y: auto;
@@ -127,7 +127,7 @@ body{
   width:100%;
   min-width:0;
   border-collapse:separate; border-spacing:0; font-size:15px;
-  table-layout: fixed;
+  table-layout: fixed;                   /* importante para repartir ancho */
   word-wrap: break-word; overflow-wrap:anywhere; white-space:normal;
 }
 .theme-light .table thead th{
@@ -142,21 +142,8 @@ body{
 .theme-light .table tbody tr:hover{ background:#f5f9ff; }
 .theme-light .table td:last-child, .theme-light .table th:last-child{ text-align:right; }
 .theme-light .table .table-actions{ display:flex; justify-content:flex-end; gap:8px; }
-/* anchos base (se sobreescriben en tablewide) */
-.theme-light table.table th:nth-child(1),
-.theme-light table.table td:nth-child(1){ width:70px; }
-.theme-light table.table th:nth-child(3),
-.theme-light table.table td:nth-child(3){ width:170px; }
-.theme-light table.table th:nth-child(4),
-.theme-light table.table td:nth-child(4){ width:170px; }
-.theme-light table.table th:nth-child(6),
-.theme-light table.table td:nth-child(6){ width:120px; }
-.theme-light table.table th:nth-child(2),
-.theme-light table.table td:nth-child(2),
-.theme-light table.table th:nth-child(5),
-.theme-light table.table td:nth-child(5){
-  overflow-wrap:anywhere; word-break:break-word; white-space:normal;
-}
+
+/* (Quitamos anchos fijos base para que no choquen con tablewide) */
 
 /* ====== UTILIDADES ====== */
 .theme-light .gap-8{ gap:8px; }
@@ -262,46 +249,49 @@ body{
   min-width: 0 !important;
   table-layout: fixed !important;
 }
-/* Evitar saltos en desktop */
-.theme-light .container.tablewide table.table th:nth-child(2),
-.theme-light .container.tablewide table.table td:nth-child(2),
-.theme-light .container.tablewide table.table th:nth-child(3),
-.theme-light .container.tablewide table.table td:nth-child(3),
-.theme-light .container.tablewide table.table th:nth-child(4),
-.theme-light .container.tablewide table.table td:nth-child(4),
-.theme-light .container.tablewide table.table th:nth-child(5),
-.theme-light .container.tablewide table.table td:nth-child(5){ white-space:nowrap; }
-/* Anchos sugeridos */
+
+/* Evitar saltos en desktop: columnas 2–8 (todas las de texto) */
+.theme-light .container.tablewide table.table th:nth-child(n+2):nth-child(-n+8),
+.theme-light .container.tablewide table.table td:nth-child(n+2):nth-child(-n+8){
+  white-space: nowrap;
+}
+
+/* Anchos por columna (equilibrados para 8 columnas de texto + ID + Acciones)
+   1:ID | 2:Nombre | 3:Teléfono | 4:Dirección | 5:RFC | 6:Estado | 7:Nombre Contacto | 8:Teléfono Contacto | 9:Acciones */
 .theme-light .container.tablewide table.table th:nth-child(1),
-.theme-light .container.tablewide table.table td:nth-child(1){ width: 72px; }
+.theme-light .container.tablewide table.table td:nth-child(1){ width:72px; }           /* ID */
 .theme-light .container.tablewide table.table th:nth-child(2),
-.theme-light .container.tablewide table.table td:nth-child(2){ width: 36%; }
+.theme-light .container.tablewide table.table td:nth-child(2){ width:22%; }            /* Nombre */
 .theme-light .container.tablewide table.table th:nth-child(3),
-.theme-light .container.tablewide table.table td:nth-child(3){ width: 18%; }
+.theme-light .container.tablewide table.table td:nth-child(3){ width:12%; }            /* Teléfono */
 .theme-light .container.tablewide table.table th:nth-child(4),
-.theme-light .container.tablewide table.table td:nth-child(4){ width: 18%; }
+.theme-light .container.tablewide table.table td:nth-child(4){ width:22%; }            /* Dirección */
 .theme-light .container.tablewide table.table th:nth-child(5),
-.theme-light .container.tablewide table.table td:nth-child(5){ width: 18%; }
+.theme-light .container.tablewide table.table td:nth-child(5){ width:8%; }             /* RFC */
 .theme-light .container.tablewide table.table th:nth-child(6),
-.theme-light .container.tablewide table.table td:nth-child(6){ width: 120px; }
+.theme-light .container.tablewide table.table td:nth-child(6){ width:10%; }            /* Estado */
+.theme-light .container.tablewide table.table th:nth-child(7),
+.theme-light .container.tablewide table.table td:nth-child(7){ width:16%; }            /* Nombre Contacto */
+.theme-light .container.tablewide table.table th:nth-child(8),
+.theme-light .container.tablewide table.table td:nth-child(8){ width:10%; }            /* Teléfono Contacto */
+.theme-light .container.tablewide table.table th:nth-child(9),
+.theme-light .container.tablewide table.table td:nth-child(9){ width:120px; }          /* Acciones */
+
 /* No cortar con “…” ahora que hay espacio */
 .theme-light .container.tablewide table.table th,
 .theme-light .container.tablewide table.table td{
   overflow: visible; text-overflow: clip;
 }
+
 /* Botón acciones compacto */
 .theme-light .container.tablewide .table .table-actions .btn{
   padding: 8px 12px; border-radius: 10px; white-space: nowrap;
 }
+
 /* En móvil permitimos saltos para legibilidad */
 @media (max-width: 900px){
-  .theme-light .container.tablewide table.table th:nth-child(2),
-  .theme-light .container.tablewide table.table td:nth-child(2),
-  .theme-light .container.tablewide table.table th:nth-child(3),
-  .theme-light .container.tablewide table.table td:nth-child(3),
-  .theme-light .container.tablewide table.table th:nth-child(4),
-  .theme-light .container.tablewide table.table td:nth-child(4),
-  .theme-light .container.tablewide table.table th:nth-child(5),
-  .theme-light .container.tablewide table.table td:nth-child(5){ white-space: normal; }
+  .theme-light .container.tablewide table.table th:nth-child(n+2):nth-child(-n+8),
+  .theme-light .container.tablewide table.table td:nth-child(n+2):nth-child(-n+8){
+    white-space: normal;
+  }
 }
-
