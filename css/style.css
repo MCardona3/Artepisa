@@ -1,44 +1,140 @@
+/* ---------- Variables y reset ---------- */
 :root{
-  --brand:#12a87a; --ink:#101418; --muted:#6b7280;
-  --line:#e5e7eb; --bg:#f6f8fb; --card:#ffffff;
+  --bg-1:#0b1220;
+  --bg-2:#0e1628;
+  --card:#0f192e;
+  --text:#e8eefb;
+  --muted:#9bb0d6;
+  --brand:#60a5fa;
+  --brand-600:#3b82f6;
+  --radius: 20px;
+  --shadow: 0 10px 40px rgba(0,0,0,.35);
 }
 *{box-sizing:border-box}
-html,body{background:var(--bg)}
-body{margin:0;font-family:system-ui,Segoe UI,Arial,sans-serif;color:var(--ink)}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family: ui-sans-serif, system-ui, Segoe UI, Roboto, Inter, Arial, sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(1000px 600px at 10% -10%, #1b2a52 0%, transparent 60%),
+    radial-gradient(800px 500px at 110% 30%, #1f335f 0%, transparent 60%),
+    linear-gradient(180deg, var(--bg-1), var(--bg-2));
+}
 
-.brand{display:flex;align-items:center;gap:12px;padding:16px 20px;
-  border-bottom:1px solid var(--line);background:#fff}
-.logo{display:flex;align-items:center;gap:10px}
-/* Logo como imagen (reemplaza al svg) */
-.logo img.brandlogo{width:36px;height:36px;object-fit:contain;display:block}
-
-.brandname{font-weight:800;letter-spacing:.3px;font-size:18px}
+/* ---------- Header/brand ---------- */
+.brand{
+  position:sticky; top:0; z-index:10;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 20px;
+  backdrop-filter:saturate(140%) blur(8px);
+  background:linear-gradient(180deg, rgba(10,16,30,.85), rgba(10,16,30,.55));
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.logo{display:flex; gap:12px; align-items:center}
+.brandlogo{height:40px; width:auto; border-radius:12px; background:#fff}
+.brandname{font-weight:800; letter-spacing:.4px}
 .muted{color:var(--muted)}
 
-.container{max-width:980px;margin:24px auto;padding:0 16px;display:grid;gap:16px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
-h1{margin:0 0 10px} h2{margin:0 0 8px}
+/* ---------- Layout del main ---------- */
+.container{max-width:1100px;margin:0 auto;padding:28px 16px 80px}
 
-.form{display:grid;gap:12px;max-width:560px}
-.field{display:grid;gap:6px}
-input{padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:15px}
-.actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.btn{background:var(--brand);color:#fff;border:none;border-radius:10px;padding:10px 14px;font-weight:600;cursor:pointer}
-.btn.ghost{background:#f3f4f6;color:#111;border:1px solid var(--line)}
-.success{color:#0a7;font-weight:600}
-.error{color:#b33;font-weight:600}
+/* Centrar la tarjeta vertical y horizontalmente */
+.hero{
+  min-height: calc(100vh - 68px); /* alto pantalla menos header */
+  display: grid;
+  place-items: center;
+}
 
-/* tables & dashboard */
-table{width:100%;border-collapse:collapse}
-th,td{border:1px solid var(--line);padding:8px;text-align:left}
-th{background:#eef2f7}
+/* ---------- Tarjeta ---------- */
+.card{
+  width:100%;
+  max-width: 720px;
+  margin: 0;
+  padding: 32px clamp(20px, 4vw, 40px);
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+  border:1px solid rgba(255,255,255,.08);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  position:relative;
+}
+.card::before{
+  content:"";
+  position:absolute; inset:-1px;
+  border-radius: calc(var(--radius) + 1px);
+  background:
+    radial-gradient(1200px 300px at 20% -40%, rgba(96,165,250,.25), transparent 60%),
+    radial-gradient(700px 300px at 110% -10%, rgba(34,197,94,.18), transparent 60%);
+  pointer-events:none; z-index:-1; filter:blur(8px);
+}
+h1{
+  font-size: clamp(28px, 3vw, 40px);
+  line-height:1.15;
+  margin: 0 0 14px;
+  letter-spacing:.3px;
+  text-shadow: 0 4px 20px rgba(0,0,0,.35);
+}
+.card p{margin:.5rem 0 0}
 
-.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
-@media(max-width:960px){.grid{grid-template-columns:1fr}}
-.tile{display:flex;flex-direction:column;gap:6px;padding:16px;border:1px solid var(--line);
-  border-radius:12px;background:#fff}
-.tile .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-.pill{display:inline-block;padding:4px 8px;border-radius:999px;font-size:12px;border:1px solid var(--line);background:#fff}
-.pill.ok{border-color:#12a87a;color:#12a87a}
-.stat{display:flex;align-items:center;justify-content:space-between;border:1px dashed var(--line);
-  border-radius:10px;padding:10px 12px}
+/* ---------- Botones ---------- */
+.actions{ display:flex; gap:12px; flex-wrap:wrap; margin-top:18px }
+.btn{
+  appearance:none; border:0; cursor:pointer;
+  display:inline-flex; align-items:center; justify-content:center;
+  gap:10px; padding:12px 18px;
+  border-radius: 12px;
+  font-weight: 800;
+  letter-spacing:.2px;
+  background: linear-gradient(180deg, var(--brand), var(--brand-600));
+  color:#fff; box-shadow: 0 6px 20px rgba(59,130,246,.35);
+  transition: transform .08s ease, box-shadow .2s ease, filter .2s ease;
+}
+.btn:hover{ transform: translateY(-1px); filter:saturate(110%); }
+.btn:active{ transform: translateY(0); filter:saturate(100%); }
+.btn:disabled{ opacity:.6; cursor:not-allowed }
+.btn.ghost{
+  background:transparent;
+  color:var(--text);
+  border:1px solid rgba(255,255,255,.14);
+  box-shadow:none;
+}
+
+/* Spinner dentro del botón */
+.spinner{
+  width:16px; height:16px;
+  border:2px solid rgba(255,255,255,.45);
+  border-top-color:#fff;
+  border-radius:50%;
+  display:none;
+  animation: spin .7s linear infinite;
+}
+.spinner.on{ display:inline-block; }
+@keyframes spin{ to{ transform: rotate(360deg); } }
+
+/* ---------- Mensajes ---------- */
+#login-msg{
+  margin-top: 18px;
+  color: var(--muted);
+  font-size: 0.98rem;
+}
+
+/* ---------- Footer shadow ---------- */
+body::after{
+  content:""; display:block; height:180px; margin-top:56px;
+  background:linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,.08));
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 720px){
+  .brand{padding:12px 14px}
+  .container{padding:18px 12px 56px}
+  .card{padding: 24px 18px}
+}
+
+/* ---------- Accesible focus ---------- */
+:focus-visible{
+  outline: 3px solid rgba(96,165,250,.9);
+  outline-offset: 2px;
+  border-radius: 12px;
+}
+
