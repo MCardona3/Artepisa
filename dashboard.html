@@ -16,41 +16,145 @@
       <div class="muted">Panel principal (OneDrive/SharePoint)</div>
     </div>
   </div>
-  <button id="btn-logout" class="btn ghost">Salir</button>
+
+  <!-- Botón salir tipo pill -->
+  <button id="btn-logout" class="btn ghost" type="button">Salir</button>
 </header>
 
 <main class="container">
-  <section class="card">
+  <!-- Tarjeta: bienvenida -->
+  <section class="card" id="welcome">
     <h2>Menú principal</h2>
-    <p>Usuario: <b id="user-name">Mauricio Cardona</b></p>
-
-    <ul>
-      <li>Clientes: <span id="count-clients">0</span></li>
-      <li>Órdenes de Trabajo: <span id="count-ot">0</span></li>
-      <li>Órdenes de Compra: <span id="count-oc">0</span></li>
-    </ul>
+    <p class="muted">Usuario: <b id="user-name">—</b></p>
   </section>
 
+  <!-- Tarjeta: KPIs/resumen -->
   <section class="card" style="margin-top:20px">
-    <h2>Módulos</h2>
-    <h3>Clientes</h3>
-    <p>Altas/edición.</p>
-    <a href="clientes.html" class="btn">Entrar</a>
+    <h3>Resumen</h3>
+    <div class="kpis">
+      <div class="kpi">
+        <div class="kpi-title">Clientes</div>
+        <div class="kpi-value" id="count-clients">0</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-title">Órdenes de Trabajo</div>
+        <div class="kpi-value" id="count-ot">0</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-title">Órdenes de Compra</div>
+        <div class="kpi-value" id="count-oc">0</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tarjeta: módulos -->
+  <section class="card" style="margin-top:20px">
+    <h3>Módulos</h3>
+
+    <div class="modules">
+      <article class="module">
+        <h4>Clientes</h4>
+        <p class="muted">Altas, edición y consulta de clientes.</p>
+        <div class="actions">
+          <a class="btn" href="clientes.html">Entrar</a>
+        </div>
+      </article>
+
+      <article class="module">
+        <h4>Órdenes de Trabajo</h4>
+        <p class="muted">Captura, consulta y seguimiento de OT.</p>
+        <div class="actions">
+          <a class="btn" href="ordenes-trabajo.html">Entrar</a>
+        </div>
+      </article>
+
+      <article class="module">
+        <h4>Órdenes de Compra</h4>
+        <p class="muted">Registro y control de OC.</p>
+        <div class="actions">
+          <a class="btn" href="ordenes-compra.html">Entrar</a>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- Tarjeta: actividad reciente (placeholder) -->
+  <section class="card" style="margin-top:20px">
+    <h3>Actividad reciente</h3>
+    <ul class="recent">
+      <li class="muted">Sin actividad por el momento.</li>
+    </ul>
   </section>
 </main>
 
+<!-- Scripts (usa el mismo auth.js del login) -->
 <script src="./js/auth.js"></script>
 <script>
-  // Si ya guardaste la cuenta en sessionStorage en index
-  const acct = JSON.parse(sessionStorage.getItem("artepisa_account") || "null");
-  if (acct) document.getElementById("user-name").textContent = acct.name || acct.username;
+  // Carga de datos básicos desde la sesión (ajústalo si guardas otras propiedades)
+  (function(){
+    const acct = JSON.parse(sessionStorage.getItem("artepisa_account") || "null");
+    document.getElementById("user-name").textContent =
+      acct?.name || acct?.username || "Sesión activa";
 
-  document.getElementById("btn-logout")?.addEventListener("click", () => {
-    if (window.MSALApp && MSALApp.logout) MSALApp.logout();
-    sessionStorage.removeItem("artepisa_account");
-    location.href = "index.html";
-  });
+    // Ejemplo: si guardas contadores en sessionStorage/localStorage, ponlos aquí
+    // document.getElementById("count-clients").textContent = localStorage.getItem("kpi_clients") || 0;
+
+    // Cerrar sesión
+    document.getElementById("btn-logout")?.addEventListener("click", async () => {
+      try { if (window.MSALApp && MSALApp.logout) await MSALApp.logout(); }
+      finally {
+        sessionStorage.removeItem("artepisa_account");
+        location.href = "index.html";
+      }
+    });
+  })();
 </script>
+
+<!-- Estilos específicos del panel (reutiliza tu hoja base) -->
+<style>
+  /* pequeñas utilidades para el grid de KPIs y módulos */
+  .kpis{
+    display:grid;
+    grid-template-columns: repeat(3, minmax(0,1fr));
+    gap:12px;
+    margin-top:12px;
+  }
+  .kpi{
+    background:#fff;
+    border:1px solid #e7edf3;
+    border-radius:12px;
+    padding:14px;
+    box-shadow: 0 4px 14px rgba(16,24,40,.05);
+  }
+  .kpi-title{ color:#5b6577; font-weight:600; font-size:.95rem; }
+  .kpi-value{ font-size:1.6rem; font-weight:800; margin-top:4px; }
+
+  .modules{
+    display:grid;
+    grid-template-columns: repeat(3, minmax(0,1fr));
+    gap:16px;
+    margin-top:12px;
+  }
+  .module{
+    background:#fff;
+    border:1px solid #e7edf3;
+    border-radius:12px;
+    padding:16px;
+    box-shadow: 0 4px 14px rgba(16,24,40,.05);
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .module h4{ margin:0; }
+  .recent{ margin:.25rem 0 0 1rem; }
+  @media (max-width: 960px){
+    .kpis{ grid-template-columns:1fr 1fr 1fr; }
+    .modules{ grid-template-columns:1fr 1fr; }
+  }
+  @media (max-width: 640px){
+    .kpis{ grid-template-columns:1fr; }
+    .modules{ grid-template-columns:1fr; }
+  }
+</style>
 </body>
 </html>
+
 
