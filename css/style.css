@@ -123,7 +123,7 @@ body{
 
 /* Wrap base */
 .theme-light .table-wrap{
-  overflow-x: visible;
+  overflow-x: hidden;                    /* evita scroll horizontal */
   overflow-y: auto;
   border:1px solid #e7edf3; border-radius:16px;
   background:#fff; box-shadow:0 10px 28px rgba(16,24,40,.06);
@@ -145,28 +145,22 @@ body{
   position:sticky; top:0; z-index:1;
   background: linear-gradient(180deg, #f5f8fc, #eef3f9);
   color:#2b3446; text-align:left;
-  padding:10px 12px; border-bottom:1px solid #dfe7f1; font-weight:800;
+  padding:12px 14px; border-bottom:1px solid #dfe7f1; font-weight:800;
 }
 
 /* Celdas */
 .theme-light .table tbody td{
-  padding:10px 12px;
+  padding:12px 14px;
   border-bottom:1px solid #eef2f7;
   color:#1c2536;
-  vertical-align:middle;
+  vertical-align:top;                    /* mejor para multi-línea */
+  white-space:normal;                    /* por defecto puede envolver */
 }
 
 /* Fila uniforme + hover */
-.theme-light .table tbody tr { height:44px; }
+.theme-light .table tbody tr { height:46px; }
 .theme-light .table tbody tr:nth-child(even){ background:#fafcff; }
 .theme-light .table tbody tr:hover{ background:#f2f7ff; }
-
-/* Elipsis en desktop (evita desbordes) */
-.theme-light .table tbody td:not(:last-child){
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-}
 
 /* Alineación acciones a la derecha */
 .theme-light .table td:last-child,
@@ -175,53 +169,52 @@ body{
 /* Acciones compactas */
 .theme-light .table .table-actions{ display:flex; justify-content:flex-end; gap:8px; }
 .theme-light .table .table-actions .btn{
-  padding:7px 10px; border-radius:10px; white-space:nowrap;
+  padding:8px 12px; border-radius:10px; white-space:nowrap;
 }
 
-/* ====== MODO ANCHO – Reparto por columnas (9 columnas total) ======
+/* ====== MODO ANCHO – Reparto por columnas (9 columnas total)
    1:ID | 2:Nombre | 3:Teléfono | 4:Dirección | 5:RFC | 6:Estado | 7:Nombre Contacto | 8:Teléfono Contacto | 9:Acciones */
 .theme-light .container.tablewide{ max-width: 1440px; }
 @media (min-width: 1600px){
   .theme-light .container.tablewide{ max-width: 1600px; }
 }
 .theme-light .container.tablewide #card-list.card{ max-width: 100%; }
-.theme-light .container.tablewide .table-wrap{ overflow-x: hidden !important; }
 .theme-light .container.tablewide table.table{
   width: 100% !important;
   min-width: 0 !important;
   table-layout: fixed !important;
 }
 
-/* Sin saltos en desktop para columnas de texto (2–8) */
-.theme-light .container.tablewide table.table th:nth-child(n+2):nth-child(-n+8),
-.theme-light .container.tablewide table.table td:nth-child(n+2):nth-child(-n+8){
-  white-space: nowrap;
-}
-
-/* Anchos por columna */
+/* Anchos por columna (ajustados) */
 .theme-light .container.tablewide table.table th:nth-child(1),
-.theme-light .container.tablewide table.table td:nth-child(1){ width:72px; }   /* ID */
+.theme-light .container.tablewide table.table td:nth-child(1){ width:70px; }    /* ID */
 .theme-light .container.tablewide table.table th:nth-child(2),
-.theme-light .container.tablewide table.table td:nth-child(2){ width:22%; }    /* Nombre */
+.theme-light .container.tablewide table.table td:nth-child(2){ width:22%; }     /* Nombre */
 .theme-light .container.tablewide table.table th:nth-child(3),
-.theme-light .container.tablewide table.table td:nth-child(3){ width:12%; }    /* Teléfono */
+.theme-light .container.tablewide table.table td:nth-child(3){ width:12%; }     /* Teléfono */
 .theme-light .container.tablewide table.table th:nth-child(4),
-.theme-light .container.tablewide table.table td:nth-child(4){ width:20%; }    /* Dirección */
+.theme-light .container.tablewide table.table td:nth-child(4){ width:22%; }     /* Dirección */
 .theme-light .container.tablewide table.table th:nth-child(5),
-.theme-light .container.tablewide table.table td:nth-child(5){ width:8%;  }    /* RFC */
+.theme-light .container.tablewide table.table td:nth-child(5){ width:8%;  }     /* RFC */
 .theme-light .container.tablewide table.table th:nth-child(6),
-.theme-light .container.tablewide table.table td:nth-child(6){ width:10%; }    /* Estado */
+.theme-light .container.tablewide table.table td:nth-child(6){ width:10%; }     /* Estado */
 .theme-light .container.tablewide table.table th:nth-child(7),
-.theme-light .container.tablewide table.table td:nth-child(7){ width:14%; }    /* Nombre Contacto */
+.theme-light .container.tablewide table.table td:nth-child(7){ width:12%; }     /* Nombre Cto */
 .theme-light .container.tablewide table.table th:nth-child(8),
-.theme-light .container.tablewide table.table td:nth-child(8){ width:10%; }    /* Teléfono Contacto */
+.theme-light .container.tablewide table.table td:nth-child(8){ width:10%; }     /* Tel Cto */
 .theme-light .container.tablewide table.table th:nth-child(9),
-.theme-light .container.tablewide table.table td:nth-child(9){ width:110px; }  /* Acciones */
+.theme-light .container.tablewide table.table td:nth-child(9){ width:110px; }   /* Acciones */
 
-/* Evitar cortes visuales */
-.theme-light .container.tablewide table.table th,
-.theme-light .container.tablewide table.table td{
-  overflow: visible; text-overflow: clip;
+/* === Truncado (elipsis) SOLO donde conviene:
+   ID, Teléfono, RFC, Estado, Tel. Contacto y Acciones.
+   Nombre, Dirección y Nombre de Contacto SÍ pueden envolver. */
+.theme-light .container.tablewide table.table td:nth-child(1),
+.theme-light .container.tablewide table.table td:nth-child(3),
+.theme-light .container.tablewide table.table td:nth-child(5),
+.theme-light .container.tablewide table.table td:nth-child(6),
+.theme-light .container.tablewide table.table td:nth-child(8),
+.theme-light .container.tablewide table.table td:nth-child(9){
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 
 /* ====== Mobile: tabla -> tarjetas con etiquetas ====== */
@@ -251,15 +244,15 @@ body{
     padding:8px 4px;
     border-bottom:0;
     display:grid;
-    grid-template-columns:130px 1fr;
-    align-items:center;
+    grid-template-columns:120px 1fr;   /* etiqueta | valor */
+    align-items:start;
     gap:8px;
     white-space:normal;
     overflow:visible;
     text-overflow:initial;
   }
 
-  /* Etiqueta de la celda (requiere data-label en el td) */
+  /* Etiqueta de la celda (usa data-label en el td) */
   .theme-light .table tbody td::before{
     content: attr(data-label);
     font-weight:700;
@@ -270,7 +263,7 @@ body{
   .theme-light .table tbody td + td{
     border-top:1px dashed #eef2f7;
     padding-top:10px;
-    margin-top:4px;
+    margin-top:6px;
   }
 
   /* Celda de acciones ocupa todo el ancho y sin etiqueta */
