@@ -6,33 +6,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="./css/style.css" />
   <style>
-    .muted-sm{font-size:.9rem;opacity:.8}
-    .actions .spacer{flex:1}
-    .table-actions button{margin-right:6px}
-    .field small{opacity:.7;display:block}
-
     /* Layout dividido cuando el formulario está visible */
     main.container { display:block; }
     main.container.split {
       display: grid;
-      grid-template-columns: minmax(360px, 1fr) minmax(360px, 1fr);
+      grid-template-columns: minmax(380px, 1fr) minmax(420px, 1fr);
       gap: 16px;
       align-items: start;
     }
-    /* Mantener el form oculto si no hay split */
     .card-form { display:none; }
     .split .card-form { display:block; }
 
-    /* Responsive */
-    @media (max-width: 900px){
-      main.container.split {
-        grid-template-columns: 1fr;
-      }
+    @media (max-width: 980px){
+      main.container.split { grid-template-columns: 1fr; }
     }
   </style>
 </head>
-<body>
-  <!-- GUARDIA DE SESIÓN: si no hay sesión, regresa a index -->
+<body class="theme-light">
+  <!-- Guardia de sesión -->
   <script>
     const __acct = JSON.parse(sessionStorage.getItem('artepisa_account')||'null');
     if(!__acct){ location.href = 'index.html'; }
@@ -49,107 +40,124 @@
   <a class="btn ghost" href="dashboard.html">Volver</a>
 </header>
 
-  <!-- NOTA: por defecto NO tiene la clase 'split', así el formulario no aparece -->
-  <main class="container" id="layout">
-    <!-- Panel LISTA + BUSCADOR + ACCIONES -->
-    <section class="card" id="card-list">
-      <h1 style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <span style="flex:1">Clientes</span>
-        <button class="btn" id="btn-show-form" type="button" title="Crear o agregar cliente">Crear / Agregar</button>
-      </h1>
+<main class="container" id="layout">
+  <!-- LISTA -->
+  <section class="card" id="card-list">
+    <h2 style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span style="flex:1">Clientes</span>
+      <button class="btn" id="btn-show-form" type="button" title="Crear o agregar cliente">Crear / Agregar</button>
+    </h2>
 
-      <div class="actions" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
-        <input id="c-buscar" placeholder="Buscar por nombre…" style="flex:1;min-width:220px">
-        <button class="btn ghost" id="c-exportar" type="button" title="Exportar JSON">Exportar</button>
-        <label class="btn ghost" for="c-importar" title="Importar JSON/CSV/TSV">Importar
-          <input id="c-importar" type="file" accept=".json,.csv,.tsv,text/csv,text/tab-separated-values,application/json" style="display:none">
-        </label>
-        <button class="btn danger" id="c-reset" type="button" title="Borrar todos los clientes">Limpiar</button>
-      </div>
+    <div class="actions" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+      <input id="c-buscar" class="input" placeholder="Buscar por nombre…" style="flex:1;min-width:240px">
+      <button class="btn ghost" id="c-exportar" type="button" title="Exportar JSON">Exportar</button>
 
-      <section class="muted-sm" style="margin-bottom:8px">
-        Acepta <b>CSV</b>, <b>TSV</b> o <b>JSON</b>. Encabezados típicos: 
-        <b>Nombre, IDcliente/IDCliente, Telefono, Direccion, RFC, Estado, NombreContacto, TelefonoContacto</b>. 
-        Soporta direcciones con saltos de línea entre comillas.
-      </section>
+      <label class="btn ghost" for="c-importar" title="Importar JSON/CSV/TSV">Importar
+        <input id="c-importar" type="file" accept=".json,.csv,.tsv,text/csv,text/tab-separated-values,application/json" style="display:none">
+      </label>
 
-      <table>
+      <button class="btn danger" id="c-reset" type="button" title="Borrar todos los clientes">Limpiar</button>
+    </div>
+
+    <p class="muted" style="margin:.2rem 0 .6rem">
+      Acepta <b>CSV</b>, <b>TSV</b> o <b>JSON</b>. Encabezados típicos:
+      <b>Nombre, IDcliente/IDCliente, Telefono, Direccion, RFC, Estado, NombreContacto, TelefonoContacto</b>.
+      Soporta direcciones con saltos de línea entre comillas.
+    </p>
+
+    <div class="table-wrap">
+      <table class="table">
         <thead>
-          <tr><th>ID</th><th>Nombre</th><th>Teléfono</th><th>Estado</th><th>Contacto</th><th></th></tr>
+          <tr>
+            <th style="width:80px">ID</th>
+            <th>Nombre</th>
+            <th style="width:160px">Teléfono</th>
+            <th style="width:160px">Estado</th>
+            <th>Contacto</th>
+            <th style="width:120px"></th>
+          </tr>
         </thead>
         <tbody id="c-tabla"></tbody>
       </table>
-    </section>
+    </div>
+  </section>
 
-    <!-- Panel FORMULARIO (oculto hasta que haya 'split') -->
-    <section class="card card-form" id="card-form">
-      <h2>Formulario</h2>
-      <div class="form">
-        <div class="field">
-          <span>IDCliente</span>
-          <input id="c-id" placeholder="(auto)" readonly>
-          <small>Se conserva el ID del archivo importado; si falta, se genera.</small>
-        </div>
-
-        <div class="field"><span>Nombre</span>
-          <input id="c-nombre" placeholder="Razón social o nombre comercial">
-        </div>
-
-        <div class="field"><span>Teléfono</span>
-          <input id="c-telefono"
-                 inputmode="numeric"
-                 autocomplete="tel"
-                 maxlength="27"
-                 data-phone-mask
-                 placeholder="4441234567 o 4441234567/4449876543">
-          <small class="muted-sm">10 dígitos o 2 teléfonos (20 dígitos) separados por “/”.</small>
-        </div>
-
-        <div class="field"><span>Dirección</span>
-          <input id="c-direccion" placeholder="Calle, #, Colonia, Ciudad">
-        </div>
-
-        <div class="field"><span>RFC</span>
-          <input id="c-rfc" placeholder="ABC123456XYZ">
-        </div>
-
-        <div class="field"><span>Estado</span>
-          <input id="c-estado" placeholder="San Luis Potosí">
-        </div>
-
-        <div class="field"><span>Nombre de Contacto</span>
-          <input id="c-contacto" placeholder="Persona de contacto">
-        </div>
-
-        <div class="field"><span>Teléfono de Contacto</span>
-          <input id="c-contacto-tel"
-                 inputmode="numeric"
-                 autocomplete="tel"
-                 maxlength="27"
-                 data-phone-mask
-                 placeholder="4441234567 o 4441234567/4449876543">
-          <small class="muted-sm">10 dígitos o 2 teléfonos (20 dígitos) separados por “/”.</small>
-        </div>
-
-        <div class="actions" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <button class="btn" id="c-guardar" type="button">Guardar</button>
-          <button class="btn ghost" id="c-nuevo" type="button">Nuevo</button>
-          <button class="btn danger" id="c-eliminar" type="button">Eliminar</button>
-          <span class="spacer"></span>
-          <button class="btn ghost" id="c-cerrar" type="button" title="Ocultar formulario">Cerrar</button>
-        </div>
+  <!-- FORMULARIO (oculto hasta que haya 'split') -->
+  <section class="card card-form" id="card-form">
+    <h3>Formulario</h3>
+    <div class="form">
+      <div class="field">
+        <label for="c-id">IDCliente</label>
+        <input id="c-id" class="input" placeholder="(auto)" readonly>
+        <small class="help">Se conserva el ID del archivo importado; si falta, se genera.</small>
       </div>
-    </section>
-  </main>
 
-  <!-- MSAL + módulos (el orden importa) -->
-  <script src="https://alcdn.msauth.net/browser/2.38.1/js/msal-browser.min.js"></script>
-  <script src="./js/msal-config.js"></script>
-  <script src="./js/auth.js"></script>
-  <script src="./js/graph.js"></script>
-  <script src="./js/data.js"></script>
+      <div class="field">
+        <label for="c-nombre">Nombre</label>
+        <input id="c-nombre" class="input" placeholder="Razón social o nombre comercial">
+      </div>
 
-  <!-- Lógica de la página -->
-  <script src="./js/clientes.js?v=7"></script>
+      <div class="field">
+        <label for="c-telefono">Teléfono</label>
+        <input id="c-telefono" class="input"
+               inputmode="numeric"
+               autocomplete="tel"
+               maxlength="27"
+               data-phone-mask
+               placeholder="4441234567 o 4441234567/4449876543">
+        <small class="help">10 dígitos o 2 teléfonos (20 dígitos) separados por “/”.</small>
+      </div>
+
+      <div class="field">
+        <label for="c-direccion">Dirección</label>
+        <input id="c-direccion" class="input" placeholder="Calle, #, Colonia, Ciudad">
+      </div>
+
+      <div class="field">
+        <label for="c-rfc">RFC</label>
+        <input id="c-rfc" class="input" placeholder="ABC123456XYZ">
+      </div>
+
+      <div class="field">
+        <label for="c-estado">Estado</label>
+        <input id="c-estado" class="input" placeholder="San Luis Potosí">
+      </div>
+
+      <div class="field">
+        <label for="c-contacto">Nombre de Contacto</label>
+        <input id="c-contacto" class="input" placeholder="Persona de contacto">
+      </div>
+
+      <div class="field">
+        <label for="c-contacto-tel">Teléfono de Contacto</label>
+        <input id="c-contacto-tel" class="input"
+               inputmode="numeric"
+               autocomplete="tel"
+               maxlength="27"
+               data-phone-mask
+               placeholder="4441234567 o 4441234567/4449876543">
+        <small class="help">10 dígitos o 2 teléfonos (20 dígitos) separados por “/”.</small>
+      </div>
+
+      <div class="actions" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button class="btn" id="c-guardar" type="button">Guardar</button>
+        <button class="btn ghost" id="c-nuevo" type="button">Nuevo</button>
+        <button class="btn danger" id="c-eliminar" type="button">Eliminar</button>
+        <span style="flex:1"></span>
+        <button class="btn ghost" id="c-cerrar" type="button" title="Ocultar formulario">Cerrar</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- MSAL + módulos (el orden importa) -->
+<script src="https://alcdn.msauth.net/browser/2.38.1/js/msal-browser.min.js"></script>
+<script src="./js/msal-config.js"></script>
+<script src="./js/auth.js"></script>
+<script src="./js/graph.js"></script>
+<script src="./js/data.js"></script>
+
+<!-- Lógica de la página -->
+<script src="./js/clientes.js?v=8"></script>
 </body>
 </html>
