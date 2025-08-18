@@ -1,165 +1,247 @@
 <script>
-// GraphStore: lee/escribe JSON en una carpeta compartida de OneDrive usando un link de compartir.
-// Requiere: que tengas un método para obtener el token de MS Graph: window.GraphAuth.getToken()
-// (si tu auth.js expone otro método, ajusta getAccessToken() abajo).
+// Microsoft Graph helpers mejorados (OneDrive/SharePoint) con:
+// - Retries 429/5xx
+// - ETag (If-Match) para evitar sobrescrituras
+// - Cola offline en localStorage (syncPending)
+// - mkdir -p para carpetas
+//
+// Requiere que exista window.GRAPH_STORAGE y un método de token:
+//   window.MSALApp.getToken()  -> string Bearer token
+//
+// Config esperada (ejemplos):
+// window.GRAPH_STORAGE = {
+//   location: "me",                // "me" (OneDrive personal) o "site" (SharePoint)
+//   siteId:  "...",                // si location === "site"
+//   folderPath: "/ArtepisaData"    // carpeta compartida donde viven los .json
+// }
 
 (function(){
+  const CFG = window.GRAPH_STORAGE || {};
   const GRAPH = "https://graph.microsoft.com/v1.0";
-  const LS_PREFIX = "graphstore_queued_"; // cola local de escrituras
 
-  let driveId = null;      // id del drive de OneDrive
-  let folderId = null;     // id de la carpeta (driveItem.id) donde guardamos los .json
-  let sharedLink = null;   // link de compartir de OneDrive
+  // --- Cola offline en localStorage ---
+  const LS_PREFIX = "GraphStore_queue_";    // por archivo: GraphStore_queue_clients.json
+  const LS_META   = "GraphStore_meta";      // etags y metadatos cacheados
 
-  // --- Adaptador de token (ajusta si tu auth expone otro método)
+  // Cache de ETag por archivo (en memoria + localStorage)
+  let metaCache = loadMetaCache();
+
+  function loadMetaCache(){
+    try { return JSON.parse(localStorage.getItem(LS_META) || "{}"); } catch { return {}; }
+  }
+  function saveMetaCache(){
+    try { localStorage.setItem(LS_META, JSON.stringify(metaCache)); } catch {}
+  }
+
+  // --- Token ---
   async function getAccessToken(){
-    if (window.GraphAuth && typeof window.GraphAuth.getToken === "function"){
-      return await window.GraphAuth.getToken();
+    if (!window.MSALApp || typeof window.MSALApp.getToken !== "function"){
+      throw new Error("MSALApp.getToken no disponible.");
     }
-    // Fallback: intenta con MSALApp (si lo tienes)
-    if (window.MSALApp && typeof window.MSALApp.acquireToken === "function"){
-      return await window.MSALApp.acquireToken();
-    }
-    throw new Error("No se encontró un proveedor de token (GraphAuth.getToken o MSALApp).");
+    return await window.MSALApp.getToken();
   }
 
-  // Base64url (para /shares/{id})
-  function base64url(str){
-    return btoa(str).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  // --- Base del Drive (OneDrive o SharePoint) ---
+  function driveBase(){
+    if (CFG.location === "site"){
+      if (!CFG.siteId) throw new Error("Falta siteId en GRAPH_STORAGE");
+      return `/sites/${CFG.siteId}/drive`;
+    }
+    return `/me/drive`;
   }
 
-  // Resuelve el link compartido -> driveItem (carpeta)
-  async function setSharedLink(url){
-    sharedLink = url;
-    const encoded = base64url("u!" + url);
+  // --- Fetch con reintentos gentiles ---
+  async function gfetch(path, opts = {}, tryNo = 0){
     const token = await getAccessToken();
-    const r = await fetch(`${GRAPH}/shares/${encoded}/driveItem?$select=id,name,parentReference`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    if (!r.ok){
-      const t = await r.text();
-      throw new Error("No se pudo resolver el link compartido. " + t);
+    const headers = {
+      "Authorization": `Bearer ${token}`,
+      ...(opts.body && typeof opts.body === "string"
+          ? { "Content-Type": opts.headers?.["Content-Type"] || "application/json" }
+          : (opts.body && typeof opts.body === "object" ? { "Content-Type": "application/json" } : {})),
+      ...opts.headers
+    };
+
+    const res = await fetch(`${GRAPH}${path}`, { ...opts, headers });
+
+    if (res.ok) return res;
+
+    // 404: devolvemos tal cual (lo maneja el caller)
+    if (res.status === 404) return res;
+
+    // Retries para 429/5xx
+    if ((res.status === 429 || (res.status >= 500 && res.status < 600)) && tryNo < 3){
+      const ra = parseInt(res.headers.get("Retry-After") || "0", 10);
+      const backoff = ra > 0 ? ra * 1000 : (200 * Math.pow(2, tryNo)); // 200ms, 400ms, 800ms
+      await new Promise(r => setTimeout(r, backoff));
+      return gfetch(path, opts, tryNo + 1);
     }
-    const item = await r.json();
-    if (!item || !item.id || !item.parentReference || !item.parentReference.driveId){
-      throw new Error("El link no apunta a una carpeta válida.");
-    }
-    driveId = item.parentReference.driveId;
-    folderId = item.id;
+
+    // Otros errores: lanza con info
+    const txt = await res.text().catch(()=> "");
+    throw new Error(`Graph ${res.status}: ${txt || res.statusText}`);
   }
 
-  // Obtiene metadatos del archivo dentro de la carpeta compartida
-  async function getItemMeta(filename){
-    const token = await getAccessToken();
-    const url = `${GRAPH}/drives/${driveId}/items/${folderId}:/${encodeURIComponent(filename)}`;
-    const r = await fetch(url, { headers: { Authorization: `Bearer ${token}` }});
-    if (r.status === 404) return null;
-    if (!r.ok){
-      const t = await r.text();
-      throw new Error("Error al obtener metadatos: " + t);
-    }
-    return await r.json();
-  }
+  // --- mkdir -p (crea cada segmento si no existe) ---
+  async function ensureFolder(path){
+    const parts = String(path || "").split("/").filter(Boolean);
+    if (!parts.length) return "/";
 
-  // Descarga JSON (si no existe, devuelve [])
-  async function getJson(filename){
-    if (!driveId || !folderId) throw new Error("GraphStore no inicializado. Llama a useSharedLink primero.");
-    try{
-      const token = await getAccessToken();
+    let currId = "root";
+    let currPath = "";
 
-      // ¿existe el archivo?
-      const meta = await getItemMeta(filename);
-      if (!meta) return []; // si no existe devolvemos lista vacía
+    for (const p of parts){
+      currPath += `/${p}`;
 
-      // ruta /content para descargar directamente
-      const contentUrl = `${GRAPH}/drives/${driveId}/items/${meta.id}/content`;
-      const r = await fetch(contentUrl, { headers: { Authorization: `Bearer ${token}` }});
-      if (!r.ok){
-        const t = await r.text();
-        throw new Error("No se pudo descargar el JSON: " + t);
+      // Intenta GET por ruta
+      let itemRes = await gfetch(`${driveBase()}/root:${currPath}`, { method: "GET" }).catch(()=>null);
+
+      if (!itemRes || itemRes.status === 404){
+        // Crear siguiente segmento
+        const createRes = await gfetch(`${driveBase()}/items/${currId}/children`, {
+          method: "POST",
+          body: JSON.stringify({
+            name: p, folder: {}, "@microsoft.graph.conflictBehavior": "fail"
+          })
+        });
+        const created = await createRes.json();
+        currId = created.id;
+      } else {
+        const item = await itemRes.json();
+        currId = item.id;
       }
-      const text = await r.text();
-      try{ return JSON.parse(text); }catch{ return []; }
+    }
+    return currPath;
+  }
+
+  // --- Helpers archivos ---
+  async function getItemByPath(relPath){
+    const fullPath = `${CFG.folderPath}/${relPath}`.replace(/\/+/g, "/");
+    const res = await gfetch(`${driveBase()}/root:${fullPath}`, { method: "GET" });
+    if (res.status === 404) return null;
+    return await res.json();
+  }
+
+  async function downloadContentById(itemId){
+    const res = await gfetch(`${driveBase()}/items/${itemId}/content`, { method: "GET", headers: { "Content-Type": "text/plain" }});
+    if (res.status === 404) return null;
+    return await res.text();
+  }
+
+  async function uploadContentByPath(relPath, body, etag){
+    const fullPath = `${CFG.folderPath}/${relPath}`.replace(/\/+/g, "/");
+    const headers = etag ? { "If-Match": etag, "Content-Type":"application/json" } : { "Content-Type":"application/json" };
+    const res = await gfetch(`${driveBase()}/root:${fullPath}:/content`, {
+      method: "PUT",
+      headers,
+      body
+    });
+    return await res.json();
+  }
+
+  // --- API pública: getJson / putJson / syncPending ---
+  async function getJson(relPath){
+    try{
+      // Intenta asegurar carpeta (una sola vez por sesión está bien)
+      await ensureFolder(CFG.folderPath);
+
+      // 1) Obtiene metadatos (para captar ETag)
+      const item = await getItemByPath(relPath).catch(()=>null);
+      if (!item || !item.id){
+        // No existe: devuelve []
+        // Limpia ETag local
+        delete metaCache[relPath];
+        saveMetaCache();
+        return [];
+      }
+
+      // 2) Baja contenido y guarda ETag
+      const text = await downloadContentById(item.id);
+      let data = [];
+      try { data = text ? JSON.parse(text) : []; } catch { data = []; }
+
+      metaCache[relPath] = { etag: item.eTag || item.@microsoft_graph_downloadUrl || null, id: item.id, lastRead: Date.now() };
+      saveMetaCache();
+
+      return data;
     }catch(err){
-      console.warn("getJson fallo, uso cola local si hubiera:", err);
-      // Fallback: intenta cola local como vista eventual
-      const queued = localStorage.getItem(LS_PREFIX + filename);
+      console.warn("getJson fallo, uso copia local si existe:", err);
+
+      // Fallback: regresa última versión guardada en cola si existe
+      const queued = localStorage.getItem(LS_PREFIX + relPath);
       if (queued){
-        try{ return JSON.parse(queued); }catch{}
+        try { return JSON.parse(queued); } catch{}
       }
       return [];
     }
   }
 
-  // Sube JSON (PUT /content). Si falla, cola en localStorage para sincronizar luego.
-  async function putJson(filename, data){
-    if (!driveId || !folderId) throw new Error("GraphStore no inicializado. Llama a useSharedLink primero.");
-
-    // Siempre guardamos snapshot en local como “última versión conocida”
-    localStorage.setItem(LS_PREFIX + filename, JSON.stringify(data));
+  async function putJson(relPath, obj){
+    // Guarda snapshot en local primero (para offline y para tener 'última vista')
+    try { localStorage.setItem(LS_PREFIX + relPath, JSON.stringify(obj)); } catch {}
 
     try{
-      const token = await getAccessToken();
-      const url = `${GRAPH}/drives/${driveId}/items/${folderId}:/${encodeURIComponent(filename)}:/content`;
-      const r = await fetch(url, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
-          // Si quieres evitar pisar cambios ajenos, añade If-Match con la ETag actual
-          // "If-Match": meta.eTag
-        },
-        body: JSON.stringify(data)
-      });
-      if (!r.ok){
-        const t = await r.text();
-        throw new Error("PUT falló: " + t);
+      await ensureFolder(CFG.folderPath);
+
+      // Si tenemos ETag, úsalo (evita pisar cambios ajenos)
+      const etag = metaCache[relPath]?.etag || "*"; // si no hay, sube siempre (o usa "*" para forzar PUT)
+      const body = JSON.stringify(obj, null, 2);
+
+      try{
+        const result = await uploadContentByPath(relPath, body, etag);
+        // Guarda nueva ETag e id si vienen
+        if (result && result.eTag){
+          metaCache[relPath] = { etag: result.eTag, id: result.id, lastWrite: Date.now() };
+          saveMetaCache();
+        }
+        return true;
+      }catch(e){
+        // Si es precondition failed (412) o 409 => conflicto ETag
+        const msg = (e.message || "").toLowerCase();
+        if (msg.includes("412") || msg.includes("precondition") || msg.includes("conflict") || msg.includes("409")){
+          // Vuelve a leer la versión remota para no perder cambios
+          const remote = await getJson(relPath);
+          // Estrategia simple: preferimos último write local => sobrescribir con ETag fresca
+          // (Si prefieres mergear, aplica aquí tu merge)
+          const freshEtag = metaCache[relPath]?.etag;
+          const result = await uploadContentByPath(relPath, body, freshEtag);
+          if (result && result.eTag){
+            metaCache[relPath] = { etag: result.eTag, id: result.id, lastWrite: Date.now() };
+            saveMetaCache();
+          }
+          return true;
+        }
+        throw e;
       }
-      // éxito: ya está en nube, mantenemos copia local por velocidad
-      return true;
     }catch(err){
-      console.warn("putJson: no se pudo subir, queda en cola local:", err);
-      // Ya quedó en local, un next sync lo subirá
+      console.warn("putJson: no se pudo subir ahora, queda en cola local:", err);
+      // Queda en cola; syncPending lo intentará luego
       return false;
     }
   }
 
-  // Sincroniza TODO lo que está en cola local (archivos con prefijo LS_PREFIX)
+  // Sube todo lo que esté en cola local (por archivo)
   async function syncPending(){
-    if (!driveId || !folderId) return;
     const keys = Object.keys(localStorage).filter(k => k.startsWith(LS_PREFIX));
     if (!keys.length) return;
 
     for (const k of keys){
-      const filename = k.replace(LS_PREFIX, "");
+      const relPath = k.replace(LS_PREFIX, "");
+      let data;
+      try{ data = JSON.parse(localStorage.getItem(k) || "null"); } catch { data = null; }
+      if (data == null) continue;
+
       try{
-        const data = JSON.parse(localStorage.getItem(k) || "null");
-        if (data == null) continue;
-        const ok = await putJson(filename, data);
-        if (ok){
-          // si quieres limpiar la cola (no recomendado si quieres cache rápida), descomenta:
-          // localStorage.removeItem(k);
-        }
+        await putJson(relPath, data);
+        // si quieres limpiar la cola tras subir con éxito, descomenta:
+        // localStorage.removeItem(k);
       }catch(e){
-        console.warn("syncPending error con", filename, e);
+        console.warn("syncPending no pudo subir", relPath, e);
       }
     }
   }
 
-  // Inicializa a partir del LINK compartido (tu 1drv.ms)
-  async function useSharedLink(url){
-    await setSharedLink(url);
-    // intenta subir pendientes
-    try{ await syncPending(); }catch(e){ console.warn("syncPending al iniciar:", e); }
-  }
+  // Exponer API
+  window.GraphStore = { getJson, putJson, ensureFolder, syncPending };
 
-  window.GraphStore = {
-    useSharedLink,   // <-- LLÁMALO UNA VEZ, al arrancar, con TU LINK
-    getJson,
-    putJson,
-    syncPending,
-    // debug opcional:
-    _debug: ()=>({driveId, folderId, sharedLink})
-  };
 })();
 </script>
