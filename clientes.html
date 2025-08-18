@@ -168,4 +168,23 @@
   <!-- Lógica de la página -->
   <script src="./js/clientes.js?v=9"></script>
 </body>
+  <!-- MSAL (autenticación) -->
+<script src="https://alcdn.msauth.net/browser/2.38.1/js/msal-browser.min.js"></script>
+<script src="./js/msal-config.js"></script>
+<script src="./js/auth.js"></script>
+
+<!-- Protege la página (obliga login) -->
+<script>
+  (async () => {
+    try { await MSALApp.requireAuth(); } catch { location.href = "index.html"; }
+  })();
+</script>
+
+<!-- Graph y capa de datos -->
+<script src="./js/graph.js"></script>
+<script src="./js/data.js"></script>
+
+<!-- TU lógica de la página -->
+<script src="./js/clientes.js?v=10"></script>
+
 </html>
