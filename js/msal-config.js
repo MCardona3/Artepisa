@@ -1,5 +1,4 @@
 // js/msal-config.js
-
 /* ---------------------------------------------
    Detección de entorno y armado de redirectUri
    --------------------------------------------- */
@@ -8,24 +7,22 @@
 const IS_GITHUB_PAGES = /\.github\.io$/i.test(location.host);
 
 // ⚠️ Si publicas dentro de un repositorio (https://usuario.github.io/MI_REPO/)
-// pon aquí el nombre EXACTO del repo. Si publicas en la raíz (https://usuario.github.io/),
-// deja el mismo valor y el script detectará que estás en raíz y NO añadirá /REPO.
+// pon aquí el nombre EXACTO del repo (tal como aparece en GitHub).
+// Si publicas en la raíz (https://usuario.github.io/), puedes dejarlo igual;
+// el código detecta y NO añade /REPO si no corresponde.
 const REPO = "Artepisa";
 
-/**
- * Determina el "base" correcto:
+/** Determina el "base" correcto:
  * - GitHub Pages en raíz: base = ""
  * - GitHub Pages dentro de repo: base = "/REPO"
  * - Localhost / file:// : base = ""
  */
 function resolveBase() {
   if (!IS_GITHUB_PAGES) return "";
-  // Si la URL actual ya está bajo /REPO, respétalo
-  const p = location.pathname || "/";
+  const p = (location.pathname || "/").replace(/\/+$/, ""); // sin trailing slash
   const repoPrefix = `/${REPO}`;
-  if (p === repoPrefix || p.startsWith(`${repoPrefix}/`)) return repoPrefix;
-  // Si no está bajo /REPO asumimos publicación en raíz del user/org
-  return "";
+  // Si ya estamos bajo /REPO, úsalo; si no, asumimos raíz de usuario/org
+  return p === repoPrefix || p.startsWith(`${repoPrefix}/`) ? repoPrefix : "";
 }
 
 // Normaliza path destino (siempre a /index.html)
@@ -39,22 +36,22 @@ function buildRedirectUri() {
 const REDIRECT = buildRedirectUri();
 
 /* ---------------------------------------------
-   Config principal MSAL (mantiene tus valores)
+   Config principal MSAL
    --------------------------------------------- */
 const CLIENT_ID = "24164079-124e-4f17-a347-2b357984c44f";
 // Para OneDrive personal: usar "consumers" (cuentas Microsoft personales)
 const TENANT_ID = "consumers";
 
-// Scopes mínimos para:
+// Scopes mínimos:
 // - Identidad básica       => User.Read
-// - Leer/escribir archivos => Files.ReadWrite (en OneDrive personal basta con este)
+// - Leer/escribir archivos => Files.ReadWrite (OneDrive personal)
 // - Token de actualización => offline_access
 const DEFAULT_SCOPES = ["User.Read", "Files.ReadWrite", "offline_access"];
 
 // Authority armada desde el tenant (consumers / organizations / <GUID>)
 const AUTHORITY = `https://login.microsoftonline.com/${TENANT_ID}`;
 
-// Exponemos una configuración simple (retrocompatible) que tu auth.js ya usa
+// Exponemos una configuración simple (la usa auth.js)
 window.MSAL_CONFIG = {
   clientId: CLIENT_ID,
   tenantId: TENANT_ID,
@@ -62,7 +59,7 @@ window.MSAL_CONFIG = {
   postLogoutRedirectUri: REDIRECT,
   scopes: DEFAULT_SCOPES,
 
-  // Opciones MSAL (idénticas a las que usaría auth.js)
+  // Opciones MSAL (idénticas a las de auth.js)
   options: {
     auth: {
       clientId: CLIENT_ID,
@@ -73,7 +70,7 @@ window.MSAL_CONFIG = {
     },
     cache: {
       cacheLocation: "sessionStorage",   // seguro para SPA
-      storeAuthStateInCookie: false      // pon true solo si Safari viejo da problemas
+      storeAuthStateInCookie: false      // true solo si Safari viejo da problemas
     },
     system: {
       loggerOptions: { loggerCallback: () => {}, piiLoggingEnabled: false },
@@ -90,18 +87,17 @@ window.MSAL_CONFIG = {
 
 /* ---------------------------------------------
    Almacenamiento en OneDrive personal compartido
-   --------------------------------------------- */
-/*
-  Recomendado (gratis):
-  1) Crea en tu OneDrive la carpeta /ArtepisaData
-  2) COMPÁRTELA con "Puede editar" a todos los usuarios
-  3) Cada usuario hace "Agregar acceso directo a Mi OneDrive"
-  4) Todos verán/editarán los mismos JSON en esa carpeta
+   ---------------------------------------------
+   Recomendado (gratis):
+   1) Crea en tu OneDrive la carpeta /ArtepisaData
+   2) COMPÁRTELA con "Puede editar" a todos los usuarios
+   3) Cada usuario hace "Agregar acceso directo a Mi OneDrive"
+   4) Todos verán/editarán los mismos JSON en esa carpeta
 */
 (function ensureGraphStorage() {
   const DEFAULT_STORAGE = {
-    location: "me",         // "me" => OneDrive personal del usuario
-    folderPath: "/ArtepisaData"
+    location: "me",                 // "me" => OneDrive personal del usuario
+    folderPath: "/ArtepisaData"     // carpeta compartida (o acceso directo)
   };
 
   // Normaliza el path (debe iniciar con /)
@@ -113,7 +109,7 @@ window.MSAL_CONFIG = {
   const incoming = window.GRAPH_STORAGE || {};
   const merged = {
     location: incoming.location === "site" ? "site" : "me",
-    siteId: incoming.siteId || "", // solo si usas SharePoint (no necesario en OneDrive personal)
+    siteId: incoming.siteId || "", // solo para SharePoint (no necesario en OneDrive personal)
     folderPath: normalizePath(incoming.folderPath || DEFAULT_STORAGE.folderPath)
   };
 
@@ -121,7 +117,7 @@ window.MSAL_CONFIG = {
 })();
 
 /* ---------------------------------------------
-   Tips de configuración (informativos)
+   Tips rápidos
    ---------------------------------------------
    - Si usas SharePoint en vez de OneDrive:
      window.GRAPH_STORAGE = {
@@ -131,7 +127,7 @@ window.MSAL_CONFIG = {
      };
 
    - GitHub Pages:
-     * Si publicas en raíz: https://<usuario>.github.io/  → REDIRECT será esa raíz + /index.html
-     * Si publicas en repo: https://<usuario>.github.io/<REPO>/  → REDIRECT será /<REPO>/index.html
-     Asegúrate de registrar EXACTAMENTE ese Redirect URI en Azure Portal.
+     * En raíz:  https://<usuario>.github.io/           → REDIRECT será /index.html
+     * En repo:  https://<usuario>.github.io/<REPO>/    → REDIRECT será /<REPO>/index.html
+     Registra EXACTAMENTE ese Redirect URI en Azure Portal (App Registration).
 */
