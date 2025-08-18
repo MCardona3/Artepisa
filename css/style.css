@@ -1,6 +1,6 @@
-/* ====== Base (puede usarse en todo el sitio) ====== */
-*{box-sizing:border-box}
-html,body{height:100%}
+/* ====== Base (para todo el sitio) ====== */
+*{ box-sizing: border-box; }
+html, body{ height:100%; }
 body{
   margin:0;
   font-family: ui-sans-serif, system-ui, Segoe UI, Roboto, Inter, Arial, sans-serif;
@@ -22,7 +22,7 @@ body{
 /* Fondo y color de texto */
 .theme-light{ background: var(--bg); color: var(--text-900); }
 
-/* Header blanco con sombra sutil */
+/* ====== HEADER (blanco con sombra sutil) ====== */
 .theme-light .brand{
   background:#fff;
   border-bottom:1px solid #edf2f7;
@@ -31,15 +31,15 @@ body{
   display:flex; align-items:center; justify-content:space-between;
 }
 .theme-light .logo{ display:flex; gap:12px; align-items:center; }
-.theme-light .brandlogo{ height:36px; border-radius:10px }
+.theme-light .brandlogo{ height:36px; border-radius:10px; }
 .theme-light .brandname{ font-weight:800; letter-spacing:.2px; color:var(--text-900); }
 .theme-light .muted{ color: var(--text-600); }
 
-/* Layout */
+/* ====== LAYOUT ====== */
 .theme-light .container{ max-width:1100px; margin:0 auto; padding: 24px 16px 80px; }
 .theme-light .hero{ min-height: calc(100vh - 70px); display:grid; place-items:center; }
 
-/* Card blanca */
+/* ====== CARDS ====== */
 .theme-light .card{
   width:100%; max-width:760px;
   margin:0;
@@ -57,7 +57,7 @@ body{
 }
 .theme-light .card p{ margin:.5rem 0 0; }
 
-/* Botones */
+/* ====== BOTONES ====== */
 .theme-light .actions{ display:flex; gap:12px; flex-wrap:wrap; margin-top:16px; }
 .theme-light .btn{
   appearance:none; border:0; cursor:pointer;
@@ -84,6 +84,13 @@ body{
 }
 .theme-light .btn.ghost:hover{ background:#f8fafc; }
 
+/* Botón peligro (eliminar/limpiar) */
+.theme-light .btn.danger{
+  background: linear-gradient(180deg, #ef4444, #dc2626);
+  box-shadow: 0 6px 18px rgba(220,38,38,.28);
+}
+.theme-light .btn.danger:hover{ filter:saturate(110%); transform:translateY(-1px); }
+
 /* Spinner dentro del botón */
 .theme-light .spinner{
   width:16px; height:16px;
@@ -96,7 +103,7 @@ body{
 .theme-light .spinner.on{ display:inline-block; }
 @keyframes spin{ to{ transform: rotate(360deg); } }
 
-/* Acordeón/ayuda */
+/* ====== ACCORDEON / AYUDA ====== */
 .theme-light details{
   margin-top: 16px;
   background:#f7f9fc;
@@ -107,17 +114,83 @@ body{
 .theme-light summary{ cursor:pointer; user-select:none; }
 .theme-light code{ background:#eef2f7; color:#0b1220; padding:2px 6px; border-radius:8px; }
 
-/* Mensaje */
+/* ====== MENSAJES ====== */
 .theme-light #login-msg{ margin-top:16px; color: var(--text-600); font-size:.98rem; }
 
-/* Focus accesible */
+/* ====== FORM / INPUTS ====== */
+.theme-light .form{ display:grid; gap:12px; }
+.theme-light .field{ display:flex; flex-direction:column; gap:6px; }
+.theme-light .field label{ font-weight:600; color:#394356; }
+.theme-light .help{ color:#5b6577; font-size:.9rem; }
+
+.theme-light .input{
+  width:100%;
+  padding: 10px 12px;
+  border:1px solid #e1e7ef;
+  border-radius: 10px;
+  background:#fff;
+  color:#0b1220;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.theme-light .input::placeholder{ color:#9aa7b8; }
+.theme-light .input:focus{
+  outline:0;
+  border-color:#bfd3ff;
+  box-shadow: 0 0 0 4px rgba(59,130,246,.15);
+}
+.theme-light .input[readonly],
+.theme-light .input:disabled{
+  background:#f4f6fa; color:#6b7486;
+}
+
+/* ====== TABLAS ====== */
+.theme-light .table-wrap{
+  overflow:auto;
+  border:1px solid #e7edf3;
+  border-radius: 12px;
+  background:#fff;
+  box-shadow: 0 4px 14px rgba(16,24,40,.05);
+  -webkit-overflow-scrolling: touch;
+}
+.theme-light table.table{
+  width:100%;
+  border-collapse: separate;
+  border-spacing:0;
+  min-width: 760px; /* mejora layout en pantallas chicas con scroll */
+}
+.theme-light .table thead th{
+  position:sticky; top:0; z-index:1;
+  background:#f3f6fb;
+  color:#394356;
+  text-align:left;
+  padding:12px 14px;
+  border-bottom:1px solid #e1e7ef;
+  font-weight:700;
+}
+.theme-light .table tbody td{
+  padding:12px 14px;
+  border-bottom:1px solid #eef3f8;
+  color:#1c2536;
+  vertical-align:middle;
+}
+.theme-light .table tbody tr:hover{ background:#f9fbfe; }
+.theme-light .table td:last-child,
+.theme-light .table th:last-child{ text-align:right; }
+.theme-light .table .table-actions{ display:flex; justify-content:flex-end; gap:8px; }
+
+/* ====== UTILIDADES ====== */
+.theme-light .gap-8{ gap:8px; }
+.theme-light .flex{ display:flex; }
+.theme-light .flex-1{ flex:1; }
+
+/* ====== ENFOQUE ACCESIBLE ====== */
 .theme-light :focus-visible{
   outline: 3px solid rgba(37,99,235,.45);
   outline-offset: 2px;
   border-radius: 12px;
 }
 
-/* Responsive */
+/* ====== RESPONSIVE ====== */
 @media (max-width: 720px){
   .theme-light .brand{ padding:10px 14px; }
   .theme-light .container{ padding:18px 12px 56px; }
