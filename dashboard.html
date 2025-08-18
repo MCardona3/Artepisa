@@ -7,6 +7,12 @@
   <link rel="stylesheet" href="./css/style.css" />
 </head>
 <body>
+  <!-- GUARDIA DE SESIÓN: si no hay sesión iniciada, vuelve a login -->
+  <script>
+    const __acct = JSON.parse(sessionStorage.getItem('artepisa_account')||'null');
+    if(!__acct){ location.href = 'index.html'; }
+  </script>
+
 <header class="brand">
   <div class="logo">
     <img class="brandlogo" src="./img/arte.png?v=1" alt="ARTEPISA SLP">
@@ -72,8 +78,9 @@
 
 <script>
   document.addEventListener("DOMContentLoaded", async () => {
-    // Asegura sesión (si falla, redirige a login)
-    try { if (MSALApp?.requireAuth) await MSALApp.requireAuth(); } catch(_) {}
+    // Intenta renovar y exige sesión
+    try { if (window.MSALApp?.requireAuth) await MSALApp.requireAuth(); } catch(_) {}
+
     const acct = MSALApp?.getAccount?.() || JSON.parse(sessionStorage.getItem("artepisa_account")||"null");
     if (!acct) { location.href = "index.html"; return; }
 
@@ -93,10 +100,12 @@
     }
 
     // Roles: mostrar tile de Usuarios solo si eres ADMIN
-    await Roles.init();
-    if (Roles.meets("ADMIN")) {
-      document.getElementById("tile-usuarios").style.display = "block";
-    }
+    try {
+      await Roles.init();
+      if (Roles.meets("ADMIN")) {
+        document.getElementById("tile-usuarios").style.display = "block";
+      }
+    } catch (_) {}
 
     // Salir
     document.getElementById("logout").addEventListener("click", MSALApp.logout);
