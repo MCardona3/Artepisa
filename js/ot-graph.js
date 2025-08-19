@@ -73,21 +73,21 @@ function renderList(){
     if (q && !hay.includes(q)) return;
 
     const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td class="clip">${x.num ?? ""}</td>
-      <td>${x.cliente ?? ""}</td>
-      <td>${x.depto ?? ""}</td>
-      <td>${x.enc ?? ""}</td>
-      <td>${fmtDate(x.emision)}</td>
-      <td>${fmtDate(x.entrega)}</td>
-      <td>${x.oc ?? ""}</td>
-      <td>${x.est ?? ""}</td>
-      <td>${x.prio ?? ""}</td>
-      <td>${x.desc ?? ""}</td>
+    tr.innerHTML = \`
+      <td class="clip">\${x.num ?? ""}</td>
+      <td>\${x.cliente ?? ""}</td>
+      <td>\${x.depto ?? ""}</td>
+      <td>\${x.enc ?? ""}</td>
+      <td>\${fmtDate(x.emision)}</td>
+      <td>\${fmtDate(x.entrega)}</td>
+      <td>\${x.oc ?? ""}</td>
+      <td>\${x.est ?? ""}</td>
+      <td>\${x.prio ?? ""}</td>
+      <td>\${x.desc ?? ""}</td>
       <td class="right table-actions">
-        <button class="btn small" data-i="${i}" data-act="edit">Editar</button>
-        <button class="btn small danger" data-i="${i}" data-act="del">Borrar</button>
-      </td>`;
+        <button class="btn small" data-i="\${i}" data-act="edit">Editar</button>
+        <button class="btn small danger" data-i="\${i}" data-act="del">Borrar</button>
+      </td>\`;
     elTable().appendChild(tr);
   });
 }
@@ -97,12 +97,12 @@ function addItemRow(item={cantidad:"", descripcion:"", plano:"", adjunto:""}){
   if (!itemsBox()) return;
   const row = document.createElement("div");
   row.className = "items-row";
-  row.innerHTML = `
-    <input type="number" min="0" step="1" placeholder="0" value="${item.cantidad ?? ""}">
-    <input placeholder="Descripción" value="${item.descripcion ?? ""}">
-    <input placeholder="Plano" value="${item.plano ?? ""}">
-    <input placeholder="Adjunto (base64)" value="${item.adjunto ?? ""}">
-    <button class="btn small danger" type="button">Quitar</button>`;
+  row.innerHTML = \`
+    <input type="number" min="0" step="1" placeholder="0" value="\${item.cantidad ?? ""}">
+    <input placeholder="Descripción" value="\${item.descripcion ?? ""}">
+    <input placeholder="Plano" value="\${item.plano ?? ""}">
+    <input placeholder="Adjunto (base64)" value="\${item.adjunto ?? ""}">
+    <button class="btn small danger" type="button">Quitar</button>\`;
   row.querySelector("button").addEventListener("click", ()=> row.remove());
   itemsBox().appendChild(row);
 }
@@ -152,7 +152,7 @@ async function loadClientesDatalist(){
     const lista = Array.isArray(items) ? items : [];
     dlClientes().innerHTML = lista
       .filter(c => c && (c.nombre || c.name))
-      .map(c => `<option value="${(c.nombre || c.name).toString().replace(/"/g,'&quot;')}"></option>`)
+      .map(c => \`<option value="\${(c.nombre || c.name).toString().replace(/"/g,'&quot;')}"></option>\`)
       .join("");
   }catch(_){ /* si no existe clientes.json, no pasa nada */ }
 }
@@ -174,7 +174,7 @@ async function save(){
 // ==== Import (.json / .csv) ====
 function parseCSV(text){
   const sep = text.includes(";") && !text.includes(",") ? ";" : ",";
-  const lines = text.split(/\r?\n/).filter(l=>l.trim().length);
+  const lines = text.split(/\\r?\\n/).filter(l=>l.trim().length);
   const head = lines.shift()?.split(sep).map(s=>s.trim().toLowerCase()) || [];
   return lines.map(line=>{
     const cells = line.split(sep).map(s=>s.replace(/^"|"$/g,"").replace(/""/g,'"').trim());
@@ -220,7 +220,7 @@ async function importFile(file){
     else LIST.push(r);
   });
 
-  try { await save(); alert(`Importados ${recs.length} registro(s).`); }
+  try { await save(); alert(\`Importados \${recs.length} registro(s).\`); }
   catch(e){
     if (String(e).includes("412")) { await load(); await importFile(file); return; }
     alert("Error al guardar tras importar: " + e.message);
@@ -233,9 +233,9 @@ function exportCSV(){
   const cols = ["num","cliente","depto","enc","emision","entrega","oc","est","prio","desc"];
   const rows = [cols.join(",")].concat(
     LIST.map(x => cols.map(k => (x[k] ?? "").toString().replace(/"/g,'""'))
-                     .map(s=>`"${s}"`).join(","))
+                     .map(s=>\`"\${s}"\`).join(","))
   );
-  download("ordenes_trabajo.csv", rows.join("\n"));
+  download("ordenes_trabajo.csv", rows.join("\\n"));
 }
 async function clearAll(){
   if (!confirm("¿Vaciar todas las Órdenes de Trabajo?")) return;
@@ -255,30 +255,36 @@ function buildPrintHTML(rec){
   const items = Array.isArray(rec.items) ? rec.items : [];
 
   const rows = items.length
-    ? items.map((it,i)=>`
+    ? items.map((it,i)=>\`
         <tr>
-          <td>${i+1}</td>
-          <td style="text-align:right">${it.cantidad ?? ""}</td>
-          <td>${(it.descripcion ?? "").toString()}</td>
-          <td>${it.plano ?? ""}</td>
-          <td>${it.adjunto ? "Sí" : ""}</td>
+          <td>\${i+1}</td>
+          <td style="text-align:right">\${it.cantidad ?? ""}</td>
+          <td>\${(it.descripcion ?? "").toString()}</td>
+          <td>\${it.plano ?? ""}</td>
+          <td>\${it.adjunto ? "Sí" : ""}</td>
         </tr>
-      `).join("")
-    : `<tr><td colspan="5" style="text-align:center;color:#6b7280">Sin partidas</td></tr>`;
+      \`).join("")
+    : \`<tr><td colspan="5" style="text-align:center;color:#6b7280">Sin partidas</td></tr>\`;
 
-  return `<!doctype html>
+  // Contacto fijo solicitado
+  const direccion = "Calle 61 #232 Col. Villa Jardín, San Luis Potosí, S. L. P.";
+  const telefono  = "+52 444 829 5859";
+  const correo    = "luis.moreno@artepisa.com";
+
+  return \`<!doctype html>
 <html>
 <head>
 <meta charset="utf-8">
-<title>OT ${rec.num || ""} - Artepisa</title>
+<title>OT \${rec.num || ""} - Artepisa</title>
 <style>
   @page { size: A4; margin: 16mm; }
   * { box-sizing: border-box; }
   body { font-family: ui-sans-serif, system-ui, Segoe UI, Roboto, Arial; color:#111827; }
-  .header { display:flex; align-items:center; gap:16px; margin-bottom:10px; }
+  .header { display:flex; align-items:center; gap:16px; margin-bottom:6px; }
   .header img { height: 56px; }
   .brand { font-weight:800; font-size:20px; line-height:1.1; }
   .muted { color:#6b7280; }
+  .contact { margin:4px 0 12px; font-size:12.5px; color:#111827; }
   h1 { font-size:18px; margin: 6px 0 14px; }
   .grid { display:grid; grid-template-columns: 1fr 1fr; gap:8px 20px; margin-bottom:14px; }
   .field { display:flex; gap:8px; }
@@ -298,29 +304,33 @@ function buildPrintHTML(rec){
 </head>
 <body>
   <div class="header">
-    <img src="${logoURL}" alt="ARTEPISA SLP">
+    <img src="\${logoURL}" alt="ARTEPISA SLP">
     <div>
       <div class="brand">ARTEPISA SLP</div>
-      <div class="muted">Orden de Trabajo ${rec.num ? `· #${rec.num}` : ""}</div>
+      <div class="muted">Orden de Trabajo \${rec.num ? \`· #\${rec.num}\` : ""}</div>
+      <div class="contact">
+        Dirección: \${direccion}<br>
+        Teléfono: \${telefono} · Correo: \${correo}
+      </div>
     </div>
   </div>
 
   <h1>Ficha de Orden de Trabajo</h1>
 
   <div class="grid">
-    <div class="field"><div class="label">Cliente</div><div class="value">${rec.cliente || "&nbsp;"}</div></div>
-    <div class="field"><div class="label">Departamento</div><div class="value">${rec.depto || "&nbsp;"}</div></div>
+    <div class="field"><div class="label">Cliente</div><div class="value">\${rec.cliente || "&nbsp;"}</div></div>
+    <div class="field"><div class="label">Departamento</div><div class="value">\${rec.depto || "&nbsp;"}</div></div>
 
-    <div class="field"><div class="label">Encargado</div><div class="value">${rec.enc || "&nbsp;"}</div></div>
-    <div class="field"><div class="label">Orden de Compra</div><div class="value">${rec.oc || "&nbsp;"}</div></div>
+    <div class="field"><div class="label">Encargado</div><div class="value">\${rec.enc || "&nbsp;"}</div></div>
+    <div class="field"><div class="label">Orden de Compra</div><div class="value">\${rec.oc || "&nbsp;"}</div></div>
 
-    <div class="field"><div class="label">Fecha Emisión</div><div class="value">${fmtDateHuman(rec.emision) || "&nbsp;"}</div></div>
-    <div class="field"><div class="label">Fecha Entrega</div><div class="value">${fmtDateHuman(rec.entrega) || "&nbsp;"}</div></div>
+    <div class="field"><div class="label">Fecha Emisión</div><div class="value">\${fmtDateHuman(rec.emision) || "&nbsp;"}</div></div>
+    <div class="field"><div class="label">Fecha Entrega</div><div class="value">\${fmtDateHuman(rec.entrega) || "&nbsp;"}</div></div>
 
-    <div class="field"><div class="label">Estatus</div><div class="value">${rec.est ? `<span class="chip">${rec.est}</span>` : "&nbsp;"}</div></div>
-    <div class="field"><div class="label">Prioridad</div><div class="value">${rec.prio ? `<span class="badge">${rec.prio}</span>` : "&nbsp;"}</div></div>
+    <div class="field"><div class="label">Estatus</div><div class="value">\${rec.est ? \`<span class="chip">\${rec.est}</span>\` : "&nbsp;"}</div></div>
+    <div class="field"><div class="label">Prioridad</div><div class="value">\${rec.prio ? \`<span class="badge">\${rec.prio}</span>\` : "&nbsp;"}</div></div>
 
-    <div class="field" style="grid-column:1 / -1"><div class="label">Descripción</div><div class="value">${rec.desc || "&nbsp;"}</div></div>
+    <div class="field" style="grid-column:1 / -1"><div class="label">Descripción</div><div class="value">\${rec.desc || "&nbsp;"}</div></div>
   </div>
 
   <div class="sep"></div>
@@ -329,7 +339,7 @@ function buildPrintHTML(rec){
     <thead>
       <tr><th>#</th><th style="text-align:right">Cant.</th><th>Descripción</th><th>Plano</th><th>Adjunto</th></tr>
     </thead>
-    <tbody>${rows}</tbody>
+    <tbody>\${rows}</tbody>
   </table>
 
   <div class="footer">
@@ -351,7 +361,7 @@ function buildPrintHTML(rec){
     window.addEventListener('load', () => setTimeout(()=>window.print(), 120));
   </script>
 </body>
-</html>`;
+</html>\`;
 }
 
 function printOT(rec){
@@ -459,4 +469,3 @@ document.addEventListener("DOMContentLoaded", ()=>{
   mountEvents();
   load().catch(err => { console.error(err); alert("Error cargando OT: " + err.message); });
 });
-
