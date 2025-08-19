@@ -327,3 +327,7 @@ main.container.form-only #card-form{
   }
   .ot-table td:last-child{ grid-template-columns:1fr; }
 }
+/* Evita que fechas/OC se partan, y estilo del placeholder */
+.ot-table .td--date,
+.ot-table .td--oc{ white-space:nowrap; }
+.ot-table td .muted, .ot-table td i, .ot-table td s{ color:#94a3b8; }
