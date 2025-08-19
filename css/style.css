@@ -701,3 +701,54 @@ main.container.form-only #card-form{
 
 /* Evita altura fija heredada en otras tablas */
 .ot-table tbody tr{ height:auto; }
+/* ===== FIX: Órdenes sin cortes feos ni columnas estrechas ===== */
+
+/* 1) Anula el wrap agresivo heredado */
+.ot-table,
+.ot-table *{
+  overflow-wrap: normal !important;  /* NO cortar dentro de palabras */
+  word-break: normal !important;     /* NO partir palabras */
+  white-space: normal;               /* que pueda saltar por espacios */
+}
+
+/* 2) Usa layout fijo con anchos útiles por columna */
+.ot-table{
+  table-layout: fixed;     /* columnas obedecen los widths */
+  width: 100%;
+}
+
+/* Anchos por columna (ajústalos si quieres) */
+.ot-table th:nth-child(1),  .ot-table td:nth-child(1)  { width: 80px; }   /* #OT */
+.ot-table th:nth-child(2),  .ot-table td:nth-child(2)  { width: 22%;  }   /* Cliente */
+.ot-table th:nth-child(3),  .ot-table td:nth-child(3)  { width: 16%;  }   /* Depto */
+.ot-table th:nth-child(4),  .ot-table td:nth-child(4)  { width: 16%;  }   /* Encargado */
+.ot-table th:nth-child(5),  .ot-table td:nth-child(5)  { width: 11%;  }   /* F. Emisión */
+.ot-table th:nth-child(6),  .ot-table td:nth-child(6)  { width: 11%;  }   /* F. Entrega */
+.ot-table th:nth-child(7),  .ot-table td:nth-child(7)  { width: 12%;  }   /* Orden Compra */
+.ot-table th:nth-child(8),  .ot-table td:nth-child(8)  { width: 9%;   }   /* Estatus */
+.ot-table th:nth-child(9),  .ot-table td:nth-child(9)  { width: 9%;   }   /* Prioridad */
+.ot-table th:nth-child(10), .ot-table td:nth-child(10) { width: 1%;   }   /* Acciones */
+
+/* 3) Cliente/Depto/Encargado: 2 líneas bonitas (sin romper letras) */
+.clamp-2{
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+/* 4) Botones compactos redondos (se ven bien y no empujan filas) */
+.ot-table td:last-child{ text-align:right; white-space:nowrap; }
+.table-actions{ display:inline-flex; align-items:center; gap:8px; }
+.iconbtn{
+  width: 36px; height: 36px; border-radius: 999px; padding: 0;
+  display: inline-grid; place-items: center; line-height: 0;
+  color: #fff; box-shadow: 0 3px 10px rgba(16,24,40,.08);
+  transition: transform .08s ease, filter .18s ease;
+}
+.iconbtn.success{ background: linear-gradient(180deg,#22c55e,#16a34a); }
+.iconbtn.danger { background: linear-gradient(180deg,#ef4444,#dc2626); }
+.iconbtn[data-act="edit"]::before{ content:"✏️"; font-size:18px; }
+.iconbtn[data-act="del"]::before { content:"🗑️"; font-size:18px; }
+.iconbtn:hover{ transform:translateY(-1px); filter:saturate(108%); }
+.iconbtn:active{ transform:translateY(0); }
