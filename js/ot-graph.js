@@ -254,6 +254,7 @@ function fmtDateHuman(s){
   return d.toLocaleDateString(undefined, { day:"2-digit", month:"2-digit", year:"numeric" });
 }
 
+: igual que antes pero SIN auto window.print()
 function buildPrintHTML(rec){
   const logoURL = new URL("./img/arte.png?v=1", location.href).href;
   const items = Array.isArray(rec.items) ? rec.items : [];
@@ -270,7 +271,6 @@ function buildPrintHTML(rec){
       `).join("")
     : `<tr><td colspan="5" style="text-align:center;color:#6b7280">Sin partidas</td></tr>`;
 
-  // Contacto fijo solicitado
   const direccion = "Calle 61 #232 Col. Villa Jardín, San Luis Potosí, S. L. P.";
   const telefono  = "+52 444 829 5859";
   const correo    = "luis.moreno@artepisa.com";
@@ -328,8 +328,8 @@ function buildPrintHTML(rec){
     <div class="field"><div class="label">Encargado</div><div class="value">${rec.enc || "&nbsp;"}</div></div>
     <div class="field"><div class="label">Orden de Compra</div><div class="value">${rec.oc || "&nbsp;"}</div></div>
 
-    <div class="field"><div class="label">Fecha Emisión</div><div class="value">${fmtDateHuman(rec.emision) || "&nbsp;"}</div></div>
-    <div class="field"><div class="label">Fecha Entrega</div><div class="value">${fmtDateHuman(rec.entrega) || "&nbsp;"}</div></div>
+    <div class="field"><div class="label">Fecha Emisión</div><div class="value">${new Date(rec.emision||'').toLocaleDateString() || "&nbsp;"}</div></div>
+    <div class="field"><div class="label">Fecha Entrega</div><div class="value">${new Date(rec.entrega||'').toLocaleDateString() || "&nbsp;"}</div></div>
 
     <div class="field"><div class="label">Estatus</div><div class="value">${rec.est ? `<span class="chip">${rec.est}</span>` : "&nbsp;"}</div></div>
     <div class="field"><div class="label">Prioridad</div><div class="value">${rec.prio ? `<span class="badge">${rec.prio}</span>` : "&nbsp;"}</div></div>
@@ -345,39 +345,41 @@ function buildPrintHTML(rec){
     </thead>
     <tbody>${rows}</tbody>
   </table>
-
-  <div class="footer">
-    <div class="sign">
-      <div class="line"></div>
-      <div class="muted">Elaboró</div>
-    </div>
-    <div class="sign">
-      <div class="line"></div>
-      <div class="muted">Autorizó</div>
-    </div>
-    <div class="sign">
-      <div class="line"></div>
-      <div class="muted">Recibió</div>
-    </div>
-  </div>
-
-  <script>
-    window.addEventListener('load', () => setTimeout(()=>window.print(), 120));
-  </script>
 </body>
 </html>`;
 }
 
+
 function printOT(rec){
   if (!rec || !rec.cliente) {
     alert("Completa al menos el CLIENTE antes de imprimir.");
-    fCliente()?.focus();
+    (document.getElementById("o-cliente")||{}).focus?.();
     return;
   }
   const html = buildPrintHTML(rec);
-  const w = window.open("", "_blank", "noopener,noreferrer");
-  if (!w) { alert("Bloqueado por el navegador. Habilita ventanas emergentes."); return; }
-  w.document.open(); w.document.write(html); w.document.close();
+
+  const frame = document.createElement("iframe");
+  frame.style.position = "fixed";
+  frame.style.right = "0";
+  frame.style.bottom = "0";
+  frame.style.width = "0";
+  frame.style.height = "0";
+  frame.style.border = "0";
+  document.body.appendChild(frame);
+
+  const win = frame.contentWindow;
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
+
+  // Dar tiempo a que cargue el logo antes de imprimir
+  setTimeout(() => {
+    try {
+      win.focus();
+      win.print();
+    } catch(_) {}
+    setTimeout(()=> frame.remove(), 1000);
+  }, 300);
 }
 
 // ==== Eventos UI ====
