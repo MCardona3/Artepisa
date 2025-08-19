@@ -608,3 +608,96 @@ main.container.form-only #card-form{
   .ot-table .table-actions{ gap:10px; }
   .iconbtn{ width:40px; height:40px; }
 }
+/* ========== Órdenes de Trabajo — look pro, sin scroll ========== */
+
+/* Usa esta clase en la tabla: <table class="table ot-table"> */
+.ot-table{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0;
+  table-layout:auto;             /* sin scroll; que ajuste según contenido */
+}
+
+/* Cabecera con mismo look que “Clientes” */
+.ot-table thead th{
+  background:linear-gradient(180deg,#f5f8fc,#eef3f9);
+  color:#2b3446;
+  font-weight:800;
+  padding:12px 14px;
+  border-bottom:1px solid #dfe7f1;
+  white-space:nowrap;
+}
+
+/* Filas */
+.ot-table tbody tr{
+  background:#fff;
+  border-bottom:1px solid #eef2f7;
+  transition:background .15s ease;
+}
+.ot-table tbody tr:nth-child(even){ background:#fafcff; }
+.ot-table tbody tr:hover{ background:#f2f7ff; }
+
+/* Celdas */
+.ot-table td{
+  padding:12px 14px;
+  vertical-align:middle;
+  color:#1c2536;
+}
+
+/* Redondeado de la tarjeta de tabla */
+.ot-wrap{
+  border:1px solid #e7edf3;
+  border-radius:14px;
+  background:#fff;
+  box-shadow:0 10px 24px rgba(16,24,40,.06);
+  overflow:hidden;               /* redondeo visible */
+}
+
+/* Bordes redondeados primera/última columna (fila) */
+.ot-table tbody tr td:first-child{ border-left:0; }
+.ot-table tbody tr td:last-child { border-right:0; }
+
+/* Columnas largas: 2 líneas máximas con elipsis (bonito y uniforme) */
+.clamp-2{
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;          /* máx 2 líneas */
+  overflow:hidden;
+}
+
+/* Columna acciones siempre compacta a la derecha */
+.ot-table th:last-child,
+.ot-table td:last-child{
+  width:1%;
+  white-space:nowrap;
+  text-align:right;
+  padding-right:12px;
+}
+
+/* Botones redondos (icon-only) más limpios */
+.table-actions{ display:inline-flex; align-items:center; gap:8px; }
+.iconbtn{
+  width:36px; height:36px; border-radius:999px; padding:0;
+  display:inline-grid; place-items:center; line-height:0;
+  color:#fff; box-shadow:0 3px 10px rgba(16,24,40,.08);
+  transition:transform .08s ease, filter .18s ease;
+}
+.iconbtn:hover{ transform:translateY(-1px); filter:saturate(108%); }
+.iconbtn:active{ transform:translateY(0); }
+.iconbtn.success{ background:linear-gradient(180deg,#22c55e,#16a34a); }
+.iconbtn.danger { background:linear-gradient(180deg,#ef4444,#dc2626); }
+
+/* Iconos (emojis) */
+.iconbtn[data-act="edit"]::before{ content:"✏️"; font-size:18px; }
+.iconbtn[data-act="del"]::before { content:"🗑️"; font-size:18px; }
+
+/* Badges para Estatus / Prioridad (opcional) */
+.badge{
+  display:inline-block; padding:3px 8px; border-radius:999px;
+  font-weight:700; font-size:.82rem; border:1px solid #dbeafe;
+  background:#eff6ff; color:#1e40af;
+}
+.badge.green{ border-color:#bbf7d0; background:#ecfdf5; color:#166534; }
+
+/* Evita altura fija heredada en otras tablas */
+.ot-table tbody tr{ height:auto; }
