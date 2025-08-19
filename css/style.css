@@ -445,3 +445,84 @@ main.container.form-only #card-form{
   }
   .ot-table tbody td:last-child{ grid-template-columns:1fr; }
 }
+/* === Tabla de Órdenes de Trabajo sin scroll horizontal === */
+.ot-table {
+  table-layout: auto;     /* deja que cada columna se ajuste al contenido */
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* Ajuste de celdas */
+.ot-table th, 
+.ot-table td {
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: middle;
+  white-space: nowrap;    /* evita que se partan las palabras */
+}
+
+/* Última columna: compacta */
+.ot-table th:last-child,
+.ot-table td:last-child {
+  width: 1%;              /* ocupa solo lo necesario */
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Contenedor de los botones */
+.ot-table .table-actions {
+  display: inline-flex;
+  gap: 6px;
+}
+
+/* Botones compactos */
+.ot-table .table-actions .btn {
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  border-radius: 6px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+/* Hover/active */
+.ot-table .table-actions .btn:hover {
+  transform: translateY(-1px);
+}
+.ot-table .table-actions .btn:active {
+  transform: translateY(0);
+}
+
+/* Colores */
+.ot-table .table-actions .btn.danger {
+  background-color: #dc2626;
+  color: #fff;
+}
+.ot-table .table-actions .btn.danger:hover {
+  background-color: #b91c1c;
+}
+
+.ot-table .table-actions .btn.success {
+  background-color: #16a34a;
+  color: #fff;
+}
+.ot-table .table-actions .btn.success:hover {
+  background-color: #15803d;
+}
+
+/* --- Responsive: en pantallas pequeñas los botones bajan de línea --- */
+@media (max-width: 640px) {
+  .ot-table th, .ot-table td {
+    white-space: normal;   /* permite que las celdas largas se partan */
+  }
+  .ot-table .table-actions {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+  .ot-table .table-actions .btn {
+    flex: 1 1 auto;
+    min-width: 90px;
+    text-align: center;
+  }
+}
