@@ -174,7 +174,11 @@ main.container.form-only #card-form{
 }
 
 /* Fila uniforme + hover */
-.theme-light .table tbody tr { height:46px; }
+/* OT: altura automática de filas para no recortar contenido */
+.ot-table tbody tr {
+  height: auto;
+}
+
 .theme-light .table tbody tr:nth-child(even){ background:#fafcff; }
 .theme-light .table tbody tr:hover{ background:#f2f7ff; }
 
@@ -396,11 +400,6 @@ main.container.form-only #card-form{
 /* Zebra + hover como Clientes */
 .ot-table tbody tr:nth-child(even){ background:#fafcff; }
 .ot-table tbody tr:hover{ background:#f2f7ff; }
-
-/* Mantén layout fijo pero dale anchos útiles por columna */
-.ot-table{
-  width:100%;
-  table-layout: fixed;
 }
 
 /* Anchos por columna (ajústalos si necesitas) */
@@ -447,19 +446,27 @@ main.container.form-only #card-form{
 }
 /* === Tabla de Órdenes de Trabajo sin scroll horizontal === */
 .ot-table {
-  table-layout: auto;     /* deja que cada columna se ajuste al contenido */
+  table-layout: auto;      /* auto para que cada columna se adapte */
   width: 100%;
   border-collapse: collapse;
 }
 
-/* Ajuste de celdas */
-.ot-table th, 
-.ot-table td {
-  padding: 8px 10px;
+/* Header compacto, cuerpo flexible (¡sin scroll!) */
+.ot-table th {
+  padding: 10px 12px;
   text-align: left;
   vertical-align: middle;
-  white-space: nowrap;    /* evita que se partan las palabras */
+  white-space: nowrap;     /* encabezados sin partir */
 }
+
+.ot-table td {
+  padding: 10px 12px;
+  text-align: left;
+  vertical-align: middle;
+  white-space: normal;     /* celdas pueden envolver */
+  overflow-wrap: anywhere; /* permite partir palabras largas si hace falta */
+}
+
 
 /* Última columna: compacta */
 .ot-table th:last-child,
