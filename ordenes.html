@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Órdenes de Trabajo · Artepisa SLP (Graph)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="./css/style.css" />
+  <link rel="stylesheet" href="./css/ordenes.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="./img/arte.png?v=1">
+  <link rel="icon" type="image/png" sizes="16x16" href="./img/arte.png?v=1">
+</head>
+<body class="theme-light">
+<script>
+  const __acct = JSON.parse(sessionStorage.getItem('artepisa_account')||'null');
+  if(!__acct){ location.href='login.html'; }
+</script>
+
+<header class="brand">
+  <div class="logo">
+    <img class="brandlogo" src="./img/arte.png?v=1" alt="ARTEPISA SLP">
+    <div>
+      <div class="brandname">ARTEPISA SLP</div>
+      <div class="muted">Órdenes de Trabajo (OneDrive/SharePoint)</div>
+    </div>
+  </div>
+  <a class="btn ghost" href="dashboard.html">Volver</a>
+</header>
+
+<main class="container tablewide" id="layout">
+  <section class="card" id="card-list">
+    <h1 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span style="flex:1">Órdenes de Trabajo</span>
+      <button class="btn ghost" id="o-export" type="button">Exportar</button>
+      <button class="btn ghost" id="o-import" type="button">Importar</button>
+      <button class="btn danger" id="o-clear" type="button">Limpiar</button>
+      <button class="btn" id="btn-show-form" type="button">Crear / Agregar</button>
+    </h1>
+    <input id="o-file" type="file" accept=".json,.csv" hidden>
+    <div class="actions" style="gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+      <input id="o-buscar" class="input" placeholder="Buscar por # OT o cliente" style="flex:1;min-width:220px">
+    </div>
+    <div class="table-wrap ot-wrap">
+      <table class="table ot-table">
+        <thead>
+          <tr>
+            <th># OT</th><th>Cliente</th><th>Departamento</th><th>Encargado</th><th>Fecha Emisión</th><th>Fecha Entrega</th><th>Orden Compra</th><th>Estatus</th><th>Prioridad</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="o-tabla"></tbody>
+      </table>
+    </div>
+    <p>Total OT: <strong id="ot-count">0</strong></p>
+  </section>
+
+  <section class="card card-form" id="card-form">
+    <h2>Formulario de OT</h2>
+    <div class="form" id="ot-form">
+      <div class="field"><label># OT</label><input id="o-num" class="input" type="number" placeholder="(autogenerado)"></div>
+      <div class="field"><label>Cliente</label><input id="o-cliente" class="input" placeholder="Cliente" list="dl-clientes" required><datalist id="dl-clientes"></datalist></div>
+      <div class="field"><label>Departamento</label><input id="o-depto" class="input" placeholder="Ej. Maquinados"></div>
+      <div class="field"><label>Encargado</label><input id="o-enc" class="input" placeholder="Nombre del responsable"></div>
+      <div class="field"><label>Fecha Emisión</label><input id="o-emision" class="input" type="date"></div>
+      <div class="field"><label>Fecha Entrega</label><input id="o-entrega" class="input" type="date"></div>
+      <div class="field"><label>Orden de Compra</label><input id="o-oc" class="input" placeholder="Número de OC"></div>
+      <div class="field"><label>Estatus</label>
+        <select id="o-est" class="input">
+          <option>ABIERTA</option><option>EN PROCESO</option><option>EN ESPERA</option><option>CERRADA</option>
+        </select>
+      </div>
+      <div class="field"><label>Prioridad</label>
+        <select id="o-prio" class="input">
+          <option>NORMAL</option><option>ALTA</option><option>URGENTE</option>
+        </select>
+      </div>
+      <div class="field"><label>Descripción</label><input id="o-desc" class="input" placeholder="Trabajo a realizar"></div>
+
+      <div class="items-box">
+        <div class="items-head">
+          <div>Cantidad</div><div>Descripción</div><div>Plano</div><div>Adjunto</div><div></div>
+        </div>
+        <div id="items-container"></div>
+        <button class="btn icon" id="btn-add-item" type="button">➕ Agregar partida</button>
+        <div class="muted">El adjunto se guarda en base64. Archivos grandes hacen pesado el JSON.</div>
+      </div>
+
+      <div class="actions" style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <button class="btn" id="o-guardar" type="button">Guardar</button>
+        <button class="btn ghost" id="o-nuevo" type="button">Nuevo</button>
+        <button class="btn" id="o-imprimir" type="button">Imprimir/PDF</button>
+        <span style="flex:1"></span>
+        <button class="btn ghost" id="o-cerrar" type="button">Cerrar</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="./js/msal-config.js"></script>
+<script src="https://alcdn.msauth.net/browser/2.38.2/js/msal-browser.min.js"></script>
+<script src="./js/auth.js"></script>
+<script type="module" src="./js/ot-graph.js"></script>
+</body>
+</html>

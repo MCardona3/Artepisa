@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login · Artepisa</title>
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body class="theme-light">
+<header class="brand">
+  <div class="logo">
+    <img class="brandlogo" src="./img/arte.png?v=1" alt="ARTEPISA SLP">
+    <div>
+      <div class="brandname">ARTEPISA SLP</div>
+      <div class="muted">Acceso</div>
+    </div>
+  </div>
+</header>
+<main class="container">
+  <section class="card">
+    <h1>Accede</h1>
+    <p class="muted">Puedes iniciar sesión con Microsoft o continuar en modo local (pruebas).</p>
+    <div class="actions">
+      <button class="btn" id="login-ms">Login Microsoft</button>
+      <button class="btn ghost" id="login-local">Entrar sin Microsoft</button>
+    </div>
+    <p id="login-msg" class="muted"></p>
+  </section>
+</main>
+
+<script src="./js/msal-config.js"></script>
+<script src="https://alcdn.msauth.net/browser/2.38.2/js/msal-browser.min.js"></script>
+<script src="./js/auth.js"></script>
+<script>
+  document.getElementById('login-ms').addEventListener('click', async ()=>{
+    try{
+      const acc = await MSALApp.signIn();
+      sessionStorage.setItem('artepisa_account', JSON.stringify(acc||{time:Date.now()}));
+      location.href = 'dashboard.html';
+    }catch(e){ document.getElementById('login-msg').textContent = 'Error al iniciar: ' + e.message; }
+  });
+  document.getElementById('login-local').addEventListener('click', ()=>{
+    sessionStorage.setItem('artepisa_account', JSON.stringify({mode:'local', time:Date.now()}));
+    location.href = 'dashboard.html';
+  });
+</script>
+</body>
+</html>
