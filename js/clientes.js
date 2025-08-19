@@ -7,6 +7,29 @@
 
   // Media query para reconocer móvil (coincide con el CSS)
   const mqlMobile = window.matchMedia("(max-width: 820px)");
+// --- Helpers de campos ---
+const fId       = () => document.getElementById("c-id");
+const fNombre   = () => document.getElementById("c-nombre");
+const fTelefono = () => document.getElementById("c-telefono");
+const fDir      = () => document.getElementById("c-direccion");
+const fRFC      = () => document.getElementById("c-rfc");
+const fEstado   = () => document.getElementById("c-estado");
+const fCtoNom   = () => document.getElementById("c-contacto");
+const fCtoTel   = () => document.getElementById("c-contacto-tel");
+
+// Quita readonly/disabled en todos los inputs del formulario de clientes
+function setEditable(on = true) {
+  [
+    fId(), fNombre(), fTelefono(), fDir(),
+    fRFC(), fEstado(), fCtoNom(), fCtoTel()
+  ].forEach(el => {
+    if (!el) return;
+    el.readOnly = !on;
+    el.disabled = false;                // por si alguien lo deshabilitó
+    el.classList.toggle('is-readonly', !on); // si usas una clase visual
+    el.style.pointerEvents = on ? '' : 'auto'; // por si CSS bloqueó eventos
+  });
+}
 
   // ---------- Helpers UI ----------
   function showForm(show) {
