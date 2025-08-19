@@ -61,7 +61,24 @@ async function load(){ try{ const {etag,items}=await gs_getCollection("ot"); ETA
 async function save(){ ETAG=await gs_putCollection("ot",LIST,ETAG); renderCount(); renderList(); }
 function parseCSV(text){ const sep=text.includes(";")&&!text.includes(",")?";":","; const lines=text.split(/\r?\n/).filter(l=>l.trim().length); if(!lines.length) return []; const head=lines.shift().split(sep).map(s=>s.trim().toLowerCase()); return lines.map(line=>{ const cells=line.split(sep).map(s=>s.replace(/^"|"$/g,"").replace(/""/g,'"').trim()); const o={}; head.forEach((h,i)=>o[h]=cells[i]??""); return o; }); }
 const take=(o,...ks)=>{ for(const k of ks) if(o[k]!==undefined) return o[k]; return ""; };
-function normalizeOT(o){ return { num:take(o,"num","#","ot","folio","numero"), cliente:take(o,"cliente","nombre","cliente_nombre"), depto:take(o,"depto","departamento"), enc:take(o,"enc","encargado","responsable","jefe"), emision:take(o,"emision","fecha_emision","fechaemision","fecha"), entrega:take(o,"entrega","fecha_entrega","fechaentrega"), oc:take(o,"oc","ordencompra","orden_compra"), est:take(o,"est","estatus","estado"), prio:take(o,"prio","prioridad"), desc:take(o,"desc","descripcion","descripción"), items:Array.isArray(o.items)?o.items:[] }; }
+function normalizeOT(obj){
+  const o = normalizeKeys(obj); // ← convierte a minúsculas sin acentos
+
+  return {
+    num:     takeN(o, "numot", "num", "ot", "folio", "id", "idot"),
+    cliente: takeN(o, "nombre", "cliente", "razonsocial"),
+    depto:   takeN(o, "departamento", "depto"),
+    enc:     takeN(o, "encargado", "responsable", "jefe"),
+    emision: takeN(o, "fechaemision", "fechai"),
+    entrega: takeN(o, "fechaentrega", "fechae"),
+    oc:      takeN(o, "ordencompra", "oc", "po"),
+    est:     takeN(o, "estatus", "estado", "status"),
+    prio:    takeN(o, "prioridad", "prio", "priority"),
+    desc:    takeN(o, "descripcion", "detalle", "observaciones"),
+    items:   Array.isArray(o.items) ? o.items : []
+  };
+}
+
 async function importFile(file){ const text=await file.text(); let arr=[]; try{ if(file.name.toLowerCase().endsWith(".json")){ const j=JSON.parse(text); arr=Array.isArray(j)?j:(Array.isArray(j?.items)?j.items:[]);} else { arr=parseCSV(text);} }catch(e){ alert("Archivo inválido: "+e.message); return; } const recs=arr.map(normalizeOT).filter(x=> (x.cliente||x.desc)); if(!recs.length){ alert("No se encontraron registros válidos."); return; } const idxByNum=new Map(); LIST.forEach((x,i)=>{ if(x.num) idxByNum.set(String(x.num),i); }); recs.forEach(r=>{ const key=r.num?String(r.num):null; if(key && idxByNum.has(key)) LIST[idxByNum.get(key)]=r; else LIST.push(r); }); try{ await save(); alert(`Importados ${recs.length} registro(s).`);} catch(e){ if(String(e).includes("412")){ await load(); await importFile(file); return; } alert("Error al guardar tras importar: "+e.message); } }
 function exportJSON(){ download("ordenes_trabajo.json", JSON.stringify(LIST,null,2)); }
 function exportCSV(){ const cols=["num","cliente","depto","enc","emision","entrega","oc","est","prio","desc"]; const rows=[cols.join(",")].concat(LIST.map(x=> cols.map(k=> (x[k]??"").toString().replace(/"/g,'""')).map(s=>`"${s}"`).join(","))); download("ordenes_trabajo.csv", rows.join("\n")); }
