@@ -93,7 +93,7 @@ function mountEvents(){ on(btnShowForm(),"click",()=>{ fillForm(null); setMode("
   on(btnAddItem(),"click",()=>addItemRow());
   on(btnGuardar(),"click",async ()=>{ const rec=readForm(); if(!rec.cliente||!rec.cliente.trim()){ alert("El campo CLIENTE es obligatorio."); fCliente()?.focus(); return; } if(editingIndex>=0) LIST[editingIndex]=rec; else LIST.push(rec); try{ await save(); alert("Guardado"); setMode(""); window.scrollTo({top:0,behavior:"smooth"}); }catch(e){ alert("Error al guardar: "+e.message); } });
   on(elBuscar(),"input",renderList);
-  on(elTable(),"click",(e)=>{ const btn=e.target.closest("button"); if(!btn) return; const i=Number(btn.getAttribute("data-i")); const act=btn.getAttribute("data-act"); if(act==="edit"){ fillForm(LIST[i]); setMode("split"); elCardForm()?.scrollIntoView({behavior:"smooth"}); } else if(act==="del"){ if(confirm("¿Eliminar la OT seleccionada?")){ LIST.splice(i,1); save().catch(err=>alert(err.message)); } } });
+  on(elTable(),"click",(e)=>{ const btn=e.target.closest("button"); if(!btn) return; const i=Number(btn.getAttribute("data-i")); const act=btn.getAttribute("data-act"); if(act==="edit"){ fillForm(LIST[i]); setMode("form-only"); elCardForm()?.scrollIntoView({behavior:"smooth"}); } else if(act==="del"){ if(confirm("¿Eliminar la OT seleccionada?")){ LIST.splice(i,1); save().catch(err=>alert(err.message)); } } });
   on(btnImprimir(),"click",()=>printOT(readForm()));
   on(btnImport(),"click",()=> inputFile()?.click()); on(inputFile(),"change",(e)=>{ const file=e.target.files?.[0]; if(!file) return; importFile(file); e.target.value=""; });
   on(btnExport(),"click",()=>{ const pick=confirm("Aceptar = JSON  |  Cancelar = CSV"); if(pick) exportJSON(); else exportCSV(); });
