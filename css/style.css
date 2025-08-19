@@ -367,3 +367,81 @@ main.container.form-only #card-form{
   .mobile-hide-list #card-list .table-wrap{ display:none; }
   .mobile-hide-list #card-list .muted-hint{ display:block; }
 }
+/* ====== Órdenes de Trabajo – Encabezados como "Clientes" ====== */
+
+/* Evita que los TH se partan letra por letra */
+.ot-table thead th{
+  white-space: nowrap;            /* no envolver */
+  word-break: keep-all;           /* no “romper” palabras */
+  overflow-wrap: normal;
+}
+
+/* Alineación y aspecto del header como Clientes */
+.ot-table thead th{
+  background: linear-gradient(180deg, #f5f8fc, #eef3f9);
+  color:#2b3446;
+  font-weight:800;
+  padding:12px 14px;
+  border-bottom:1px solid #dfe7f1;
+}
+
+/* Celdas del body con el mismo look */
+.ot-table tbody td{
+  padding:12px 14px;
+  border-bottom:1px solid #eef2f7;
+  color:#1c2536;
+  white-space: normal;
+}
+
+/* Zebra + hover como Clientes */
+.ot-table tbody tr:nth-child(even){ background:#fafcff; }
+.ot-table tbody tr:hover{ background:#f2f7ff; }
+
+/* Mantén layout fijo pero dale anchos útiles por columna */
+.ot-table{
+  width:100%;
+  table-layout: fixed;
+}
+
+/* Anchos por columna (ajústalos si necesitas) */
+.ot-table th:nth-child(1),  .ot-table td:nth-child(1)  { width: 90px;  } /* # OT */
+.ot-table th:nth-child(2),  .ot-table td:nth-child(2)  { width: 18%;   } /* Cliente */
+.ot-table th:nth-child(3),  .ot-table td:nth-child(3)  { width: 14%;   } /* Depto */
+.ot-table th:nth-child(4),  .ot-table td:nth-child(4)  { width: 14%;   } /* Encargado */
+.ot-table th:nth-child(5),  .ot-table td:nth-child(5)  { width: 11%;   } /* F. Emisión */
+.ot-table th:nth-child(6),  .ot-table td:nth-child(6)  { width: 11%;   } /* F. Entrega */
+.ot-table th:nth-child(7),  .ot-table td:nth-child(7)  { width: 12%;   } /* Orden Compra */
+.ot-table th:nth-child(8),  .ot-table td:nth-child(8)  { width: 10%;   } /* Estatus */
+.ot-table th:nth-child(9),  .ot-table td:nth-child(9)  { width: 10%;   } /* Prioridad */
+.ot-table th:nth-child(10), .ot-table td:nth-child(10) { width: 120px; } /* Acciones */
+
+/* Evita overwrap agresivo heredado en este contexto */
+.ot-wrap .table{
+  word-wrap: normal;
+  overflow-wrap: normal;
+}
+
+/* Responsivo: en móvil convierte en tarjetas (si tu base lo hace así) */
+@media (max-width: 820px){
+  .ot-table thead { display:none; }
+  .ot-table, .ot-table tbody, .ot-table tr, .ot-table td{ display:block; width:100%; }
+  .ot-wrap{
+    border-radius:14px;
+    box-shadow:0 8px 22px rgba(16,24,40,.06);
+  }
+  .ot-table tbody tr{
+    background:#fff;
+    margin:10px 10px 14px;
+    padding:12px 12px 6px;
+    border:1px solid #e8eef6;
+    border-radius:12px;
+  }
+  .ot-table tbody td{
+    padding:8px 4px;
+    border-bottom:0;
+    display:grid;
+    grid-template-columns:120px 1fr;
+    gap:8px;
+  }
+  .ot-table tbody td:last-child{ grid-template-columns:1fr; }
+}
