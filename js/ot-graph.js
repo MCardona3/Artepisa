@@ -14,37 +14,38 @@ const download=(name,text)=>{ const b=new Blob([text],{type:"application/octet-s
 function setMode(mode){ const lay=elLayout(); if(!lay) return; lay.classList.remove("form-only","split"); if(mode) lay.classList.add(mode); }
 function renderCount(){ if(elCount()) elCount().textContent=LIST.length; }
 function renderList(){
-  if(!elTable()) return;
+  if (!elTable()) return;
   const q = (elBuscar()?.value || "").toLowerCase().trim();
   elTable().innerHTML = "";
+
+  const dash = (v) => (v == null || String(v).trim() === "") ? "—" : v;
 
   LIST.forEach((x,i)=>{
     const hay = [
       x.num??"", x.cliente??"", x.depto??"", x.enc??"",
       fmtDate(x.emision), fmtDate(x.entrega), x.oc??"", x.est??"", x.prio??"", x.desc??""
     ].join(" ").toLowerCase();
-    if(q && !hay.includes(q)) return;
+    if (q && !hay.includes(q)) return;
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td class="clip">${x.num ?? ""}</td>
-      <td class="clamp-2">${x.cliente ?? ""}</td>
-      <td class="clamp-2">${x.depto ?? ""}</td>
-      <td class="clamp-2">${x.enc ?? ""}</td>
-      <td>${fmtDate(x.emision)}</td>
-      <td>${fmtDate(x.entrega)}</td>
-      <td>${x.oc ?? ""}</td>
-      <td><span class="badge">${x.est ?? ""}</span></td>
-      <td><span class="badge green">${x.prio ?? ""}</span></td>
-      <td>
-        <div class="table-actions">
-          <button class="iconbtn success" title="Editar" data-i="${i}" data-act="edit"></button>
-          <button class="iconbtn danger"  title="Borrar" data-i="${i}" data-act="del"></button>
-        </div>
+      <td data-label="# OT" class="clip td--num">${dash(x.num ?? "")}</td>
+      <td data-label="Cliente" class="clamp-2">${dash(x.cliente || "")}</td>
+      <td data-label="Departamento" class="clamp-2">${dash(x.depto || "")}</td>
+      <td data-label="Encargado" class="clamp-2">${dash(x.enc || "")}</td>
+      <td data-label="Fecha Emisión" class="td--date">${dash(fmtDate(x.emision))}</td>
+      <td data-label="Fecha Entrega" class="td--date">${dash(fmtDate(x.entrega))}</td>
+      <td data-label="Orden Compra" class="td--oc">${dash(x.oc || "")}</td>
+      <td data-label="Estatus">${x.est ? `<span class="badge">${x.est}</span>` : "—"}</td>
+      <td data-label="Prioridad">${x.prio ? `<span class="badge green">${x.prio}</span>` : "—"}</td>
+      <td data-label="Acciones" class="right table-actions">
+        <button class="iconbtn success" title="Editar" data-i="${i}" data-act="edit"></button>
+        <button class="iconbtn danger"  title="Borrar" data-i="${i}" data-act="del"></button>
       </td>`;
     elTable().appendChild(tr);
   });
 }
+
 function clearItemsUI(){ if(itemsBox()) itemsBox().innerHTML=""; }
 function addItemRow(item={cantidad:"",descripcion:"",plano:"",adjunto:""}){ if(!itemsBox()) return; const row=document.createElement("div"); row.className="items-row"; row.innerHTML=`
     <input type="number" min="0" step="1" placeholder="0" value="${item.cantidad??""}">
