@@ -1,4 +1,4 @@
-/* ====== Base (para todo el sitio) ====== */
+/* ====== Base ====== */
 *{ box-sizing: border-box; }
 html, body{ height:100%; }
 body{
@@ -6,22 +6,20 @@ body{
   font-family: ui-sans-serif, system-ui, Segoe UI, Roboto, Inter, Arial, sans-serif;
 }
 
-/* ====== THEME LIGHT (Paleta verde) ====== */
+/* ====== THEME LIGHT ====== */
 .theme-light{
   --bg:#f6f8fb;
   --text-900:#0b1220;
   --text-600:#5b6577;
 
-  /* Marca (verde) */
-  --brand-500:#22c55e;   /* green-500 */
-  --brand-600:#16a34a;   /* green-600 */
+  --brand-500:#22c55e;
+  --brand-600:#16a34a;
 
   --card-bg:#ffffff;
   --card-brd:#e7edf3;
   --shadow-lg:0 12px 36px rgba(16,24,40,.08);
   --radius:18px;
 
-  /* Focos/sombras verdes */
   --focus-ring: rgba(34,197,94,.28);
   --focus-soft: rgba(34,197,94,.14);
 }
@@ -42,7 +40,6 @@ body{
 .theme-light .container{ max-width:1100px; margin:0 auto; padding:24px 16px 80px; }
 .theme-light .hero{ min-height:calc(100vh - 70px); display:grid; place-items:center; }
 
-/* Modo SPLIT (lista + formulario lado a lado) si lo usas */
 main.container.split{
   display:grid;
   grid-template-columns: minmax(380px, 1fr) minmax(420px, 1fr);
@@ -52,13 +49,13 @@ main.container.split{
   main.container.split{ grid-template-columns:1fr; }
 }
 
-/* Modo SOLO FORMULARIO (oculta la lista) */
+/* Modo SOLO FORMULARIO */
 main.container.form-only #card-list{ display:none; }
 main.container.form-only #card-form{
   display:block; grid-column:1 / -1; max-width:860px; margin-inline:auto;
 }
 
-/* Cards base */
+/* ====== CARD ====== */
 .theme-light .card{
   width:100%; max-width:760px; margin:0;
   padding:32px clamp(20px,4vw,44px);
@@ -70,7 +67,6 @@ main.container.form-only #card-form{
 .theme-light .card h1, .theme-light .card h2, .theme-light .card h3{
   margin:0 0 10px; letter-spacing:.2px; color:var(--text-900);
 }
-.theme-light .card > .muted{ margin-top:2px; }
 
 /* ====== BOTONES ====== */
 .theme-light .actions{ display:flex; gap:12px; flex-wrap:wrap; margin-top:16px; }
@@ -99,24 +95,7 @@ main.container.form-only #card-form{
 .theme-light .btn.danger:hover{ filter:saturate(110%); transform:translateY(-1px); }
 .theme-light .btn.sm{ padding:8px 12px; border-radius:10px; font-weight:700; }
 
-/* Spinner dentro del botón */
-.theme-light .spinner{
-  width:16px; height:16px; border:2px solid rgba(255,255,255,.45);
-  border-top-color:#fff; border-radius:50%; display:none; animation:spin .7s linear infinite;
-}
-.theme-light .spinner.on{ display:inline-block; }
-@keyframes spin{ to{ transform:rotate(360deg); } }
-
-/* ====== ACCORDION / AYUDA ====== */
-.theme-light details{
-  margin-top:16px; background:#f7f9fc; border:1px solid #e6eaf0;
-  border-radius:12px; padding:10px 12px;
-}
-.theme-light summary{ cursor:pointer; user-select:none; }
-.theme-light code{ background:#eef2f7; color:#0b1220; padding:2px 6px; border-radius:8px; }
-.theme-light #login-msg{ margin-top:16px; color:var(--text-600); font-size:.98rem; }
-
-/* ====== FORM / INPUTS (base) ====== */
+/* ====== FORM / INPUTS ====== */
 .theme-light .form{ display:grid; gap:12px; }
 .theme-light .field{ display:flex; flex-direction:column; gap:6px; }
 .theme-light .field label{ font-weight:600; color:#394356; }
@@ -128,72 +107,50 @@ main.container.form-only #card-form{
 }
 .theme-light .input::placeholder{ color:#9aa7b8; }
 .theme-light .input:focus{
-  outline:0; border-color:#bbf7d0;                      /* verde claro */
+  outline:0; border-color:#bbf7d0;
   box-shadow:0 0 0 4px var(--focus-soft);
 }
 .theme-light .input[readonly], .theme-light .input:disabled{ background:#f4f6fa; color:#6b7486; }
 
-/* =========================================================
-   TABLAS – Desktop pro + Mobile cards
-   ========================================================= */
-
-/* Wrap base */
+/* ====== TABLE WRAP GENÉRICO ====== */
 .theme-light .table-wrap{
-  overflow-x: hidden;                    /* evita scroll horizontal */
+  overflow-x: hidden;
   overflow-y: auto;
   border:1px solid #e7edf3; border-radius:16px;
   background:#fff; box-shadow:0 10px 28px rgba(16,24,40,.06);
   -webkit-overflow-scrolling:touch;
 }
-
-/* Tabla base */
 .theme-light table.table{
   width:100%;
   min-width:0;
   border-collapse:separate; border-spacing:0;
   font-size:14.5px; line-height:1.35;
-  table-layout: fixed;                   /* reparte ancho */
+  table-layout: fixed;
   word-wrap: break-word; overflow-wrap:anywhere; white-space:normal;
 }
-
-/* Header */
 .theme-light .table thead th{
   position:sticky; top:0; z-index:1;
   background: linear-gradient(180deg, #f5f8fc, #eef3f9);
   color:#2b3446; text-align:left;
   padding:12px 14px; border-bottom:1px solid #dfe7f1; font-weight:800;
 }
-
-/* Celdas */
 .theme-light .table tbody td{
   padding:12px 14px;
   border-bottom:1px solid #eef2f7;
   color:#1c2536;
-  vertical-align:top;                    /* mejor para multi-línea */
-  white-space:normal;                    /* por defecto puede envolver */
+  vertical-align:top;
+  white-space:normal;
 }
-
-/* Fila uniforme + hover */
-/* OT: altura automática de filas para no recortar contenido */
-.ot-table tbody tr {
-  height: auto;
-}
-
 .theme-light .table tbody tr:nth-child(even){ background:#fafcff; }
 .theme-light .table tbody tr:hover{ background:#f2f7ff; }
-
-/* Alineación acciones a la derecha */
 .theme-light .table td:last-child,
 .theme-light .table th:last-child{ text-align:right; }
-
-/* Acciones compactas */
 .theme-light .table .table-actions{ display:flex; justify-content:flex-end; gap:8px; }
 .theme-light .table .table-actions .btn{
   padding:8px 12px; border-radius:10px; white-space:nowrap;
 }
 
-/* ====== MODO ANCHO – Reparto por columnas (9 columnas total)
-   1:ID | 2:Nombre | 3:Teléfono | 4:Dirección | 5:RFC | 6:Estado | 7:Nombre Contacto | 8:Teléfono Contacto | 9:Acciones */
+/* ====== “MODO ANCHO” para tablas grandes ====== */
 .theme-light .container.tablewide{ max-width: 1440px; }
 @media (min-width: 1600px){
   .theme-light .container.tablewide{ max-width: 1600px; }
@@ -205,96 +162,7 @@ main.container.form-only #card-form{
   table-layout: fixed !important;
 }
 
-/* Anchos por columna (ajustados) */
-.theme-light .container.tablewide table.table th:nth-child(1),
-.theme-light .container.tablewide table.table td:nth-child(1){ width:70px; }    /* ID */
-.theme-light .container.tablewide table.table th:nth-child(2),
-.theme-light .container.tablewide table.table td:nth-child(2){ width:22%; }     /* Nombre */
-.theme-light .container.tablewide table.table th:nth-child(3),
-.theme-light .container.tablewide table.table td:nth-child(3){ width:12%; }     /* Teléfono */
-.theme-light .container.tablewide table.table th:nth-child(4),
-.theme-light .container.tablewide table.table td:nth-child(4){ width:22%; }     /* Dirección */
-.theme-light .container.tablewide table.table th:nth-child(5),
-.theme-light .container.tablewide table.table td:nth-child(5){ width:8%;  }     /* RFC */
-.theme-light .container.tablewide table.table th:nth-child(6),
-.theme-light .container.tablewide table.table td:nth-child(6){ width:10%; }     /* Estado */
-.theme-light .container.tablewide table.table th:nth-child(7),
-.theme-light .container.tablewide table.table td:nth-child(7){ width:12%; }     /* Nombre Cto */
-.theme-light .container.tablewide table.table th:nth-child(8),
-.theme-light .container.tablewide table.table td:nth-child(8){ width:10%; }     /* Tel Cto */
-.theme-light .container.tablewide table.table th:nth-child(9),
-.theme-light .container.tablewide table.table td:nth-child(9){ width:110px; }   /* Acciones */
-
-/* === Truncado (elipsis) SOLO donde conviene:
-   ID, Teléfono, RFC, Estado, Tel. Contacto y Acciones.
-   Nombre, Dirección y Nombre de Contacto SÍ pueden envolver. */
-.theme-light .container.tablewide table.table td:nth-child(1),
-.theme-light .container.tablewide table.table td:nth-child(3),
-.theme-light .container.tablewide table.table td:nth-child(5),
-.theme-light .container.tablewide table.table td:nth-child(6),
-.theme-light .container.tablewide table.table td:nth-child(8),
-.theme-light .container.tablewide table.table td:nth-child(9){
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-}
-
-/* ====== Mobile: tabla -> tarjetas con etiquetas ====== */
-@media (max-width: 820px){
-  /* Oculta encabezado y hace tarjetas */
-  .theme-light .table thead { display:none; }
-  .theme-light .table,
-  .theme-light .table tbody,
-  .theme-light .table tr,
-  .theme-light .table td { display:block; width:100%; }
-
-  .theme-light .table-wrap{
-    border-radius:14px;
-    box-shadow:0 8px 22px rgba(16,24,40,.06);
-  }
-
-  .theme-light .table tbody tr{
-    background:#fff;
-    margin:10px 10px 14px;
-    padding:12px 12px 6px;
-    border:1px solid #e8eef6;
-    border-radius:12px;
-  }
-
-  /* Cada celda => fila del “card” con etiqueta izquierda y valor derecha */
-  .theme-light .table tbody td{
-    padding:8px 4px;
-    border-bottom:0;
-    display:grid;
-    grid-template-columns:120px 1fr;   /* etiqueta | valor */
-    align-items:start;
-    gap:8px;
-    white-space:normal;
-    overflow:visible;
-    text-overflow:initial;
-  }
-
-  /* Etiqueta de la celda (usa data-label en el td) */
-  .theme-light .table tbody td::before{
-    content: attr(data-label);
-    font-weight:700;
-    color:#334155;
-  }
-
-  /* Separadores sutiles entre filas internas */
-  .theme-light .table tbody td + td{
-    border-top:1px dashed #eef2f7;
-    padding-top:10px;
-    margin-top:6px;
-  }
-
-  /* Celda de acciones ocupa todo el ancho y sin etiqueta */
-  .theme-light .table tbody td:last-child{
-    grid-template-columns:1fr;
-    padding-top:10px;
-  }
-  .theme-light .table tbody td:last-child::before{ content:""; display:none; }
-}
-
-/* ====== FORMATO “CELDAS DE TABLA” PARA FORMULARIO ====== */
+/* ====== Formulario tabular (pantallas amplias) ====== */
 .theme-light .card-form .form{ display:table; width:100%; border-collapse:collapse; gap:0; }
 .theme-light .card-form .form .field{ display:table-row; }
 .theme-light .card-form .form .field label,
@@ -312,15 +180,10 @@ main.container.form-only #card-form{
 .theme-light .card-form .form .field input:focus{
   outline:none; border-color:#bbf7d0; box-shadow:inset 0 0 0 2px var(--focus-soft);
 }
-.theme-light .card-form .form .field .help{
-  display:block; grid-column:1 / -1; padding:6px 14px 10px; color:#6a7386;
-}
 .theme-light .card-form .actions{ display:table-row; }
 .theme-light .card-form .actions .btn{
   margin:8px 6px; padding:10px 18px; border-radius:10px; font-weight:700;
 }
-
-/* Responsive del formulario tabular */
 @media (max-width: 720px){
   .theme-light .card-form .form{ display:block; }
   .theme-light .card-form .form .field{ display:block; margin-bottom:10px; }
@@ -331,420 +194,109 @@ main.container.form-only #card-form{
   .theme-light .card-form .form .field label{
     background:transparent; border:0; padding:0 0 6px; font-weight:700; color:#2b3446;
   }
-  .theme-light .card-form .form .field input{ padding:10px 12px; }
   .theme-light .card-form .actions{ display:flex; flex-wrap:wrap; gap:8px; }
 }
 
-/* ====== Badges (verdes) ====== */
+/* ====== Badges genéricas ====== */
 .theme-light .badge{
   display:inline-flex; align-items:center; height:28px; padding:0 10px;
   border-radius:999px; font-weight:700; font-size:.85rem;
   background:#ecfdf5; color:#15803d; border:1px solid #bbf7d0;
 }
 
-/* ====== UTILIDADES ====== */
+/* ====== Utilidades ====== */
 .theme-light .gap-8{ gap:8px; }
 .theme-light .flex{ display:flex; }
 .theme-light .flex-1{ flex:1; }
-
-/* ====== ENFOQUE ACCESIBLE ====== */
 .theme-light :focus-visible{
   outline:3px solid var(--focus-ring);
   outline-offset:2px; border-radius:12px;
 }
-
-/* ====== RESPONSIVE base ====== */
 @media (max-width:720px){
   .theme-light .brand{ padding:10px 14px; }
   .theme-light .container{ padding:18px 12px 56px; }
   .theme-light .card{ padding:22px 16px; }
 }
 
-/* ====== EXTRA para móvil: ocultar lista hasta que haya búsqueda ====== */
-.muted-hint{
-  display:none;
-  margin-top:6px;
-  color:var(--text-600);
-  font-size:.95rem;
-}
+/* ====== EXTRA móvil: ocultar lista hasta que haya búsqueda ====== */
+.muted-hint{ display:none; margin-top:6px; color:var(--text-600); font-size:.95rem; }
 @media (max-width: 820px){
   .mobile-hide-list #card-list .table-wrap{ display:none; }
   .mobile-hide-list #card-list .muted-hint{ display:block; }
 }
-/* ====== Órdenes de Trabajo – Encabezados como "Clientes" ====== */
 
-/* Evita que los TH se partan letra por letra */
-.ot-table thead th{
-  white-space: nowrap;            /* no envolver */
-  word-break: keep-all;           /* no “romper” palabras */
-  overflow-wrap: normal;
-}
+/* =================================================================
+   ÓRDENES DE TRABAJO — tabla consolidada (sin duplicados)
+   ================================================================= */
 
-/* Alineación y aspecto del header como Clientes */
-.ot-table thead th{
-  background: linear-gradient(180deg, #f5f8fc, #eef3f9);
-  color:#2b3446;
-  font-weight:800;
-  padding:12px 14px;
-  border-bottom:1px solid #dfe7f1;
-}
-
-/* Celdas del body con el mismo look */
-.ot-table tbody td{
-  padding:12px 14px;
-  border-bottom:1px solid #eef2f7;
-  color:#1c2536;
+/* No cortar palabras feo ni forzar wrap extraño */
+.ot-table,
+.ot-table *{
+  overflow-wrap: normal !important;
+  word-break: normal !important;
   white-space: normal;
 }
 
-/* Zebra + hover como Clientes */
-.ot-table tbody tr:nth-child(even){ background:#fafcff; }
-.ot-table tbody tr:hover{ background:#f2f7ff; }
-}
-
-/* Anchos por columna (ajústalos si necesitas) */
-.ot-table th:nth-child(1),  .ot-table td:nth-child(1)  { width: 90px;  } /* # OT */
-.ot-table th:nth-child(2),  .ot-table td:nth-child(2)  { width: 18%;   } /* Cliente */
-.ot-table th:nth-child(3),  .ot-table td:nth-child(3)  { width: 14%;   } /* Depto */
-.ot-table th:nth-child(4),  .ot-table td:nth-child(4)  { width: 14%;   } /* Encargado */
-.ot-table th:nth-child(5),  .ot-table td:nth-child(5)  { width: 11%;   } /* F. Emisión */
-.ot-table th:nth-child(6),  .ot-table td:nth-child(6)  { width: 11%;   } /* F. Entrega */
-.ot-table th:nth-child(7),  .ot-table td:nth-child(7)  { width: 12%;   } /* Orden Compra */
-.ot-table th:nth-child(8),  .ot-table td:nth-child(8)  { width: 10%;   } /* Estatus */
-.ot-table th:nth-child(9),  .ot-table td:nth-child(9)  { width: 10%;   } /* Prioridad */
-.ot-table th:nth-child(10), .ot-table td:nth-child(10) { width: 120px; } /* Acciones */
-
-/* Evita overwrap agresivo heredado en este contexto */
-.ot-wrap .table{
-  word-wrap: normal;
-  overflow-wrap: normal;
-}
-
-/* Responsivo: en móvil convierte en tarjetas (si tu base lo hace así) */
-@media (max-width: 820px){
-  .ot-table thead { display:none; }
-  .ot-table, .ot-table tbody, .ot-table tr, .ot-table td{ display:block; width:100%; }
-  .ot-wrap{
-    border-radius:14px;
-    box-shadow:0 8px 22px rgba(16,24,40,.06);
-  }
-  .ot-table tbody tr{
-    background:#fff;
-    margin:10px 10px 14px;
-    padding:12px 12px 6px;
-    border:1px solid #e8eef6;
-    border-radius:12px;
-  }
-  .ot-table tbody td{
-    padding:8px 4px;
-    border-bottom:0;
-    display:grid;
-    grid-template-columns:120px 1fr;
-    gap:8px;
-  }
-  .ot-table tbody td:last-child{ grid-template-columns:1fr; }
-}
-/* === Tabla de Órdenes de Trabajo sin scroll horizontal === */
-.ot-table {
-  table-layout: auto;      /* auto para que cada columna se adapte */
-  width: 100%;
-  border-collapse: collapse;
-}
-
-/* Header compacto, cuerpo flexible (¡sin scroll!) */
-.ot-table th {
-  padding: 10px 12px;
-  text-align: left;
-  vertical-align: middle;
-  white-space: nowrap;     /* encabezados sin partir */
-}
-
-.ot-table td {
-  padding: 10px 12px;
-  text-align: left;
-  vertical-align: middle;
-  white-space: normal;     /* celdas pueden envolver */
-  overflow-wrap: anywhere; /* permite partir palabras largas si hace falta */
-}
-
-
-/* Última columna: compacta */
-.ot-table th:last-child,
-.ot-table td:last-child {
-  width: 1%;              /* ocupa solo lo necesario */
-  text-align: right;
-  white-space: nowrap;
-}
-
-/* Contenedor de los botones */
-.ot-table .table-actions {
-  display: inline-flex;
-  gap: 6px;
-}
-
-/* Botones compactos */
-.ot-table .table-actions .btn {
-  padding: 6px 10px;
-  font-size: 0.85rem;
-  border-radius: 6px;
-  font-weight: 600;
-  line-height: 1;
-  white-space: nowrap;
-  transition: background 0.2s ease, transform 0.1s ease;
-}
-
-/* Hover/active */
-.ot-table .table-actions .btn:hover {
-  transform: translateY(-1px);
-}
-.ot-table .table-actions .btn:active {
-  transform: translateY(0);
-}
-
-/* Colores */
-.ot-table .table-actions .btn.danger {
-  background-color: #dc2626;
-  color: #fff;
-}
-.ot-table .table-actions .btn.danger:hover {
-  background-color: #b91c1c;
-}
-
-.ot-table .table-actions .btn.success {
-  background-color: #16a34a;
-  color: #fff;
-}
-.ot-table .table-actions .btn.success:hover {
-  background-color: #15803d;
-}
-
-/* --- Responsive: en pantallas pequeñas los botones bajan de línea --- */
-@media (max-width: 640px) {
-  .ot-table th, .ot-table td {
-    white-space: normal;   /* permite que las celdas largas se partan */
-  }
-  .ot-table .table-actions {
-    flex-wrap: wrap;
-    justify-content: flex-start;
-  }
-  .ot-table .table-actions .btn {
-    flex: 1 1 auto;
-    min-width: 90px;
-    text-align: center;
-  }
-}
-/* ====== Botones icon-only en la tabla de OT ====== */
-
-/* Última columna compacta */
-.ot-table th:last-child,
-.ot-table td:last-child{
-  width: 1%;
-  white-space: nowrap;
-  text-align: right;
-  padding-right: 12px;
-}
-
-/* Contenedor de acciones en fila */
-.ot-table .table-actions{
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;                 /* separa los iconos */
-}
-
-/* Botón circular, sólo icono */
-.iconbtn{
-  width: 36px;
-  height: 36px;
-  border-radius: 999px;
-  padding: 0;
-  line-height: 0;
-  display: inline-grid;
-  place-items: center;
-  box-shadow: 0 3px 10px rgba(16,24,40,.08);
-  transition: transform .08s ease, filter .18s ease, box-shadow .18s ease;
-}
-
-/* Verde/rojo coherentes */
-.iconbtn.success{ background: linear-gradient(180deg, #22c55e, #16a34a); color:#fff; }
-.iconbtn.danger { background: linear-gradient(180deg, #ef4444, #dc2626); color:#fff; }
-
-/* Hover/active/focus */
-.iconbtn:hover   { transform: translateY(-1px); filter: saturate(108%); }
-.iconbtn:active  { transform: translateY(0); }
-.iconbtn:focus-visible{
-  outline: 3px solid rgba(34,197,94,.28);
-  outline-offset: 2px;
-}
-
-/* Insertamos el icono vía ::before según data-act */
-.iconbtn::before{
-  font-size: 18px;          /* tamaño del ícono */
-  line-height: 1;
-}
-
-/* ✏️ editar | 🗑️ borrar (emojis simples y universales) */
-.iconbtn[data-act="edit"]::before { content: "✏️"; }
-.iconbtn[data-act="del"]::before  { content: "🗑️"; }
-
-/* Si prefieres SVG monocromo (más prolijo), usa máscaras:
-.iconbtn[data-act="edit"]::before{
-  content:"";
-  width:18px; height:18px;
-  background-color:#fff;
-  -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path fill="%23000" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1.003 1.003 0 0 0 0-1.42l-2.34-2.34a1.003 1.003 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.82z"/></svg>') center/contain no-repeat;
-          mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path fill="%23000" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1.003 1.003 0 0 0 0-1.42l-2.34-2.34a1.003 1.003 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.82z"/></svg>') center/contain no-repeat;
-}
-.iconbtn[data-act="del"]::before{
-  content:"";
-  width:18px; height:18px;
-  background-color:#fff;
-  -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%23000" d="M6 7h12l-1 14H7L6 7zm10.5-3L15 2H9L7.5 4H4v2h16V4z"/></svg>') center/contain no-repeat;
-          mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%23000" d="M6 7h12l-1 14H7L6 7zm10.5-3L15 2H9L7.5 4H4v2h16V4z"/></svg>') center/contain no-repeat;
-}
-*/
-
-/* Móvil: si no caben, que se acomoden en dos filas */
-@media (max-width: 640px){
-  .ot-table .table-actions{ gap:10px; }
-  .iconbtn{ width:40px; height:40px; }
-}
-/* ========== Órdenes de Trabajo — look pro, sin scroll ========== */
-
-/* Usa esta clase en la tabla: <table class="table ot-table"> */
-.ot-table{
-  width:100%;
-  border-collapse:separate;
-  border-spacing:0;
-  table-layout:auto;             /* sin scroll; que ajuste según contenido */
-}
-
-/* Cabecera con mismo look que “Clientes” */
-.ot-table thead th{
-  background:linear-gradient(180deg,#f5f8fc,#eef3f9);
-  color:#2b3446;
-  font-weight:800;
-  padding:12px 14px;
-  border-bottom:1px solid #dfe7f1;
-  white-space:nowrap;
-}
-
-/* Filas */
-.ot-table tbody tr{
-  background:#fff;
-  border-bottom:1px solid #eef2f7;
-  transition:background .15s ease;
-}
-.ot-table tbody tr:nth-child(even){ background:#fafcff; }
-.ot-table tbody tr:hover{ background:#f2f7ff; }
-
-/* Celdas */
-.ot-table td{
-  padding:12px 14px;
-  vertical-align:middle;
-  color:#1c2536;
-}
-
-/* Redondeado de la tarjeta de tabla */
+/* Estructura general */
 .ot-wrap{
   border:1px solid #e7edf3;
   border-radius:14px;
   background:#fff;
   box-shadow:0 10px 24px rgba(16,24,40,.06);
-  overflow:hidden;               /* redondeo visible */
+  overflow:hidden;
+}
+.ot-table{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0;
+  table-layout:fixed;                  /* respeta widths por columna */
 }
 
-/* Bordes redondeados primera/última columna (fila) */
-.ot-table tbody tr td:first-child{ border-left:0; }
-.ot-table tbody tr td:last-child { border-right:0; }
+/* Header */
+.ot-table thead th{
+  background:linear-gradient(180deg,#f5f8fc,#eef3f9);
+  color:#2b3446; font-weight:800;
+  padding:12px 14px;
+  border-bottom:1px solid #dfe7f1;
+  white-space:nowrap;
+}
 
-/* Columnas largas: 2 líneas máximas con elipsis (bonito y uniforme) */
+/* Filas / celdas */
+.ot-table tbody tr{ background:#fff; border-bottom:1px solid #eef2f7; transition:background .15s ease; height:auto; }
+.ot-table tbody tr:nth-child(even){ background:#fafcff; }
+.ot-table tbody tr:hover{ background:#f2f7ff; }
+.ot-table td{ padding:12px 14px; vertical-align:middle; color:#1c2536; }
+
+/* Anchos por columna */
+.ot-table th:nth-child(1),  .ot-table td:nth-child(1)  { width: 80px; }   /* # OT */
+.ot-table th:nth-child(2),  .ot-table td:nth-child(2)  { width: 22%; }    /* Cliente */
+.ot-table th:nth-child(3),  .ot-table td:nth-child(3)  { width: 16%; }    /* Depto */
+.ot-table th:nth-child(4),  .ot-table td:nth-child(4)  { width: 16%; }    /* Encargado */
+.ot-table th:nth-child(5),  .ot-table td:nth-child(5)  { width: 11%; }    /* F. Emisión */
+.ot-table th:nth-child(6),  .ot-table td:nth-child(6)  { width: 11%; }    /* F. Entrega */
+.ot-table th:nth-child(7),  .ot-table td:nth-child(7)  { width: 12%; }    /* Orden Compra */
+.ot-table th:nth-child(8),  .ot-table td:nth-child(8)  { width: 9%;  }    /* Estatus */
+.ot-table th:nth-child(9),  .ot-table td:nth-child(9)  { width: 9%;  }    /* Prioridad */
+.ot-table th:nth-child(10), .ot-table td:nth-child(10) { width: 1%;  }    /* Acciones */
+
+/* Texto multilínea bonito (2 líneas) donde conviene */
 .clamp-2{
   display:-webkit-box;
   -webkit-box-orient:vertical;
-  -webkit-line-clamp:2;          /* máx 2 líneas */
+  -webkit-line-clamp:2;
   overflow:hidden;
 }
 
-/* Columna acciones siempre compacta a la derecha */
-.ot-table th:last-child,
-.ot-table td:last-child{
-  width:1%;
-  white-space:nowrap;
-  text-align:right;
-  padding-right:12px;
-}
-
-/* Botones redondos (icon-only) más limpios */
+/* Columna de acciones compacta */
+.ot-table td:last-child{ text-align:right; white-space:nowrap; padding-right:12px; }
 .table-actions{ display:inline-flex; align-items:center; gap:8px; }
+
+/* Botones redondos (solo icono) */
 .iconbtn{
   width:36px; height:36px; border-radius:999px; padding:0;
   display:inline-grid; place-items:center; line-height:0;
   color:#fff; box-shadow:0 3px 10px rgba(16,24,40,.08);
   transition:transform .08s ease, filter .18s ease;
-}
-.iconbtn:hover{ transform:translateY(-1px); filter:saturate(108%); }
-.iconbtn:active{ transform:translateY(0); }
-.iconbtn.success{ background:linear-gradient(180deg,#22c55e,#16a34a); }
-.iconbtn.danger { background:linear-gradient(180deg,#ef4444,#dc2626); }
-
-/* Iconos (emojis) */
-.iconbtn[data-act="edit"]::before{ content:"✏️"; font-size:18px; }
-.iconbtn[data-act="del"]::before { content:"🗑️"; font-size:18px; }
-
-/* Badges para Estatus / Prioridad (opcional) */
-.badge{
-  display:inline-block; padding:3px 8px; border-radius:999px;
-  font-weight:700; font-size:.82rem; border:1px solid #dbeafe;
-  background:#eff6ff; color:#1e40af;
-}
-.badge.green{ border-color:#bbf7d0; background:#ecfdf5; color:#166534; }
-
-/* Evita altura fija heredada en otras tablas */
-.ot-table tbody tr{ height:auto; }
-/* ===== FIX: Órdenes sin cortes feos ni columnas estrechas ===== */
-
-/* 1) Anula el wrap agresivo heredado */
-.ot-table,
-.ot-table *{
-  overflow-wrap: normal !important;  /* NO cortar dentro de palabras */
-  word-break: normal !important;     /* NO partir palabras */
-  white-space: normal;               /* que pueda saltar por espacios */
-}
-
-/* 2) Usa layout fijo con anchos útiles por columna */
-.ot-table{
-  table-layout: fixed;     /* columnas obedecen los widths */
-  width: 100%;
-}
-
-/* Anchos por columna (ajústalos si quieres) */
-.ot-table th:nth-child(1),  .ot-table td:nth-child(1)  { width: 80px; }   /* #OT */
-.ot-table th:nth-child(2),  .ot-table td:nth-child(2)  { width: 22%;  }   /* Cliente */
-.ot-table th:nth-child(3),  .ot-table td:nth-child(3)  { width: 16%;  }   /* Depto */
-.ot-table th:nth-child(4),  .ot-table td:nth-child(4)  { width: 16%;  }   /* Encargado */
-.ot-table th:nth-child(5),  .ot-table td:nth-child(5)  { width: 11%;  }   /* F. Emisión */
-.ot-table th:nth-child(6),  .ot-table td:nth-child(6)  { width: 11%;  }   /* F. Entrega */
-.ot-table th:nth-child(7),  .ot-table td:nth-child(7)  { width: 12%;  }   /* Orden Compra */
-.ot-table th:nth-child(8),  .ot-table td:nth-child(8)  { width: 9%;   }   /* Estatus */
-.ot-table th:nth-child(9),  .ot-table td:nth-child(9)  { width: 9%;   }   /* Prioridad */
-.ot-table th:nth-child(10), .ot-table td:nth-child(10) { width: 1%;   }   /* Acciones */
-
-/* 3) Cliente/Depto/Encargado: 2 líneas bonitas (sin romper letras) */
-.clamp-2{
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
-}
-
-/* 4) Botones compactos redondos (se ven bien y no empujan filas) */
-.ot-table td:last-child{ text-align:right; white-space:nowrap; }
-.table-actions{ display:inline-flex; align-items:center; gap:8px; }
-.iconbtn{
-  width: 36px; height: 36px; border-radius: 999px; padding: 0;
-  display: inline-grid; place-items: center; line-height: 0;
-  color: #fff; box-shadow: 0 3px 10px rgba(16,24,40,.08);
-  transition: transform .08s ease, filter .18s ease;
 }
 .iconbtn.success{ background: linear-gradient(180deg,#22c55e,#16a34a); }
 .iconbtn.danger { background: linear-gradient(180deg,#ef4444,#dc2626); }
@@ -752,3 +304,26 @@ main.container.form-only #card-form{
 .iconbtn[data-act="del"]::before { content:"🗑️"; font-size:18px; }
 .iconbtn:hover{ transform:translateY(-1px); filter:saturate(108%); }
 .iconbtn:active{ transform:translateY(0); }
+
+/* Chips para Estatus/Prioridad */
+.badge{
+  display:inline-block; padding:3px 8px; border-radius:999px;
+  font-weight:700; font-size:.82rem; border:1px solid #dbeafe;
+  background:#eff6ff; color:#1e40af;
+}
+.badge.green{ border-color:#bbf7d0; background:#ecfdf5; color:#166534; }
+
+/* Mobile: tarjetas */
+@media (max-width: 820px){
+  .ot-table thead { display:none; }
+  .ot-table, .ot-table tbody, .ot-table tr, .ot-table td{ display:block; width:100%; }
+  .ot-table tbody tr{
+    background:#fff; margin:10px 10px 14px; padding:12px 12px 6px;
+    border:1px solid #e8eef6; border-radius:12px;
+  }
+  .ot-table td{
+    padding:8px 4px; border-bottom:0;
+    display:grid; grid-template-columns:120px 1fr; gap:8px;
+  }
+  .ot-table td:last-child{ grid-template-columns:1fr; }
+}
