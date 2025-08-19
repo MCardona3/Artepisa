@@ -21,7 +21,7 @@ function renderList(){
   LIST.forEach((x,i)=>{
     const hay = [
       x.num??"", x.cliente??"", x.depto??"", x.enc??"",
-      fmtDate(x.emision), fmtDate(x.entrega), x.oc??"", x.est??"", x.prio??""
+      fmtDate(x.emision), fmtDate(x.entrega), x.oc??"", x.est??"", x.prio??"", x.desc??""
     ].join(" ").toLowerCase();
     if(q && !hay.includes(q)) return;
 
@@ -45,8 +45,6 @@ function renderList(){
     elTable().appendChild(tr);
   });
 }
-
-
 function clearItemsUI(){ if(itemsBox()) itemsBox().innerHTML=""; }
 function addItemRow(item={cantidad:"",descripcion:"",plano:"",adjunto:""}){ if(!itemsBox()) return; const row=document.createElement("div"); row.className="items-row"; row.innerHTML=`
     <input type="number" min="0" step="1" placeholder="0" value="${item.cantidad??""}">
