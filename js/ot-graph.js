@@ -13,21 +13,46 @@ const fmtDateHuman=(s)=>{ if(!s) return ""; const d=new Date(s); if(isNaN(d)) re
 const download=(name,text)=>{ const b=new Blob([text],{type:"application/octet-stream"}); const a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download=name; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href); };
 function setMode(mode){ const lay=elLayout(); if(!lay) return; lay.classList.remove("form-only","split"); if(mode) lay.classList.add(mode); }
 function renderCount(){ if(elCount()) elCount().textContent=LIST.length; }
-function renderList(){ if(!elTable()) return; const q=(elBuscar()?.value||"").toLowerCase().trim(); elTable().innerHTML=""; LIST.forEach((x,i)=>{ const hay=[x.num??"",x.cliente??"",x.depto??"",x.enc??"",fmtDate(x.emision),fmtDate(x.entrega),x.oc??"",x.est??"",x.prio??"",x.desc??""].join(" ").toLowerCase(); if(q && !hay.includes(q)) return; const tr=document.createElement("tr"); tr.innerHTML=`
-      <td class="clip">${x.num??""}</td>
-      <td>${x.cliente??""}</td>
-      <td>${x.depto??""}</td>
-      <td>${x.enc??""}</td>
+function renderList() {
+  const tbody = elTable();
+  if (!tbody) return;
+
+  const q = (elBuscar()?.value || "").toLowerCase().trim();
+  tbody.innerHTML = "";
+
+  LIST.forEach((x, i) => {
+    const hay = [
+      x.num ?? "", x.cliente ?? "", x.depto ?? "", x.enc ?? "",
+      fmtDate(x.emision), fmtDate(x.entrega), x.oc ?? "", x.est ?? "",
+      x.prio ?? "", x.desc ?? ""
+    ].join(" ").toLowerCase();
+
+    if (q && !hay.includes(q)) return;
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="clip">${x.num ?? ""}</td>
+      <td>${x.cliente ?? ""}</td>
+      <td>${x.depto ?? ""}</td>
+      <td>${x.enc ?? ""}</td>
       <td>${fmtDate(x.emision)}</td>
       <td>${fmtDate(x.entrega)}</td>
-      <td>${x.oc??""}</td>
-      <td>${x.est??""}</td>
-      <td>${x.prio??""}</td>
-      <td>${x.desc??""}</td>
+      <td>${x.oc ?? ""}</td>
+      <td>${x.est ?? ""}</td>
+      <td>${x.prio ?? ""}</td>
+      <td>${x.desc ?? ""}</td>
       <td class="right table-actions">
-        <button class="btn small" data-i="${i}" data-act="edit">Editar</button>
-        <button class="btn small danger" data-i="${i}" data-act="del">Borrar</button>
-      </td>`; elTable().appendChild(tr); });}
+        <button class="btn iconbtn success"
+                data-i="${i}" data-act="edit"
+                type="button" title="Editar" aria-label="Editar"></button>
+        <button class="btn iconbtn danger"
+                data-i="${i}" data-act="del"
+                type="button" title="Borrar" aria-label="Borrar"></button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+
 function clearItemsUI(){ if(itemsBox()) itemsBox().innerHTML=""; }
 function addItemRow(item={cantidad:"",descripcion:"",plano:"",adjunto:""}){ if(!itemsBox()) return; const row=document.createElement("div"); row.className="items-row"; row.innerHTML=`
     <input type="number" min="0" step="1" placeholder="0" value="${item.cantidad??""}">
