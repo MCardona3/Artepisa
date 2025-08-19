@@ -526,3 +526,78 @@ main.container.form-only #card-form{
     text-align: center;
   }
 }
+/* ====== Botones icon-only en la tabla de OT ====== */
+
+/* Última columna compacta */
+.ot-table th:last-child,
+.ot-table td:last-child{
+  width: 1%;
+  white-space: nowrap;
+  text-align: right;
+  padding-right: 12px;
+}
+
+/* Contenedor de acciones en fila */
+.ot-table .table-actions{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;                 /* separa los iconos */
+}
+
+/* Botón circular, sólo icono */
+.iconbtn{
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  padding: 0;
+  line-height: 0;
+  display: inline-grid;
+  place-items: center;
+  box-shadow: 0 3px 10px rgba(16,24,40,.08);
+  transition: transform .08s ease, filter .18s ease, box-shadow .18s ease;
+}
+
+/* Verde/rojo coherentes */
+.iconbtn.success{ background: linear-gradient(180deg, #22c55e, #16a34a); color:#fff; }
+.iconbtn.danger { background: linear-gradient(180deg, #ef4444, #dc2626); color:#fff; }
+
+/* Hover/active/focus */
+.iconbtn:hover   { transform: translateY(-1px); filter: saturate(108%); }
+.iconbtn:active  { transform: translateY(0); }
+.iconbtn:focus-visible{
+  outline: 3px solid rgba(34,197,94,.28);
+  outline-offset: 2px;
+}
+
+/* Insertamos el icono vía ::before según data-act */
+.iconbtn::before{
+  font-size: 18px;          /* tamaño del ícono */
+  line-height: 1;
+}
+
+/* ✏️ editar | 🗑️ borrar (emojis simples y universales) */
+.iconbtn[data-act="edit"]::before { content: "✏️"; }
+.iconbtn[data-act="del"]::before  { content: "🗑️"; }
+
+/* Si prefieres SVG monocromo (más prolijo), usa máscaras:
+.iconbtn[data-act="edit"]::before{
+  content:"";
+  width:18px; height:18px;
+  background-color:#fff;
+  -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path fill="%23000" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1.003 1.003 0 0 0 0-1.42l-2.34-2.34a1.003 1.003 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.82z"/></svg>') center/contain no-repeat;
+          mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path fill="%23000" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1.003 1.003 0 0 0 0-1.42l-2.34-2.34a1.003 1.003 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.82z"/></svg>') center/contain no-repeat;
+}
+.iconbtn[data-act="del"]::before{
+  content:"";
+  width:18px; height:18px;
+  background-color:#fff;
+  -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%23000" d="M6 7h12l-1 14H7L6 7zm10.5-3L15 2H9L7.5 4H4v2h16V4z"/></svg>') center/contain no-repeat;
+          mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%23000" d="M6 7h12l-1 14H7L6 7zm10.5-3L15 2H9L7.5 4H4v2h16V4z"/></svg>') center/contain no-repeat;
+}
+*/
+
+/* Móvil: si no caben, que se acomoden en dos filas */
+@media (max-width: 640px){
+  .ot-table .table-actions{ gap:10px; }
+  .iconbtn{ width:40px; height:40px; }
+}
