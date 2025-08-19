@@ -728,7 +728,7 @@
         return;
 
       const originalText = btnReset.textContent;
-      btnReset.disabled = true;
+      btnReset.disabled = false;
       btnReset.textContent = "Limpiando…";
 
       try {

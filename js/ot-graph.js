@@ -351,35 +351,14 @@ function buildPrintHTML(rec){
 
 
 function printOT(rec){
-  if (!rec || !rec.cliente) {
-    alert("Completa al menos el CLIENTE antes de imprimir.");
-    (document.getElementById("o-cliente")||{}).focus?.();
-    return;
-  }
+  if (!rec || !rec.cliente) { alert("Completa al menos el CLIENTE antes de imprimir."); (document.getElementById("o-cliente")||{}).focus?.(); return; }
   const html = buildPrintHTML(rec);
-
   const frame = document.createElement("iframe");
-  frame.style.position = "fixed";
-  frame.style.right = "0";
-  frame.style.bottom = "0";
-  frame.style.width = "0";
-  frame.style.height = "0";
-  frame.style.border = "0";
+  Object.assign(frame.style,{position:"fixed",right:"0",bottom:"0",width:"0",height:"0",border:"0"});
   document.body.appendChild(frame);
-
   const win = frame.contentWindow;
-  win.document.open();
-  win.document.write(html);
-  win.document.close();
-
-  // Dar tiempo a que cargue el logo antes de imprimir
-  setTimeout(() => {
-    try {
-      win.focus();
-      win.print();
-    } catch(_) {}
-    setTimeout(()=> frame.remove(), 1000);
-  }, 300);
+  win.document.open(); win.document.write(html); win.document.close();
+  setTimeout(()=>{ try{win.focus(); win.print();}catch(e){} setTimeout(()=>frame.remove(),800); }, 300);
 }
 
 // ==== Eventos UI ====

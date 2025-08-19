@@ -123,7 +123,7 @@ window.MSAL_CONFIG = {
      window.GRAPH_STORAGE = {
        location: "site",
        siteId: "<TU_SITE_ID>",
-       folderPath: "/Shared Documents/ArtepisaData"
+       folderPath: "/ArtepisaData"
      };
 
    - GitHub Pages:
