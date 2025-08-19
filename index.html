@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Artepisa SLP · Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="./css/style.css" />
+  <!-- CSP sugerida (ajústala a tu hosting y necesidades)
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self';
+                 img-src 'self' data: https:;
+                 script-src 'self' https://alcdn.msauth.net 'unsafe-inline';
+                 style-src 'self' 'unsafe-inline' https:;
+                 connect-src https://graph.microsoft.com https://login.microsoftonline.com;"> -->
+</head>
+
+<body class="theme-light">
+<header class="brand">
+  <div class="logo">
+    <img class="brandlogo" src="./img/arte.png?v=1" alt="ARTEPISA SLP">
+    <div>
+      <div class="brandname">ARTEPISA SLP</div>
+      <div class="muted">Registro de Órdenes de Trabajo</div>
+    </div>
+  </div>
+  <a id="link-panel" class="btn ghost" href="dashboard.html" style="display:none">Ir al panel</a>
+</header>
+
+<main class="container hero">
+  <section class="card">
+    <h1>Iniciar sesión con Microsoft</h1>
+    <p class="muted">
+      Solo entrar con <b>cuenta personal</b> Si requieres permisos revisa con tu supervisor.
+    </p>
+
+    <div class="actions">
+      <button class="btn" id="btn-login" type="button">
+        <svg width="18" height="18" viewBox="0 0 23 23" aria-hidden="true" focusable="false">
+          <rect width="10.5" height="10.5" x="1" y="1" fill="#f25022"/>
+          <rect width="10.5" height="10.5" x="11.5" y="1" fill="#7fba00"/>
+          <rect width="10.5" height="10.5" x="1" y="11.5" fill="#00a4ef"/>
+          <rect width="10.5" height="10.5" x="11.5" y="11.5" fill="#ffb900"/>
+        </svg>
+        <span class="btn-label">Entrar con Microsoft</span>
+        <span class="spinner" aria-hidden="true"></span>
+      </button>
+
+      <button class="btn ghost" id="btn-logout" type="button" style="display:none">Cerrar sesión</button>
+    </div>
+
+    <p id="login-msg" class="muted" aria-live="polite"></p>
+
+   
+  </section>
+</main>
+
+<!-- MSAL -->
+<script src="https://alcdn.msauth.net/browser/2.38.1/js/msal-browser.min.js" defer></script>
+<script src="./js/msal-config.js" defer></script>
+<script src="./js/auth.js" defer></script>
+
+<script>
+  (function () {
+    const $ = (s) => document.querySelector(s);
+    const linkPanel = $("#link-panel");
+    const btnLogin  = $("#btn-login");
+    const btnLogout = $("#btn-logout");
+    const msg       = $("#login-msg");
+    const spinner   = btnLogin?.querySelector(".spinner");
+    const label     = btnLogin?.querySelector(".btn-label");
+
+    function setMsg(text, { show = true, isError = false } = {}) {
+      msg.textContent = text || "";
+      msg.hidden = !show || !text;
+      if (isError) msg.setAttribute("role","alert"); else msg.removeAttribute("role");
+    }
+    function startLoading(text="Procesando…"){
+      btnLogin.disabled = true; btnLogout.disabled = true;
+      spinner?.classList.add("on");
+      if (label) label.textContent = text;
+      setMsg(text, { show:true });
+    }
+    function stopLoading(){
+      spinner?.classList.remove("on");
+      if (label) label.textContent = "Entrar con Microsoft";
+      btnLogin.disabled = false; btnLogout.disabled = false;
+    }
+    function setLoggedInUI(account){
+      linkPanel.style.display = "inline-block";
+      btnLogout.style.display = "inline-block";
+      btnLogin.style.display  = "none";
+      stopLoading();
+      setMsg(`Conectado como: ${account?.name || account?.username || "sesión activa"}`, { show:true });
+    }
+    function setLoggedOutUI(){
+      linkPanel.style.display = "none";
+      btnLogout.style.display = "none";
+      btnLogin.style.display  = "inline-block";
+      stopLoading();
+      setMsg("No has iniciado sesión.", { show:true });
+    }
+
+    try{
+      const acct = JSON.parse(sessionStorage.getItem("artepisa_account") || "null");
+      if (acct) setLoggedInUI(acct); else setLoggedOutUI();
+    }catch{ setLoggedOutUI(); }
+
+    btnLogin?.addEventListener("click", async () => {
+      if (!(window.MSALApp && MSALApp.login)) {
+        setMsg("MSAL no está listo. Verifica que 'msal-config.js' y 'auth.js' carguen correctamente.", { show:true, isError:true });
+        return;
+      }
+      startLoading("Abriendo Microsoft…");
+      try{
+        await MSALApp.login();
+        const acct = JSON.parse(sessionStorage.getItem("artepisa_account") || "null");
+        if (acct) setLoggedInUI(acct);
+        else setMsg("Sesión iniciada, pero no se pudo leer el perfil. Revisa auth.js.", { show:true, isError:true });
+      }catch(e){
+        setMsg(`No se pudo iniciar sesión: ${e?.message || e}`, { show:true, isError:true });
+        setLoggedOutUI();
+      }
+    });
+
+    btnLogout?.addEventListener("click", async () => {
+      if (!(window.MSALApp && MSALApp.logout)) {
+        setMsg("MSAL no está listo para cerrar sesión.", { show:true, isError:true });
+        return;
+      }
+      startLoading("Cerrando sesión…");
+      try{ await MSALApp.logout(); }
+      finally{
+        sessionStorage.removeItem("artepisa_account");
+        setLoggedOutUI();
+      }
+    });
+  })();
+</script>
+</body>
+</html>
