@@ -37,16 +37,13 @@ const itemsBox=()=>$id("items-container");
 const btnAddItem=()=>$id("btn-add-item");
 
 /* ===== Mostrar/ocultar formulario por modo =====
-   - null      : lista por defecto (oculta form)
+   - null       : lista por defecto (oculta form)
    - "form-only": solo formulario (lista oculta)
-   - "split"    : lista + formulario lado a lado (si lo quisieras) */
+   - "split"    : lista + formulario (si lo quisieras) */
 function showForm(mode){
-  const lay = elLayout();
-  if (!lay) return;
+  const lay = elLayout(); if (!lay) return;
   lay.classList.remove("split", "form-only");
-  if (mode === "split" || mode === "form-only") {
-    lay.classList.add(mode);
-  }
+  if (mode === "split" || mode === "form-only") lay.classList.add(mode);
 }
 
 /* ================== Utilidades ================== */
@@ -87,10 +84,25 @@ function repairMisplaced(u) {
   let touched = false;
 
   // depto tenía fecha (era Emisión); encargado tenía fecha (era Entrega)
-  if (isISO(x.depto) && !isISO(x.emision))    { x.emision  = x.depto;      x.depto = "";      touched = true; }
-  if (isISO(x.encargado) && !isISO(x.entrega)) { x.entrega  = x.
+  if (isISO(x.depto) && !isISO(x.emision))    { x.emision   = x.depto;      x.depto = "";       touched = true; }
+  if (isISO(x.encargado) && !isISO(x.entrega)) { x.entrega   = x.encargado;  x.encargado = "";   touched = true; }
 
+  // Emisión quedó con la OC (ej. "123")
+  if (!x.oc && x.emision && !isISO(x.emision) && isOC(x.emision)) {
+    x.oc = x.emision; x.emision = ""; touched = true;
+  }
 
+  // Entrega quedó con el estatus
+  if (!x.estatus && isStatus(x.entrega)) {
+    x.estatus = x.entrega; x.entrega = ""; touched = true;
+  }
+
+  // OC quedó con la prioridad
+  if (!x.prioridad && isPriority(x.oc)) {
+    x.prioridad = x.oc; x.oc = ""; touched = true;
+  }
+
+  return { fixed: touched, rec: x };
 }
 
 /* ================== PARTIDAS ================== */
@@ -322,9 +334,30 @@ function printOT(rec){
 
 /* ================== Persistencia ================== */
 async function load(){
-  try{ const {etag,items}=await gs_getCollection("ot"); ETAG=etag; LIST=Array.isArray(items)?items:[]; }
-  catch(e){ console.error("Carga OT falló:",e); ETAG=""; LIST=[]; }
-  renderCount(); renderList(); loadClientesDatalist();
+  try {
+    const { etag, items } = await gs_getCollection("ot");
+    ETAG = etag;
+    LIST = Array.isArray(items) ? items : [];
+  } catch(e) {
+    console.error("Carga OT falló:", e);
+    ETAG = ""; LIST = [];
+  }
+
+  // 🔧 Reparar registros corridos y persistir si cambian
+  let changed = false;
+  LIST = LIST.map(r => {
+    const { fixed, rec } = repairMisplaced(unify(r));
+    if (fixed) changed = true;
+    return rec;
+  });
+  if (changed) {
+    try { ETAG = await gs_putCollection("ot", LIST, ETAG); }
+    catch(e){ console.warn("No se pudo guardar la reparación:", e); }
+  }
+
+  renderCount();
+  renderList();
+  loadClientesDatalist();
 }
 async function save(){ ETAG=await gs_putCollection("ot",LIST,ETAG); renderCount(); renderList(); }
 
