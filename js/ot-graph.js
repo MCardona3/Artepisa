@@ -57,20 +57,40 @@ const fmtDateHuman=(s)=>{ if(!s) return ""; const d=new Date(s); return isNaN(d)
 const download=(name,text)=>{ const b=new Blob([text],{type:"application/octet-stream"}); const a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download=name; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href); };
 
 /* ================== Normalización (llaves unificadas) ================== */
-function unify(rec={}){
+function unify(rec = {}) {
   return {
-    num: rec.num ?? "",
-    cliente: rec.cliente ?? "",
-    depto: rec.depto ?? "",
-    encargado: (rec.encargado ?? rec.enc ?? ""),
-    emision: rec.emision ?? "",
-    entrega: rec.entrega ?? "",
-    oc: rec.oc ?? "",
-    estatus: (rec.estatus ?? rec.est ?? ""),
-    prioridad: (rec.prioridad ?? rec.prio ?? ""),
+    num:         rec.num ?? "",
+    cliente:     rec.cliente ?? "",
+    depto:       rec.depto ?? "",
+    encargado:   (rec.encargado ?? rec.enc ?? ""),
+    emision:     rec.emision ?? "",
+    entrega:     rec.entrega ?? "",
+    oc:          rec.oc ?? "",
+    estatus:     (rec.estatus ?? rec.est ?? ""),
+    prioridad:   (rec.prioridad ?? rec.prio ?? ""),
     descripcion: (rec.descripcion ?? rec.desc ?? ""),
-    items: Array.isArray(rec.items) ? rec.items : []
+    items:       Array.isArray(rec.items) ? rec.items : []
   };
+}
+
+/* ---- Detectores simples (fuera de unify) ---- */
+const isISO      = (v) => /^\d{4}-\d{2}-\d{2}$/.test(String(v || ""));
+const isOC       = (v) => /^\d{1,}$/.test(String(v || "")); // número simple
+const isStatus   = (v) => ["ABIERTA","EN PROCESO","EN ESPERA","CERRADA"]
+                         .includes(String(v || "").toUpperCase());
+const isPriority = (v) => ["NORMAL","ALTA","URGENTE"]
+                         .includes(String(v || "").toUpperCase());
+
+/* ---- Repara registros típicamente "corridos" por versiones previas ---- */
+function repairMisplaced(u) {
+  let x = { ...u };
+  let touched = false;
+
+  // depto tenía fecha (era Emisión); encargado tenía fecha (era Entrega)
+  if (isISO(x.depto) && !isISO(x.emision))    { x.emision  = x.depto;      x.depto = "";      touched = true; }
+  if (isISO(x.encargado) && !isISO(x.entrega)) { x.entrega  = x.
+
+
 }
 
 /* ================== PARTIDAS ================== */
