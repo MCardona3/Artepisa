@@ -1,4 +1,4 @@
-// js/ot-graph.js — unified + split-mode (funcional)
+// js/ot-graph.js — unified + form-only (funcional)
 "use strict";
 import { gs_getCollection, gs_putCollection } from "./graph-store.js";
 
@@ -35,15 +35,19 @@ const fPrio=()=>$id("o-prio");
 const fDesc=()=>$id("o-desc");
 const itemsBox=()=>$id("items-container");
 const btnAddItem=()=>$id("btn-add-item");
+
+/* ===== Mostrar/ocultar formulario por modo =====
+   - null      : lista por defecto (oculta form)
+   - "form-only": solo formulario (lista oculta)
+   - "split"    : lista + formulario lado a lado (si lo quisieras) */
 function showForm(mode){
-  const lay = document.getElementById("layout");
+  const lay = elLayout();
   if (!lay) return;
-  lay.classList.remove("split", "form-only");   // limpia modos
+  lay.classList.remove("split", "form-only");
   if (mode === "split" || mode === "form-only") {
     lay.classList.add(mode);
   }
 }
-
 
 /* ================== Utilidades ================== */
 const S=(v)=> (v==null ? "" : String(v));
@@ -51,9 +55,6 @@ const todayISO=()=> new Date().toISOString().slice(0,10);
 const fmtDate=(s)=>{ if(!s) return ""; const d=new Date(s); return isNaN(d) ? "" : d.toISOString().slice(0,10); };
 const fmtDateHuman=(s)=>{ if(!s) return ""; const d=new Date(s); return isNaN(d) ? s : d.toLocaleDateString(undefined,{day:"2-digit",month:"2-digit",year:"numeric"}); };
 const download=(name,text)=>{ const b=new Blob([text],{type:"application/octet-stream"}); const a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download=name; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href); };
-
-/* Mostrar/ocultar formulario según tu CSS (.split .card-form {display:block}) */
-function showForm(show){ const lay=elLayout(); if(!lay) return; lay.classList.toggle("split", !!show); }
 
 /* ================== Normalización (llaves unificadas) ================== */
 function unify(rec={}){
@@ -310,28 +311,43 @@ async function save(){ ETAG=await gs_putCollection("ot",LIST,ETAG); renderCount(
 /* ================== Eventos ================== */
 function on(node, ev, fn){ node && node.addEventListener(ev, fn); }
 function mountEvents(){
-  on(btnShowForm(),"click",()=>{ fillForm(null); showForm(true); elCardForm()?.scrollIntoView({behavior:"smooth",block:"start"}); });
-  on(btnCerrar(),"click",()=>{ showForm(false); window.scrollTo({top:0,behavior:"smooth"}); });
-  on(btnNuevo(),"click",()=>{ fillForm(null); showForm(true); });
+  // Crear / Agregar -> SOLO formulario (lista oculta)
+  on(btnShowForm(),"click",()=>{ fillForm(null); showForm("form-only"); elCardForm()?.scrollIntoView({behavior:"smooth",block:"start"}); });
+
+  // Cerrar -> vuelve al listado
+  on(btnCerrar(),"click",()=>{ showForm(null); window.scrollTo({top:0,behavior:"smooth"}); });
+
+  // Nuevo -> SOLO formulario
+  on(btnNuevo(),"click",()=>{ fillForm(null); showForm("form-only"); });
+
+  // Partidas
   on(btnAddItem(),"click",()=> addItemRow());
+
+  // Guardar
   on(btnGuardar(),"click",async ()=>{
     const rec=readForm();
     if(!rec.cliente || !rec.cliente.trim()){ alert("El campo CLIENTE es obligatorio."); fCliente()?.focus(); return; }
     if(editingIndex>=0) LIST[editingIndex]=rec; else LIST.push(rec);
-    try{ await save(); alert("Guardado"); showForm(false); window.scrollTo({top:0,behavior:"smooth"}); }
+    try{ await save(); alert("Guardado"); showForm(null); window.scrollTo({top:0,behavior:"smooth"}); }
     catch(e){ alert("Error al guardar: "+e.message); }
   });
+
+  // Buscar
   on(elBuscar(),"input",renderList);
+
+  // Editar / Eliminar
   on(elTable(),"click",(e)=>{
     const btn=e.target.closest("button"); if(!btn) return;
     const i=Number(btn.getAttribute("data-i"));
     const act=btn.getAttribute("data-act");
     if(act==="edit"){
-      fillForm(LIST[i]); showForm(true); elCardForm()?.scrollIntoView({behavior:"smooth"});
+      fillForm(LIST[i]); showForm("form-only"); elCardForm()?.scrollIntoView({behavior:"smooth"});
     } else if(act==="del"){
       if(confirm("¿Eliminar la OT seleccionada?")){ LIST.splice(i,1); save().catch(err=>alert(err.message)); }
     }
   });
+
+  // Imprimir, Importar/Exportar, Limpiar
   on(btnImprimir(),"click",()=>printOT(readForm()));
   on(btnImport(),"click",()=> inputFile()?.click());
   on(inputFile(),"change",(e)=>{ const file=e.target.files?.[0]; if(!file) return; importFile(file); e.target.value=""; });
