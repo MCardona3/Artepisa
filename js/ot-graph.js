@@ -70,7 +70,7 @@ function unify(rec = {}) {
   };
 }
 
-/* ---- Detectores simples (fuera de unify) ---- */
+/* ---- Detectores simples ---- */
 const isISO      = (v) => /^\d{4}-\d{2}-\d{2}$/.test(String(v || ""));
 const isOC       = (v) => /^\d{1,}$/.test(String(v || "")); // número simple
 const isStatus   = (v) => ["ABIERTA","EN PROCESO","EN ESPERA","CERRADA"]
@@ -78,34 +78,25 @@ const isStatus   = (v) => ["ABIERTA","EN PROCESO","EN ESPERA","CERRADA"]
 const isPriority = (v) => ["NORMAL","ALTA","URGENTE"]
                          .includes(String(v || "").toUpperCase());
 
-/* ---- Repara registros “corridos” por versiones previas (v2) ---- */
+/* ---- Repara registros “corridos” (v2) ---- */
 function repairMisplaced(u) {
   let x = { ...u };
   let touched = false;
 
-  // A) depto y encargado traen fechas -> mover a emision/entrega
+  // depto/encargado traen fechas -> mover a emision/entrega
   if (isISO(x.depto) && !isISO(x.emision))    { x.emision   = x.depto;      x.depto = "";       touched = true; }
   if (isISO(x.encargado) && !isISO(x.entrega)) { x.entrega   = x.encargado;  x.encargado = "";   touched = true; }
 
-  // B) emision recibió valores que no son fecha:
-  //    - número simple => era OC
-  if (!x.oc && x.emision && !isISO(x.emision) && isOC(x.emision)) {
-    x.oc = x.emision; x.emision = ""; touched = true;
-  }
-  //    - estatus => mover a estatus
-  if (!x.estatus && isStatus(x.emision)) {
-    x.estatus = x.emision; x.emision = ""; touched = true;
-  }
-  //    - prioridad => mover a prioridad
-  if (!x.prioridad && isPriority(x.emision)) {
-    x.prioridad = x.emision; x.emision = ""; touched = true;
-  }
+  // emision con valores no-fecha
+  if (!x.oc && x.emision && !isISO(x.emision) && isOC(x.emision)) { x.oc = x.emision; x.emision = ""; touched = true; }
+  if (!x.estatus   && isStatus(x.emision))   { x.estatus   = x.emision;   x.emision = ""; touched = true; }
+  if (!x.prioridad && isPriority(x.emision)) { x.prioridad = x.emision;   x.emision = ""; touched = true; }
 
-  // C) entrega recibió estatus/prioridad
-  if (!x.estatus && isStatus(x.entrega))   { x.estatus   = x.entrega;   x.entrega = ""; touched = true; }
-  if (!x.prioridad && isPriority(x.entrega)){ x.prioridad = x.entrega;  x.entrega = ""; touched = true; }
+  // entrega con estatus/prioridad
+  if (!x.estatus   && isStatus(x.entrega))   { x.estatus   = x.entrega;   x.entrega = ""; touched = true; }
+  if (!x.prioridad && isPriority(x.entrega)) { x.prioridad = x.entrega;   x.entrega = ""; touched = true; }
 
-  // D) OC recibió prioridad
+  // oc con prioridad
   if (!x.prioridad && isPriority(x.oc)) { x.prioridad = x.oc; x.oc = ""; touched = true; }
 
   return { fixed: touched, rec: x };
@@ -223,13 +214,11 @@ function parseCSV(text){
 const take=(o,...ks)=>{ for(const k of ks){ if(o[k]!=null && o[k]!="") return o[k]; } return ""; };
 
 function normalizeOT(o){
-  // normaliza claves a minúsculas sin acentos/espacios
   const norm={};
   for(const [k,v] of Object.entries(o||{})){
     const kk=k.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g,"");
     norm[kk]=v;
   }
-  // salida con llaves unificadas
   return {
     num:         take(norm,"num","numot","ot","folio","numero","#"),
     cliente:     take(norm,"cliente","nombre","name"),
@@ -349,7 +338,7 @@ async function load(){
     ETAG = ""; LIST = [];
   }
 
-  // 🔧 Reparar registros corridos y persistir si cambian
+  // Reparar registros corridos y persistir si cambian
   let changed = false;
   LIST = LIST.map(r => {
     const { fixed, rec } = repairMisplaced(unify(r));
@@ -370,7 +359,7 @@ async function save(){ ETAG=await gs_putCollection("ot",LIST,ETAG); renderCount(
 /* ================== Eventos ================== */
 function on(node, ev, fn){ node && node.addEventListener(ev, fn); }
 function mountEvents(){
-  // Crear / Agregar -> SOLO formulario (lista oculta)
+  // Crear / Agregar -> SOLO formulario
   on(btnShowForm(),"click",()=>{ fillForm(null); showForm("form-only"); elCardForm()?.scrollIntoView({behavior:"smooth",block:"start"}); });
 
   // Cerrar -> vuelve al listado
@@ -382,25 +371,26 @@ function mountEvents(){
   // Partidas
   on(btnAddItem(),"click",()=> addItemRow());
 
-function repairMisplaced(u) {
-  let x = { ...u };
-  let touched = false;
+  // Guardar (normaliza + repara antes de persistir)
+  on(btnGuardar(),"click", async ()=>{
+    const raw = readForm();
+    const { rec: fixed } = repairMisplaced(unify(raw));
 
-  if (isISO(x.depto) && !isISO(x.emision))    { x.emision = x.depto;     x.depto = "";        touched = true; }
-  if (isISO(x.encargado) && !isISO(x.entrega)) { x.entrega = x.encargado; x.encargado = "";    touched = true; }
+    if(!fixed.cliente || !fixed.cliente.trim()){
+      alert("El campo CLIENTE es obligatorio."); fCliente()?.focus(); return;
+    }
 
-  if (!x.oc && x.emision && !isISO(x.emision) && isOC(x.emision)) { x.oc = x.emision; x.emision = ""; touched = true; }
-  if (!x.estatus   && isStatus(x.emision))   { x.estatus   = x.emision;   x.emision = ""; touched = true; }
-  if (!x.prioridad && isPriority(x.emision)) { x.prioridad = x.emision;   x.emision = ""; touched = true; }
+    if(editingIndex>=0) LIST[editingIndex]=fixed; else LIST.push(fixed);
 
-  if (!x.estatus   && isStatus(x.entrega))   { x.estatus   = x.entrega;   x.entrega = ""; touched = true; }
-  if (!x.prioridad && isPriority(x.entrega)) { x.prioridad = x.entrega;   x.entrega = ""; touched = true; }
-
-  if (!x.prioridad && isPriority(x.oc)) { x.prioridad = x.oc; x.oc = ""; touched = true; }
-
-  return { fixed: touched, rec: x };
-}
-
+    try{
+      await save();
+      alert("Guardado");
+      showForm(null);
+      window.scrollTo({top:0,behavior:"smooth"});
+    }catch(e){
+      alert("Error al guardar: "+e.message);
+    }
+  });
 
   // Buscar
   on(elBuscar(),"input",renderList);
