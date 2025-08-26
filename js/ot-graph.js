@@ -35,6 +35,15 @@ const fPrio=()=>$id("o-prio");
 const fDesc=()=>$id("o-desc");
 const itemsBox=()=>$id("items-container");
 const btnAddItem=()=>$id("btn-add-item");
+function showForm(mode){
+  const lay = document.getElementById("layout");
+  if (!lay) return;
+  lay.classList.remove("split", "form-only");   // limpia modos
+  if (mode === "split" || mode === "form-only") {
+    lay.classList.add(mode);
+  }
+}
+
 
 /* ================== Utilidades ================== */
 const S=(v)=> (v==null ? "" : String(v));
