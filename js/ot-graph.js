@@ -1,4 +1,4 @@
-// js/ot-graph.js — unified + form-only (funcional)
+// js/ot-graph.js — unified + form-only (mejorado)
 "use strict";
 import { gs_getCollection, gs_putCollection } from "./graph-store.js";
 
@@ -151,14 +151,20 @@ function readForm(){
     cliente: fCliente()?.value || "",
     depto: fDepto()?.value || "",
     encargado: fEnc()?.value || "",
-    emision: fEmision()?.value || "",
-    entrega: fEntrega()?.value || "",
+    emision: fEmision()?.value || todayISO(),   // ← fecha de hoy por defecto
+    entrega: fEntrega()?.value || todayISO(),   // ← fecha de hoy por defecto
     oc: fOC()?.value || "",
     estatus: fEst()?.value || "ABIERTA",
     prioridad: fPrio()?.value || "NORMAL",
     descripcion: fDesc()?.value || "",
     items: readItemsFromUI()
   };
+}
+
+/* ===== Consecutivo de OT ===== */
+function nextNum(){
+  const nums = LIST.map(r => Number(unify(r).num) || 0);
+  return (nums.length ? Math.max(...nums) : 0) + 1;
 }
 
 /* ================== TABLA ================== */
@@ -371,10 +377,16 @@ function mountEvents(){
   // Partidas
   on(btnAddItem(),"click",()=> addItemRow());
 
-  // Guardar (normaliza + repara antes de persistir)
+  // Guardar (unify + defaults + reparar antes de persistir)
   on(btnGuardar(),"click", async ()=>{
-    const raw = readForm();
-    const { rec: fixed } = repairMisplaced(unify(raw));
+    let u = unify(readForm());
+
+    // defaults duros
+    if (!u.num)     u.num = String(nextNum());
+    if (!u.emision) u.emision = todayISO();
+    if (!u.entrega) u.entrega = todayISO();
+
+    const { rec: fixed } = repairMisplaced(u);
 
     if(!fixed.cliente || !fixed.cliente.trim()){
       alert("El campo CLIENTE es obligatorio."); fCliente()?.focus(); return;
