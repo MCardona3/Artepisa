@@ -71,3 +71,7 @@
   .ot-table td{ display:grid; grid-template-columns:120px 1fr; gap:8px; border:0; }
   .ot-table td:last-child{ grid-template-columns:1fr; }
 }
+/* ===== Modo: solo formulario ===== */
+main.container.form-only { display: block; }
+.form-only #card-list { display: none; }   /* oculta el listado */
+.form-only #card-form { display: block; }  /* muestra el formulario */
