@@ -1,6 +1,6 @@
 // js/ot.js
 (function(){
-  const $ = s => document.querySelector(s);
+  const $  = s => document.querySelector(s);
   const $$ = s => Array.from(document.querySelectorAll(s));
   const LS_KEY = "ots";
   let cache = [];           // OTs
@@ -10,24 +10,29 @@
   const today = () => new Date().toISOString().slice(0,10);
   const S = v => (v==null ? "" : String(v));
 
-  // --- UI: mostrar/ocultar formulario (lista sola por defecto)
+  // ---------- UI helpers ----------
   function showForm(show){
     const layout = $("#layout");
     if (!layout) return;
     if (show) {
-      layout.classList.add("split");
+      layout.classList.add("split"); // coincide con tu CSS (.split .card-form {display:block})
       setTimeout(()=> window.scrollTo({ top: 0, behavior: "smooth" }), 0);
     } else {
       layout.classList.remove("split");
     }
   }
 
-  // --- Datalist de clientes (desde colección clients)
+  function updateCount(){
+    const el = $("#ot-count");
+    if (el) el.textContent = (cache || []).length;
+  }
+
+  // ---------- Datalist de clientes ----------
   function renderDatalist(){
     const dl = $("#dl-clientes"); if(!dl) return;
     dl.innerHTML = "";
     (clients || [])
-      .map(c => S(c.Nombre))
+      .map(c => S(c.Nombre ?? c.nombre ?? c.name))   // tolerante a claves
       .filter(Boolean)
       .sort((a,b)=>a.localeCompare(b,"es"))
       .forEach(n => {
@@ -37,7 +42,7 @@
       });
   }
 
-  // --- PARTIDAS
+  // ---------- PARTIDAS ----------
   function newItemRow(item = {}){
     const row = document.createElement("div");
     row.className = "items-row";
@@ -63,8 +68,8 @@
 
     // Handlers
     const fileInput = row.querySelector(".i-file");
-    row.querySelector(".btn-file").addEventListener("click", ()=> fileInput.click());
-    fileInput.addEventListener("change", async (e)=>{
+    row.querySelector(".btn-file")?.addEventListener("click", ()=> fileInput.click());
+    fileInput?.addEventListener("change", async (e)=>{
       const f = e.target.files?.[0]; if(!f) return;
       if (f.size > 5 * 1024 * 1024) {
         if (!confirm("El archivo pesa más de 5MB. ¿Seguro que deseas incrustarlo en la OT?")) {
@@ -81,14 +86,15 @@
       reader.readAsDataURL(f);
     });
 
-    row.querySelector(".btn-del").addEventListener("click", ()=> row.remove());
+    row.querySelector(".btn-del")?.addEventListener("click", ()=> row.remove());
     return row;
   }
-  function clearItems(){ $("#items-container").innerHTML = ""; }
-  function addItem(item){ $("#items-container").appendChild(newItemRow(item)); }
+  function clearItems(){ const c = $("#items-container"); if (c) c.innerHTML = ""; }
+  function addItem(item){ $("#items-container")?.appendChild(newItemRow(item)); }
 
-  // --- Form
+  // ---------- Formulario ----------
   function toISO(d){ return (d || "").slice(0,10); }
+
   function readForm(){
     const items = $$("#items-container .items-row").map(row => {
       const cantidad = Number(row.querySelector(".i-cant").value) || 0;
@@ -117,16 +123,16 @@
   }
 
   function fillForm(o = {}){
-    $("#o-num").value = o.num ?? "";
-    $("#o-cliente").value = o.cliente ?? "";
-    $("#o-depto").value = o.depto ?? "MAQUINADOS";
-    $("#o-enc").value = o.encargado ?? "";
-    $("#o-emision").value = toISO(o.emision || today());
-    $("#o-entrega").value = toISO(o.entrega || today());
-    $("#o-oc").value = o.oc ?? "";
-    $("#o-est").value = o.estatus ?? "ABIERTA";
-    $("#o-prio").value = o.prioridad ?? "NORMAL";
-    $("#o-desc").value = o.descripcion ?? "";
+    $("#o-num")?.value = o.num ?? "";
+    $("#o-cliente")?.value = o.cliente ?? "";
+    $("#o-depto")?.value = o.depto ?? "MAQUINADOS";
+    $("#o-enc")?.value = o.encargado ?? "";
+    $("#o-emision")?.value = toISO(o.emision || today());
+    $("#o-entrega")?.value = toISO(o.entrega || today());
+    $("#o-oc")?.value = o.oc ?? "";
+    $("#o-est")?.value = o.estatus ?? "ABIERTA";
+    $("#o-prio")?.value = o.prioridad ?? "NORMAL";
+    $("#o-desc")?.value = o.descripcion ?? "";
     editingNum = o.num ?? null;
 
     clearItems();
@@ -141,14 +147,15 @@
     return Number.isFinite(n) ? n : 1;
   }
 
-  // --- Tabla
+  // ---------- Tabla ----------
   function compareByNumAsc(a,b){
     const av = Number(a.num) || 0, bv = Number(b.num) || 0;
     return av - bv || S(a.cliente).localeCompare(S(b.cliente),"es");
   }
 
   function render(q = ""){
-    const tb = $("#o-tabla"); tb.innerHTML = "";
+    const tb = $("#o-tabla"); if (!tb) return;
+    tb.innerHTML = "";
     const needle = (q || "").toLowerCase();
     const list = (cache || [])
       .filter(ot =>
@@ -160,36 +167,51 @@
 
     list.forEach(ot=>{
       const tr = document.createElement("tr");
-      tr.innerHTML = `<td>${S(ot.num)}</td>` +
-`<td>${S(ot.cliente)}</td>` +
-`<td>${S(ot.depto)}</td>` +
-`<td>${S(ot.encargado)}</td>` +
-`<td>${S(ot.emision)}</td>` +
-`<td>${S(ot.entrega)}</td>` +
-`<td>${S(ot.oc)}</td>` +
-`<td>${S(ot.estatus)}</td>` +
-`<td>${S(ot.prioridad)}</td>` +
-`<td>
-   <button class="btn ghost btn-edit">Editar</button>
-   <button class="btn ghost btn-print">Imprimir</button>
-   <button class="btn danger btn-del">Eliminar</button>
- </td>`;
-      tr.querySelector(".btn-edit").addEventListener("click", ()=> fillForm(ot));
-      tr.querySelector(".btn-print").addEventListener("click", ()=> openPrint(ot));
-      tr.querySelector(".btn-del").addEventListener("click", async ()=>{
+      tr.innerHTML =
+        `<td>${S(ot.num)}</td>` +
+        `<td>${S(ot.cliente)}</td>` +
+        `<td>${S(ot.depto)}</td>` +
+        `<td>${S(ot.encargado)}</td>` +
+        `<td>${S(ot.emision)}</td>` +
+        `<td>${S(ot.entrega)}</td>` +
+        `<td>${S(ot.oc)}</td>` +
+        `<td>${S(ot.estatus)}</td>` +
+        `<td>${S(ot.prioridad)}</td>` +
+        `<td>
+           <button class="btn ghost btn-edit">Editar</button>
+           <button class="btn ghost btn-print">Imprimir</button>
+           <button class="btn danger btn-del">Eliminar</button>
+         </td>`;
+
+      tr.querySelector(".btn-edit")?.addEventListener("click", ()=> fillForm(ot));
+      tr.querySelector(".btn-print")?.addEventListener("click", ()=> openPrint(ot));
+      tr.querySelector(".btn-del")?.addEventListener("click", async ()=>{
         if (!confirm(`¿Eliminar OT #${ot.num}?`)) return;
         cache = cache.filter(x => x.num !== ot.num);
         await save();
-        render($("#o-buscar").value);
+        render($("#o-buscar")?.value);
       });
       tb.appendChild(tr);
     });
+
+    updateCount();
   }
 
-  // --- Persistencia
+  // ---------- Migración de llaves antiguas ----------
+  function migrateKeys(x){
+    if (!x) return x;
+    if (x.enc !== undefined && x.encargado === undefined) x.encargado = x.enc;
+    if (x.est !== undefined && x.estatus   === undefined) x.estatus   = x.est;
+    if (x.prio!== undefined && x.prioridad === undefined) x.prioridad = x.prio;
+    if (x.desc!== undefined && x.descripcion=== undefined) x.descripcion = x.desc;
+    return x;
+  }
+
+  // ---------- Persistencia ----------
   async function load(){
-    // Auth opcional
-    try { if (window.MSALApp?.requireAuth) await MSALApp.requireAuth(); } catch(e){ console.warn("MSAL auth falló:", e); }
+    // Auth opcional (MSAL)
+    try { if (window.MSALApp?.requireAuth) await MSALApp.requireAuth(); }
+    catch(e){ console.warn("MSAL auth falló:", e); }
 
     // Clients (para datalist)
     try {
@@ -202,12 +224,24 @@
     try {
       const data = await ArtepisaData.loadCollection("ots");
       cache = Array.isArray(data) ? data : [];
-      if (!cache.length) cache = JSON.parse(localStorage.getItem(LS_KEY) || "[]");
-      else localStorage.setItem(LS_KEY, JSON.stringify(cache));
+
+      // Fallback a localStorage si está vacío
+      if (!cache.length) {
+        cache = JSON.parse(localStorage.getItem(LS_KEY) || "[]");
+      }
+
+      // Migrar llaves antiguas → nuevas y persistir
+      cache = cache.map(migrateKeys);
+      localStorage.setItem(LS_KEY, JSON.stringify(cache));
+      try { await ArtepisaData.saveCollection("ots", cache); } catch(e){ /* ok si falla */ }
+
     } catch(e) {
       console.warn("load OTs (Graph) falló, uso localStorage:", e);
-      cache = JSON.parse(localStorage.getItem(LS_KEY) || "[]");
+      cache = JSON.parse(localStorage.getItem(LS_KEY) || "[]").map(migrateKeys);
+      localStorage.setItem(LS_KEY, JSON.stringify(cache));
+      try { await ArtepisaData.saveCollection("ots", cache); } catch(_) {}
     }
+
     render("");
     // Al entrar: SOLO LISTA
     showForm(false);
@@ -215,11 +249,12 @@
 
   async function save(){
     localStorage.setItem(LS_KEY, JSON.stringify(cache));
+    updateCount();
     try { await ArtepisaData.saveCollection("ots", cache); }
     catch(e){ console.warn("save OTs (Graph) falló (local OK):", e); }
   }
 
-  // --- Impresión directa (con logo)
+  // ---------- Impresión ----------
   const escapeHTML = s => S(s)
     .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
     .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
@@ -267,6 +302,7 @@
       </div>
 
       <p><b>Cliente:</b> ${escapeHTML(o.cliente)} &nbsp; <b>Depto:</b> ${escapeHTML(o.depto)}</p>
+      <p><b>Encargado:</b> ${escapeHTML(o.encargado)}</p>
       <p><b>Emisión:</b> ${escapeHTML(o.emision)} &nbsp; <b>Entrega:</b> ${escapeHTML(o.entrega)}</p>
       <p><b>Estatus:</b> ${escapeHTML(o.estatus)} &nbsp; <b>Prioridad:</b> ${escapeHTML(o.prioridad)}</p>
       <p><b>OC:</b> ${escapeHTML(o.oc || "")}</p>
@@ -288,32 +324,32 @@
     w.document.open(); w.document.write(html); w.document.close();
   }
 
-  // --- Init
+  // ---------- Init ----------
   document.addEventListener("DOMContentLoaded", async ()=>{
     await load();
 
     // Crear / Agregar (muestra form vacío)
     $("#btn-show-form")?.addEventListener("click", ()=>{
       fillForm({ items:[{}] });
-      $("#o-cliente").focus();
+      $("#o-cliente")?.focus();
     });
 
     // Cerrar formulario
     $("#o-cerrar")?.addEventListener("click", ()=> showForm(false));
 
     // Buscar
-    $("#o-buscar").addEventListener("input", e=> render(e.target.value));
+    $("#o-buscar")?.addEventListener("input", e=> render(e.target.value));
 
     // Partidas: agregar
-    $("#btn-add-item").addEventListener("click", ()=> addItem({}));
+    $("#btn-add-item")?.addEventListener("click", ()=> addItem({}));
 
     // Nuevo (limpia pero mantiene abierto)
-    $("#o-nuevo").addEventListener("click", ()=> fillForm({ items:[{}] }));
+    $("#o-nuevo")?.addEventListener("click", ()=> fillForm({ items:[{}] }));
 
     // Guardar
-    $("#o-guardar").addEventListener("click", async ()=>{
+    $("#o-guardar")?.addEventListener("click", async ()=>{
       const o = readForm();
-      if (!o.cliente) { alert("Cliente requerido"); $("#o-cliente").focus(); return; }
+      if (!o.cliente) { alert("Cliente requerido"); $("#o-cliente")?.focus(); return; }
 
       // #OT autogenera
       if (!o.num) o.num = nextNum();
@@ -322,7 +358,7 @@
       if (editingNum !== null && editingNum !== o.num) {
         if (cache.some(x => Number(x.num) === Number(o.num))) {
           alert(`El #OT ${o.num} ya existe. Usa otro número o deja el original (${editingNum}).`);
-          $("#o-num").focus(); return;
+          $("#o-num")?.focus(); return;
         }
       }
 
@@ -330,7 +366,7 @@
       if (idx >= 0) cache[idx] = o; else cache.push(o);
 
       await save();
-      render($("#o-buscar").value);
+      render($("#o-buscar")?.value);
 
       // Cierra panel y enfoca buscador
       showForm(false);
@@ -340,7 +376,7 @@
     });
 
     // Imprimir directo desde el formulario
-    $("#o-imprimir").addEventListener("click", ()=>{
+    $("#o-imprimir")?.addEventListener("click", ()=>{
       const o = readForm();
       if (!o.num) { alert("Guarda la OT para imprimir."); return; }
       openPrint(o);
