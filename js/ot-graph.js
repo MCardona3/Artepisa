@@ -1,13 +1,13 @@
-// js/ot-graph.js — unified + form-only (mejorado)
+// js/ot-graph.js — unified + form-only (corregido y endurecido)
 "use strict";
 import { gs_getCollection, gs_putCollection } from "./graph-store.js";
 
-/* ================== Estado ================== */
+/* ============== Estado ============== */
 let ETAG = "";
 let LIST = [];
 let editingIndex = -1;
 
-/* ================== Helpers DOM ================== */
+/* ============== Helpers DOM ============== */
 const $id=(id)=>document.getElementById(id);
 const elLayout=()=>$id("layout");
 const elCardForm=()=>$id("card-form");
@@ -36,25 +36,22 @@ const fDesc=()=>$id("o-desc");
 const itemsBox=()=>$id("items-container");
 const btnAddItem=()=>$id("btn-add-item");
 
-/* ===== Mostrar/ocultar formulario por modo =====
-   - null       : lista por defecto (oculta form)
-   - "form-only": solo formulario (lista oculta)
-   - "split"    : lista + formulario (si lo quisieras) */
+/* Mostrar solo formulario (oculta listado) o viceversa */
 function showForm(mode){
   const lay = elLayout(); if (!lay) return;
-  lay.classList.remove("split", "form-only");
-  if (mode === "split" || mode === "form-only") lay.classList.add(mode);
+  lay.classList.remove("split","form-only");
+  if (mode==="split" || mode==="form-only") lay.classList.add(mode);
 }
 
-/* ================== Utilidades ================== */
+/* ============== Utils ============== */
 const S=(v)=> (v==null ? "" : String(v));
 const todayISO=()=> new Date().toISOString().slice(0,10);
-const fmtDate=(s)=>{ if(!s) return ""; const d=new Date(s); return isNaN(d) ? "" : d.toISOString().slice(0,10); };
-const fmtDateHuman=(s)=>{ if(!s) return ""; const d=new Date(s); return isNaN(d) ? s : d.toLocaleDateString(undefined,{day:"2-digit",month:"2-digit",year:"numeric"}); };
+const fmtDate=(s)=>{ if(!s) return ""; const d=new Date(s); return isNaN(d)?"":d.toISOString().slice(0,10); };
+const fmtDateHuman=(s)=>{ if(!s) return ""; const d=new Date(s); return isNaN(d)?s:d.toLocaleDateString(undefined,{day:"2-digit",month:"2-digit",year:"numeric"}); };
 const download=(name,text)=>{ const b=new Blob([text],{type:"application/octet-stream"}); const a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download=name; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href); };
 
-/* ================== Normalización (llaves unificadas) ================== */
-function unify(rec = {}) {
+/* ============== Normalización ============== */
+function unify(rec={}){
   return {
     num:         rec.num ?? "",
     cliente:     rec.cliente ?? "",
@@ -66,43 +63,39 @@ function unify(rec = {}) {
     estatus:     (rec.estatus ?? rec.est ?? ""),
     prioridad:   (rec.prioridad ?? rec.prio ?? ""),
     descripcion: (rec.descripcion ?? rec.desc ?? ""),
-    items:       Array.isArray(rec.items) ? rec.items : []
+    items:       Array.isArray(rec.items)?rec.items:[]
   };
 }
 
-/* ---- Detectores simples ---- */
-const isISO      = (v) => /^\d{4}-\d{2}-\d{2}$/.test(String(v || ""));
-const isOC       = (v) => /^\d{1,}$/.test(String(v || "")); // número simple
-const isStatus   = (v) => ["ABIERTA","EN PROCESO","EN ESPERA","CERRADA"]
-                         .includes(String(v || "").toUpperCase());
-const isPriority = (v) => ["NORMAL","ALTA","URGENTE"]
-                         .includes(String(v || "").toUpperCase());
+const isISO      = (v)=>/^\d{4}-\d{2}-\d{2}$/.test(String(v||""));
+const isOC       = (v)=>/^\d{1,}$/.test(String(v||""));
+const isStatus   = (v)=>["ABIERTA","EN PROCESO","EN ESPERA","CERRADA"].includes(String(v||"").toUpperCase());
+const isPriority = (v)=>["NORMAL","ALTA","URGENTE"].includes(String(v||"").toUpperCase());
 
-/* ---- Repara registros “corridos” (v2) ---- */
-function repairMisplaced(u) {
-  let x = { ...u };
-  let touched = false;
+/* Corrige registros “corridos” (tanto al cargar como al guardar) */
+function repairMisplaced(u){
+  let x = {...u}; let touched=false;
 
   // depto/encargado traen fechas -> mover a emision/entrega
-  if (isISO(x.depto) && !isISO(x.emision))    { x.emision   = x.depto;      x.depto = "";       touched = true; }
-  if (isISO(x.encargado) && !isISO(x.entrega)) { x.entrega   = x.encargado;  x.encargado = "";   touched = true; }
+  if (isISO(x.depto)      && !isISO(x.emision))   { x.emision   = x.depto;      x.depto="";        touched=true; }
+  if (isISO(x.encargado)  && !isISO(x.entrega))   { x.entrega   = x.encargado;  x.encargado="";    touched=true; }
 
-  // emision con valores no-fecha
-  if (!x.oc && x.emision && !isISO(x.emision) && isOC(x.emision)) { x.oc = x.emision; x.emision = ""; touched = true; }
-  if (!x.estatus   && isStatus(x.emision))   { x.estatus   = x.emision;   x.emision = ""; touched = true; }
-  if (!x.prioridad && isPriority(x.emision)) { x.prioridad = x.emision;   x.emision = ""; touched = true; }
+  // emision con valores no-fecha -> pueden ser OC/estatus/prioridad
+  if (!x.oc        && x.emision && !isISO(x.emision) && isOC(x.emision))       { x.oc        = x.emision; x.emision=""; touched=true; }
+  if (!x.estatus   && isStatus(x.emision))                                     { x.estatus   = x.emision; x.emision=""; touched=true; }
+  if (!x.prioridad && isPriority(x.emision))                                   { x.prioridad = x.emision; x.emision=""; touched=true; }
 
   // entrega con estatus/prioridad
-  if (!x.estatus   && isStatus(x.entrega))   { x.estatus   = x.entrega;   x.entrega = ""; touched = true; }
-  if (!x.prioridad && isPriority(x.entrega)) { x.prioridad = x.entrega;   x.entrega = ""; touched = true; }
+  if (!x.estatus   && isStatus(x.entrega))                                     { x.estatus   = x.entrega; x.entrega=""; touched=true; }
+  if (!x.prioridad && isPriority(x.entrega))                                   { x.prioridad = x.entrega; x.entrega=""; touched=true; }
 
   // oc con prioridad
-  if (!x.prioridad && isPriority(x.oc)) { x.prioridad = x.oc; x.oc = ""; touched = true; }
+  if (!x.prioridad && isPriority(x.oc))                                        { x.prioridad = x.oc; x.oc=""; touched=true; }
 
-  return { fixed: touched, rec: x };
+  return { fixed:touched, rec:x };
 }
 
-/* ================== PARTIDAS ================== */
+/* ============== Partidas ============== */
 function clearItemsUI(){ if(itemsBox()) itemsBox().innerHTML=""; }
 function addItemRow(item={cantidad:"",descripcion:"",plano:"",adjunto:""}){
   if(!itemsBox()) return;
@@ -124,7 +117,7 @@ function readItemsFromUI(){
   });
 }
 
-/* ================== FORM ================== */
+/* ============== Form ============== */
 function fillForm(data=null){
   const u = data ? unify(data) : null;
   editingIndex = data ? LIST.indexOf(data) : -1;
@@ -141,18 +134,16 @@ function fillForm(data=null){
   fDesc()    && (fDesc().value = u?.descripcion ?? "");
 
   clearItemsUI();
-  const items = (u?.items && u.items.length) ? u.items : [{}];
-  items.forEach(addItemRow);
+  (u?.items?.length?u.items:[{}]).forEach(addItemRow);
 }
-
 function readForm(){
   return {
     num: fNum()?.value || undefined,
     cliente: fCliente()?.value || "",
     depto: fDepto()?.value || "",
     encargado: fEnc()?.value || "",
-    emision: fEmision()?.value || todayISO(),   // ← fecha de hoy por defecto
-    entrega: fEntrega()?.value || todayISO(),   // ← fecha de hoy por defecto
+    emision: fEmision()?.value || todayISO(),   // defaults
+    entrega: fEntrega()?.value || todayISO(),   // defaults
     oc: fOC()?.value || "",
     estatus: fEst()?.value || "ABIERTA",
     prioridad: fPrio()?.value || "NORMAL",
@@ -161,41 +152,41 @@ function readForm(){
   };
 }
 
-/* ===== Consecutivo de OT ===== */
+/* Consecutivo */
 function nextNum(){
   const nums = LIST.map(r => Number(unify(r).num) || 0);
   return (nums.length ? Math.max(...nums) : 0) + 1;
 }
 
-/* ================== TABLA ================== */
-function renderCount(){ if(elCount()) elCount().textContent = LIST.length; }
+/* ============== Tabla ============== */
+function renderCount(){ elCount() && (elCount().textContent = LIST.length); }
 
 function renderList(){
   if(!elTable()) return;
-  const q = (elBuscar()?.value || "").toLowerCase().trim();
-  elTable().innerHTML = "";
+  const q=(elBuscar()?.value||"").toLowerCase().trim();
+  elTable().innerHTML="";
 
   LIST.forEach((raw,i)=>{
-    const x = unify(raw);
+    // Normaliza y repara ANTES de mostrar
+    let { rec:x } = repairMisplaced(unify(raw));
 
-    const hay = [
-      x.num, x.cliente, x.depto, x.encargado,
-      fmtDate(x.emision), fmtDate(x.entrega),
-      x.oc, x.estatus, x.prioridad, x.descripcion
-    ].map(S).join(" ").toLowerCase();
+    const hay=[x.num,x.cliente,x.depto,x.encargado,fmtDate(x.emision),fmtDate(x.entrega),x.oc,x.estatus,x.prioridad,x.descripcion]
+      .map(S).join(" ").toLowerCase();
     if(q && !hay.includes(q)) return;
 
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td class="clip">${S(x.num)}</td>
-      <td class="clamp-2">${S(x.cliente)}</td>
-      <td class="clamp-2">${S(x.depto)}</td>
-      <td class="clamp-2">${S(x.encargado)}</td>
-      <td>${fmtDate(x.emision)}</td>
-      <td>${fmtDate(x.entrega)}</td>
-      <td>${S(x.oc)}</td>
-      <td><span class="badge">${S(x.estatus)}</span></td>
-      <td><span class="badge green">${S(x.prioridad)}</span></td>
+    const td = (v)=> (S(v) || "—");  // muestra — si vacío
+
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td class="clip">${td(x.num)}</td>
+      <td class="clamp-2">${td(x.cliente)}</td>
+      <td class="clamp-2">${td(x.depto)}</td>
+      <td class="clamp-2">${td(x.encargado)}</td>
+      <td>${td(fmtDate(x.emision))}</td>
+      <td>${td(fmtDate(x.entrega))}</td>
+      <td>${td(x.oc)}</td>
+      <td><span class="badge">${td(x.estatus)}</span></td>
+      <td><span class="badge green">${td(x.prioridad)}</span></td>
       <td>
         <div class="table-actions">
           <button class="iconbtn success" title="Editar" data-i="${i}" data-act="edit"></button>
@@ -206,7 +197,7 @@ function renderList(){
   });
 }
 
-/* ================== Import / Export ================== */
+/* ============== Import / Export ============== */
 function parseCSV(text){
   const sep=text.includes(";")&&!text.includes(",")?";":",";
   const lines=text.split(/\r?\n/).filter(l=>l.trim().length);
@@ -218,7 +209,6 @@ function parseCSV(text){
   });
 }
 const take=(o,...ks)=>{ for(const k of ks){ if(o[k]!=null && o[k]!="") return o[k]; } return ""; };
-
 function normalizeOT(o){
   const norm={};
   for(const [k,v] of Object.entries(o||{})){
@@ -239,16 +229,13 @@ function normalizeOT(o){
     items:       Array.isArray(o.items) ? o.items : []
   };
 }
-
 async function importFile(file){
   const text=await file.text(); let arr=[];
   try{
     if(file.name.toLowerCase().endsWith(".json")){
       const j=JSON.parse(text);
       arr=Array.isArray(j)?j:(Array.isArray(j?.items)?j.items:[]);
-    } else {
-      arr=parseCSV(text);
-    }
+    } else { arr=parseCSV(text); }
   }catch(e){ alert("Archivo inválido: "+e.message); return; }
 
   const recs=arr.map(normalizeOT).filter(x=> (x.cliente || x.descripcion));
@@ -267,7 +254,6 @@ async function importFile(file){
     alert("Error al guardar tras importar: "+e.message);
   }
 }
-
 function exportJSON(){ download("ordenes_trabajo.json", JSON.stringify(LIST.map(unify),null,2)); }
 function exportCSV(){
   const cols=["num","cliente","depto","encargado","emision","entrega","oc","estatus","prioridad","descripcion"];
@@ -276,7 +262,7 @@ function exportCSV(){
 }
 async function clearAll(){ if(!confirm("¿Vaciar todas las Órdenes de Trabajo?")) return; LIST=[]; await save(); }
 
-/* ================== Datalist de clientes ================== */
+/* ============== Datalist clientes ============== */
 async function loadClientesDatalist(){
   try{
     const {items}=await gs_getCollection("clientes");
@@ -286,140 +272,86 @@ async function loadClientesDatalist(){
       .filter(c=>c && (c.nombre || c.name))
       .map(c=>`<option value="${S(c.nombre||c.name).replace(/"/g,'&quot;')}"></option>`)
       .join("");
-  }catch(_){ /* si no existe clientes.json, ignorar */ }
+  }catch(_){ /* sin clientes.json, ignorar */ }
 }
 
-/* ================== Print ================== */
+/* ============== Print ============== */
 function buildPrintHTML(rec){
-  const x = unify(rec);
+  const x=unify(rec);
   const logoURL=new URL("./img/arte.png?v=1", location.href).href;
   const items=Array.isArray(x.items)?x.items:[];
   const rows=items.length? items.map((it,i)=>`
-        <tr>
-          <td>${i+1}</td>
-          <td style="text-align:right">${S(it.cantidad)}</td>
-          <td>${S(it.descripcion)}</td>
-          <td>${S(it.plano)}</td>
-          <td>${it.adjunto?"Sí":""}</td>
-        </tr>`).join("")
-    : `<tr><td colspan="5" style="text-align:center;color:#6b7280">Sin partidas</td></tr>`;
-
-  return `<!doctype html><html><head><meta charset="utf-8"><title>OT ${S(x.num)} - Artepisa</title><style>
-    @page { size: A4; margin: 16mm; } *{box-sizing:border-box}
-    body{font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Arial;color:#111827}
-    .header{display:flex;align-items:center;gap:16px;margin-bottom:6px}.header img{height:56px}
-    .brand{font-weight:800;font-size:20px;line-height:1.1}.muted{color:#6b7280}
-    h1{font-size:18px;margin:6px 0 14px}
-    table{width:100%;border-collapse:collapse;margin-top:8px}th,td{border:1px solid #e5e7eb;padding:6px 8px;font-size:12.5px;vertical-align:top}
-    th{background:#f3f4f6;text-align:left}
+      <tr><td>${i+1}</td><td style="text-align:right">${S(it.cantidad)}</td>
+      <td>${S(it.descripcion)}</td><td>${S(it.plano)}</td><td>${it.adjunto?"Sí":""}</td></tr>`
+    ).join(""):`<tr><td colspan="5" style="text-align:center;color:#6b7280">Sin partidas</td></tr>`;
+  return `<!doctype html><html><head><meta charset="utf-8"><title>OT ${S(x.num)} - Artepisa</title>
+  <style>@page{size:A4;margin:16mm}*{box-sizing:border-box}body{font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Arial;color:#111827}
+  .header{display:flex;align-items:center;gap:16px;margin-bottom:6px}.header img{height:56px}
+  .brand{font-weight:800;font-size:20px;line-height:1.1}.muted{color:#6b7280}h1{font-size:18px;margin:6px 0 14px}
+  table{width:100%;border-collapse:collapse;margin-top:8px}th,td{border:1px solid #e5e7eb;padding:6px 8px;font-size:12.5px;vertical-align:top}th{background:#f3f4f6;text-align:left}
   </style></head><body onload="window.print()">
-    <div class="header"><img src="${logoURL}" alt="ARTEPISA SLP"><div><div class="brand">ARTEPISA SLP</div><div class="muted">Orden de Trabajo ${x.num?`· #${S(x.num)}`:""}</div></div></div>
-    <table>
-      <tbody>
-        <tr><th>Cliente</th><td>${S(x.cliente)}</td><th>Departamento</th><td>${S(x.depto)}</td></tr>
-        <tr><th>Encargado</th><td>${S(x.encargado)}</td><th>Orden de Compra</th><td>${S(x.oc)}</td></tr>
-        <tr><th>Emisión</th><td>${fmtDateHuman(x.emision)}</td><th>Entrega</th><td>${fmtDateHuman(x.entrega)}</td></tr>
-        <tr><th>Estatus</th><td>${S(x.estatus)}</td><th>Prioridad</th><td>${S(x.prioridad)}</td></tr>
-        <tr><th>Descripción</th><td colspan="3">${S(x.descripcion)}</td></tr>
-      </tbody>
-    </table>
-    <h3>Partidas</h3>
-    <table><thead><tr><th>#</th><th style="text-align:right">Cant.</th><th>Descripción</th><th>Plano</th><th>Adjunto</th></tr></thead><tbody>${rows}</tbody></table>
+  <div class="header"><img src="${logoURL}" alt="ARTEPISA SLP"><div><div class="brand">ARTEPISA SLP</div><div class="muted">Orden de Trabajo ${x.num?`· #${S(x.num)}`:""}</div></div></div>
+  <table><tbody>
+  <tr><th>Cliente</th><td>${S(x.cliente)}</td><th>Departamento</th><td>${S(x.depto)}</td></tr>
+  <tr><th>Encargado</th><td>${S(x.encargado)}</td><th>Orden de Compra</th><td>${S(x.oc)}</td></tr>
+  <tr><th>Emisión</th><td>${fmtDateHuman(x.emision)}</td><th>Entrega</th><td>${fmtDateHuman(x.entrega)}</td></tr>
+  <tr><th>Estatus</th><td>${S(x.estatus)}</td><th>Prioridad</th><td>${S(x.prioridad)}</td></tr>
+  <tr><th>Descripción</th><td colspan="3">${S(x.descripcion)}</td></tr></tbody></table>
+  <h3>Partidas</h3><table><thead><tr><th>#</th><th style="text-align:right">Cant.</th><th>Descripción</th><th>Plano</th><th>Adjunto</th></tr></thead><tbody>${rows}</tbody></table>
   </body></html>`;
 }
-function printOT(rec){
-  const html=buildPrintHTML(rec);
-  const w=window.open("", "_blank", "width=900,height=900");
-  w.document.open(); w.document.write(html); w.document.close();
-}
+function printOT(rec){ const html=buildPrintHTML(rec); const w=window.open("","_blank","width=900,height=900"); w.document.open(); w.document.write(html); w.document.close(); }
 
-/* ================== Persistencia ================== */
+/* ============== Persistencia ============== */
 async function load(){
-  try {
+  try{
     const { etag, items } = await gs_getCollection("ot");
-    ETAG = etag;
-    LIST = Array.isArray(items) ? items : [];
-  } catch(e) {
-    console.error("Carga OT falló:", e);
-    ETAG = ""; LIST = [];
-  }
+    ETAG=etag; LIST=Array.isArray(items)?items:[];
+  }catch(e){ console.error("Carga OT falló:",e); ETAG=""; LIST=[]; }
 
-  // Reparar registros corridos y persistir si cambian
-  let changed = false;
-  LIST = LIST.map(r => {
-    const { fixed, rec } = repairMisplaced(unify(r));
-    if (fixed) changed = true;
-    return rec;
-  });
-  if (changed) {
-    try { ETAG = await gs_putCollection("ot", LIST, ETAG); }
-    catch(e){ console.warn("No se pudo guardar la reparación:", e); }
-  }
+  // Repara todo lo existente y persiste si cambió
+  let changed=false;
+  LIST = LIST.map(r=>{ const {fixed,rec}=repairMisplaced(unify(r)); if(fixed) changed=true; return rec; });
+  if(changed){ try{ ETAG=await gs_putCollection("ot",LIST,ETAG); }catch(e){ console.warn("No se pudo guardar la reparación:",e); } }
 
-  renderCount();
-  renderList();
-  loadClientesDatalist();
+  renderCount(); renderList(); loadClientesDatalist();
 }
 async function save(){ ETAG=await gs_putCollection("ot",LIST,ETAG); renderCount(); renderList(); }
 
-/* ================== Eventos ================== */
-function on(node, ev, fn){ node && node.addEventListener(ev, fn); }
+/* ============== Eventos ============== */
+function on(node,ev,fn){ node && node.addEventListener(ev,fn); }
 function mountEvents(){
-  // Crear / Agregar -> SOLO formulario
   on(btnShowForm(),"click",()=>{ fillForm(null); showForm("form-only"); elCardForm()?.scrollIntoView({behavior:"smooth",block:"start"}); });
-
-  // Cerrar -> vuelve al listado
   on(btnCerrar(),"click",()=>{ showForm(null); window.scrollTo({top:0,behavior:"smooth"}); });
-
-  // Nuevo -> SOLO formulario
   on(btnNuevo(),"click",()=>{ fillForm(null); showForm("form-only"); });
-
-  // Partidas
   on(btnAddItem(),"click",()=> addItemRow());
 
-  // Guardar (unify + defaults + reparar antes de persistir)
+  // Guardar con defaults + reparación
   on(btnGuardar(),"click", async ()=>{
     let u = unify(readForm());
-
-    // defaults duros
-    if (!u.num)     u.num = String(nextNum());
-    if (!u.emision) u.emision = todayISO();
-    if (!u.entrega) u.entrega = todayISO();
-
+    if(!u.num)     u.num = String(nextNum());
+    if(!u.emision) u.emision = todayISO();
+    if(!u.entrega) u.entrega = todayISO();
     const { rec: fixed } = repairMisplaced(u);
 
-    if(!fixed.cliente || !fixed.cliente.trim()){
-      alert("El campo CLIENTE es obligatorio."); fCliente()?.focus(); return;
-    }
+    if(!fixed.cliente || !fixed.cliente.trim()){ alert("El campo CLIENTE es obligatorio."); fCliente()?.focus(); return; }
 
     if(editingIndex>=0) LIST[editingIndex]=fixed; else LIST.push(fixed);
 
-    try{
-      await save();
-      alert("Guardado");
-      showForm(null);
-      window.scrollTo({top:0,behavior:"smooth"});
-    }catch(e){
-      alert("Error al guardar: "+e.message);
-    }
+    try{ await save(); alert("Guardado"); showForm(null); window.scrollTo({top:0,behavior:"smooth"}); }
+    catch(e){ alert("Error al guardar: "+e.message); }
   });
 
-  // Buscar
   on(elBuscar(),"input",renderList);
 
-  // Editar / Eliminar
   on(elTable(),"click",(e)=>{
     const btn=e.target.closest("button"); if(!btn) return;
     const i=Number(btn.getAttribute("data-i"));
     const act=btn.getAttribute("data-act");
-    if(act==="edit"){
-      fillForm(LIST[i]); showForm("form-only"); elCardForm()?.scrollIntoView({behavior:"smooth"});
-    } else if(act==="del"){
-      if(confirm("¿Eliminar la OT seleccionada?")){ LIST.splice(i,1); save().catch(err=>alert(err.message)); }
-    }
+    if(act==="edit"){ fillForm(LIST[i]); showForm("form-only"); elCardForm()?.scrollIntoView({behavior:"smooth"}); }
+    else if(act==="del"){ if(confirm("¿Eliminar la OT seleccionada?")){ LIST.splice(i,1); save().catch(err=>alert(err.message)); } }
   });
 
-  // Imprimir, Importar/Exportar, Limpiar
   on(btnImprimir(),"click",()=>printOT(readForm()));
   on(btnImport(),"click",()=> inputFile()?.click());
   on(inputFile(),"change",(e)=>{ const file=e.target.files?.[0]; if(!file) return; importFile(file); e.target.value=""; });
@@ -427,5 +359,5 @@ function mountEvents(){
   on(btnClear(),"click",clearAll);
 }
 
-/* ================== Init ================== */
+/* ============== Init ============== */
 (async function bootstrap(){ try{ mountEvents(); await load(); }catch(e){ console.error("Init OT falló:",e); mountEvents(); } })();
