@@ -78,29 +78,35 @@ const isStatus   = (v) => ["ABIERTA","EN PROCESO","EN ESPERA","CERRADA"]
 const isPriority = (v) => ["NORMAL","ALTA","URGENTE"]
                          .includes(String(v || "").toUpperCase());
 
-/* ---- Repara registros típicamente "corridos" por versiones previas ---- */
+/* ---- Repara registros “corridos” por versiones previas (v2) ---- */
 function repairMisplaced(u) {
   let x = { ...u };
   let touched = false;
 
-  // depto tenía fecha (era Emisión); encargado tenía fecha (era Entrega)
+  // A) depto y encargado traen fechas -> mover a emision/entrega
   if (isISO(x.depto) && !isISO(x.emision))    { x.emision   = x.depto;      x.depto = "";       touched = true; }
   if (isISO(x.encargado) && !isISO(x.entrega)) { x.entrega   = x.encargado;  x.encargado = "";   touched = true; }
 
-  // Emisión quedó con la OC (ej. "123")
+  // B) emision recibió valores que no son fecha:
+  //    - número simple => era OC
   if (!x.oc && x.emision && !isISO(x.emision) && isOC(x.emision)) {
     x.oc = x.emision; x.emision = ""; touched = true;
   }
-
-  // Entrega quedó con el estatus
-  if (!x.estatus && isStatus(x.entrega)) {
-    x.estatus = x.entrega; x.entrega = ""; touched = true;
+  //    - estatus => mover a estatus
+  if (!x.estatus && isStatus(x.emision)) {
+    x.estatus = x.emision; x.emision = ""; touched = true;
+  }
+  //    - prioridad => mover a prioridad
+  if (!x.prioridad && isPriority(x.emision)) {
+    x.prioridad = x.emision; x.emision = ""; touched = true;
   }
 
-  // OC quedó con la prioridad
-  if (!x.prioridad && isPriority(x.oc)) {
-    x.prioridad = x.oc; x.oc = ""; touched = true;
-  }
+  // C) entrega recibió estatus/prioridad
+  if (!x.estatus && isStatus(x.entrega))   { x.estatus   = x.entrega;   x.entrega = ""; touched = true; }
+  if (!x.prioridad && isPriority(x.entrega)){ x.prioridad = x.entrega;  x.entrega = ""; touched = true; }
+
+  // D) OC recibió prioridad
+  if (!x.prioridad && isPriority(x.oc)) { x.prioridad = x.oc; x.oc = ""; touched = true; }
 
   return { fixed: touched, rec: x };
 }
