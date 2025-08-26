@@ -382,14 +382,25 @@ function mountEvents(){
   // Partidas
   on(btnAddItem(),"click",()=> addItemRow());
 
-  // Guardar
-  on(btnGuardar(),"click",async ()=>{
-    const rec=readForm();
-    if(!rec.cliente || !rec.cliente.trim()){ alert("El campo CLIENTE es obligatorio."); fCliente()?.focus(); return; }
-    if(editingIndex>=0) LIST[editingIndex]=rec; else LIST.push(rec);
-    try{ await save(); alert("Guardado"); showForm(null); window.scrollTo({top:0,behavior:"smooth"}); }
-    catch(e){ alert("Error al guardar: "+e.message); }
-  });
+function repairMisplaced(u) {
+  let x = { ...u };
+  let touched = false;
+
+  if (isISO(x.depto) && !isISO(x.emision))    { x.emision = x.depto;     x.depto = "";        touched = true; }
+  if (isISO(x.encargado) && !isISO(x.entrega)) { x.entrega = x.encargado; x.encargado = "";    touched = true; }
+
+  if (!x.oc && x.emision && !isISO(x.emision) && isOC(x.emision)) { x.oc = x.emision; x.emision = ""; touched = true; }
+  if (!x.estatus   && isStatus(x.emision))   { x.estatus   = x.emision;   x.emision = ""; touched = true; }
+  if (!x.prioridad && isPriority(x.emision)) { x.prioridad = x.emision;   x.emision = ""; touched = true; }
+
+  if (!x.estatus   && isStatus(x.entrega))   { x.estatus   = x.entrega;   x.entrega = ""; touched = true; }
+  if (!x.prioridad && isPriority(x.entrega)) { x.prioridad = x.entrega;   x.entrega = ""; touched = true; }
+
+  if (!x.prioridad && isPriority(x.oc)) { x.prioridad = x.oc; x.oc = ""; touched = true; }
+
+  return { fixed: touched, rec: x };
+}
+
 
   // Buscar
   on(elBuscar(),"input",renderList);
