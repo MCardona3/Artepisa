@@ -164,12 +164,13 @@
         `<td>${S(ot.num)}</td>` +
         `<td>${S(ot.cliente)}</td>` +
         `<td>${S(ot.depto)}</td>` +
+        `<td>${S(ot.encargado)}</td>` +     
         `<td>${S(ot.emision)}</td>` +
         `<td>${S(ot.entrega)}</td>` +
-        `<td>${S(ot.estatus)}</td>` +
-        `<td>${S(ot.prioridad)}</td>` +
-        `<td>${S(ot.oc)}</td>` +
-        `<td>
+        `<td>${S(ot.oc)}</td>` +             
+       `<td>${S(ot.estatus)}</td>` +
+       `<td>${S(ot.prioridad)}</td>` +
+  `<td>
            <button class="btn ghost btn-edit">Editar</button>
            <button class="btn ghost btn-print">Imprimir</button>
            <button class="btn danger btn-del">Eliminar</button>
@@ -347,3 +348,4 @@
     });
   });
 })();
+
