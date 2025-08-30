@@ -1,10 +1,10 @@
-// js/inv-graph.js — Inventario (OneDrive/SharePoint) — versión estable (sin # en variables)
+// js/inv-graph.js — Inventario (OneDrive/SharePoint) — estable con "# Parte" en UI y "parte" en datos
 "use strict";
 import { gs_getCollection, gs_putCollection } from "./graph-store.js";
 
 /* ============== Estado ============== */
 let ETAG = "";
-let LIST = [];          // [{sku, descripcion, unidad, stock, minimo, ubicacion, proveedor, estado}]
+let LIST = [];          // [{parte, descripcion, unidad, stock, minimo, ubicacion, proveedor, estado}]
 let editingIndex = -1;
 
 /* ============== Helpers DOM ============== */
@@ -30,29 +30,21 @@ const btnImport  = () => $id("inv-import");
 const btnClear   = () => $id("inv-clear");
 const inputFile  = () => $id("inv-file");
 
-// Campos de formulario (ids esperados en tu HTML)
-const fSKU   = () => $id("f-sku")   || $id("i-sku");
+// Campos (acepta tanto f-parte como f-sku por compatibilidad)
+const fParte = () => $id("f-parte") || $id("f-sku") || $id("i-sku");
 const fDesc  = () => $id("f-nombre")|| $id("i-desc");
-const fUni   = () => $id("f-un")    || $id("i-uni");
-const fStock = () => $id("f-stock") || $id("i-stock");
-const fMin   = () => $id("f-min")   || $id("i-min");
-const fUbi   = () => $id("f-ubi")   || $id("i-ubi");
-const fProv  = () => $id("f-prov")  || $id("i-prov");
-const fEst   = () => $id("f-estado")|| $id("i-estado");
+const fUni   = () => $id("f-un")     || $id("i-uni");
+const fStock = () => $id("f-stock")  || $id("i-stock");
+const fMin   = () => $id("f-min")    || $id("i-min");
+const fUbi   = () => $id("f-ubi")    || $id("i-ubi");
+const fProv  = () => $id("f-prov")   || $id("i-prov");
+const fEst   = () => $id("f-estado") || $id("i-estado");
 
-/* ============== Utilidades ============== */
-const S = v => (v == null ? "" : String(v));
-const N = v => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
+/* ============== Utiles ============== */
+const S=v=>(v==null?"":String(v));
+const N=v=>{ const n=Number(v); return Number.isFinite(n)?n:0; };
 
-const download=(name,text)=>{
-  const b=new Blob([text],{type:"application/octet-stream"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(b); a.download=name;
-  document.body.appendChild(a); a.click(); a.remove();
-  URL.revokeObjectURL(a.href);
-};
-
-/* ===== Toggle listado ↔ formulario ===== */
+/* Listado ↔ Formulario */
 function showForm(show){
   const lay = elLayout();
   if (lay) lay.classList.toggle("form-only", !!show);
@@ -61,28 +53,18 @@ function showForm(show){
   if (show) elCardForm()?.scrollIntoView({behavior:"smooth", block:"start"});
 }
 
-/* ============== Normalización ============== */
+/* ============== Normalización (canon: 'parte') ============== */
 function unify(rec = {}){
-  // Acepta alias como parte / #PARTE / numero_parte..., pero guarda en `sku`
-  const parte =
-    rec.sku ??
-    rec.parte ??
-    rec.PARTE ??
-    rec["#PARTE"] ??
-    rec["#Parte"] ??
-    rec["# parte"] ??
-    rec["numparte"] ??
-    rec["numero_parte"];
-
   return {
-    sku:         S(parte).trim(),
-    descripcion: S(rec.descripcion).trim(),
-    unidad:      S(rec.unidad).trim(),
-    stock:       N(rec.stock),
-    minimo:      N(rec.minimo ?? rec.min),
-    ubicacion:   S(rec.ubicacion).trim(),
-    proveedor:   S(rec.proveedor).trim(),
-    estado:      S(rec.estado).trim(),
+    // lee parte, sku o "#Parte" pero normaliza a 'parte'
+    parte:      S(rec.parte ?? rec.sku ?? rec["#Parte"]).trim(),
+    descripcion:S(rec.descripcion).trim(),
+    unidad:     S(rec.unidad).trim(),
+    stock:      N(rec.stock),
+    minimo:     N(rec.minimo ?? rec.min),
+    ubicacion:  S(rec.ubicacion).trim(),
+    proveedor:  S(rec.proveedor).trim(),
+    estado:     S(rec.estado || "ACTIVO").trim(),
   };
 }
 
@@ -91,26 +73,26 @@ function fillForm(data=null){
   const u = data ? unify(data) : null;
   editingIndex = data ? LIST.indexOf(data) : -1;
 
-  if(fSKU())   fSKU().value   = u?.sku || "";
-  if(fDesc())  fDesc().value  = u?.descripcion || "";
-  if(fUni())   fUni().value   = u?.unidad || "pza";
-  if(fStock()) fStock().value = (u?.stock ?? 0);
-  if(fMin())   fMin().value   = (u?.minimo ?? 0);
-  if(fUbi())   fUbi().value   = u?.ubicacion || "";
-  if(fProv())  fProv().value  = u?.proveedor || "";
-  if(fEst())   fEst().value   = u?.estado || "ACTIVO";
+  fParte() && (fParte().value = u?.parte || "");
+  fDesc()  && (fDesc().value  = u?.descripcion || "");
+  fUni()   && (fUni().value   = u?.unidad || "pza");
+  fStock() && (fStock().value = u?.stock ?? 0);
+  fMin()   && (fMin().value   = u?.minimo ?? 0);
+  fUbi()   && (fUbi().value   = u?.ubicacion || "");
+  fProv()  && (fProv().value  = u?.proveedor || "");
+  fEst()   && (fEst().value   = u?.estado || "ACTIVO");
 }
 
 function readForm(){
   return unify({
-    sku:         fSKU()?.value,
-    descripcion: fDesc()?.value,
-    unidad:      fUni()?.value,
-    stock:       fStock()?.value,
-    minimo:      fMin()?.value,
-    ubicacion:   fUbi()?.value,
-    proveedor:   fProv()?.value,
-    estado:      fEst()?.value,
+    parte:      fParte()?.value,
+    descripcion:fDesc()?.value,
+    unidad:     fUni()?.value,
+    stock:      fStock()?.value,
+    minimo:     fMin()?.value,
+    ubicacion:  fUbi()?.value,
+    proveedor:  fProv()?.value,
+    estado:     fEst()?.value,
   });
 }
 
@@ -126,16 +108,15 @@ function renderList(){
     .map(unify)
     .filter(x=>{
       if(!q) return true;
-      const hay = [
-        x.sku, x.descripcion, x.unidad, x.ubicacion, x.proveedor, x.estado
-      ].join(" ").toLowerCase();
+      const hay = [x.parte, x.descripcion, x.unidad, x.ubicacion, x.proveedor, x.estado]
+        .join(" ").toLowerCase();
       return hay.includes(q);
     });
 
   list.forEach((x,i)=>{
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td class="clip">${S(x.sku)}</td>          <!-- Se muestra como “# PARTE” en el encabezado de la tabla -->
+      <td class="clip">${S(x.parte)}</td>
       <td class="clamp-2">${S(x.descripcion)}</td>
       <td>${S(x.unidad)}</td>
       <td style="text-align:right">${N(x.stock)}</td>
@@ -177,8 +158,7 @@ function normalizeItem(o){
     norm[kk]=v;
   }
   return unify({
-    // Acepta varios nombres para la parte, pero lo guarda en `sku`
-    sku:         take(norm,"sku","parte","#parte","numeroparte","numparte","codigo","clave"),
+    parte:       take(norm,"parte","#parte","sku","codigo","clave"),
     descripcion: take(norm,"descripcion","description","desc"),
     unidad:      take(norm,"unidad","uni"),
     stock:       take(norm,"stock","existencia","qty","cantidad"),
@@ -202,14 +182,14 @@ async function importFile(file){
     alert("Archivo inválido: "+e.message); return;
   }
 
-  const recs = arr.map(normalizeItem).filter(x=> x.sku || x.descripcion);
+  const recs = arr.map(normalizeItem).filter(x=> x.parte || x.descripcion);
   if(!recs.length){ alert("No se encontraron registros válidos."); return; }
 
-  // merge por sku
+  // merge por 'parte'
   const idx = new Map();
-  LIST.forEach((x,i)=>{ const key=S(x.sku); if(key) idx.set(key,i); });
+  LIST.forEach((x,i)=>{ const key=S(unify(x).parte); if(key) idx.set(key,i); });
   recs.forEach(r=>{
-    const key = S(r.sku);
+    const key = S(r.parte);
     if(key && idx.has(key)) LIST[idx.get(key)] = r;
     else LIST.push(r);
   });
@@ -223,11 +203,18 @@ async function importFile(file){
   }
 }
 
+function download(name,text){
+  const b=new Blob([text],{type:"application/octet-stream"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(b); a.download=name;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(a.href);
+}
 function exportJSON(){ download("inventario.json", JSON.stringify(LIST.map(unify),null,2)); }
 function exportCSV(){
-  const cols=["sku","descripcion","unidad","stock","minimo","ubicacion","proveedor","estado"];
-  const rows=[cols.join(",")]
-    .concat(LIST.map(unify).map(x=> cols.map(k=>S(x[k]).replace(/"/g,'""')).map(s=>`"${s}"`).join(",")));
+  const cols=["parte","descripcion","unidad","stock","minimo","ubicacion","proveedor","estado"];
+  const rows=[cols.join(",")].concat(LIST.map(unify).map(x=> cols
+    .map(k=>S(x[k]).replace(/"/g,'""')).map(s=>`"${s}"`).join(",")));
   download("inventario.csv", rows.join("\n"));
 }
 async function clearAll(){ if(!confirm("¿Vaciar todos los ítems de inventario?")) return; LIST=[]; await save(); }
@@ -252,24 +239,21 @@ async function save(){
 
 /* ============== Eventos ============== */
 function on(node, ev, fn){ node && node.addEventListener(ev, fn); }
-
 function mountEvents(){
-  // Crear / Agregar -> SOLO formulario
-  on(btnCreate(), "click", ()=>{
-    fillForm(null);
-    showForm(true);
-    fSKU()?.focus();
-  });
+  on(btnCreate(),"click",()=>{ fillForm(null); showForm(true); fParte()?.focus(); });
 
-  // Guardar
-  on(btnGuardar(), "click", async ()=>{
+  on(btnGuardar(),"click", async ()=>{
     const rec = readForm();
-    if(!rec.sku){ alert("El campo # PARTE es obligatorio."); fSKU()?.focus(); return; }
-    if(!rec.descripcion){ alert("La DESCRIPCIÓN es obligatoria."); fDesc()?.focus(); return; }
+    if(!rec.parte || !rec.parte.trim()){
+      alert("El campo # PARTE es obligatorio."); fParte()?.focus(); return;
+    }
+    if(!rec.descripcion || !rec.descripcion.trim()){
+      alert("La DESCRIPCIÓN es obligatoria."); fDesc()?.focus(); return;
+    }
 
     const i = editingIndex >= 0
       ? editingIndex
-      : LIST.findIndex(x => S(x.sku) === S(rec.sku));
+      : LIST.findIndex(x => S(unify(x).parte) === S(rec.parte));
 
     if(i >= 0) LIST[i] = rec; else LIST.push(rec);
 
@@ -283,49 +267,30 @@ function mountEvents(){
     }
   });
 
-  // Nuevo (limpia y deja abierto)
-  on(btnNuevo(), "click", ()=>{
-    fillForm(null);
-    showForm(true);
-    fSKU()?.focus();
-  });
+  on(btnNuevo(),"click",()=>{ fillForm(null); showForm(true); fParte()?.focus(); });
+  on(btnCerrar(),"click",()=>{ showForm(false); window.scrollTo({top:0,behavior:"smooth"}); });
+  on(elBuscar(),"input",renderList);
 
-  // Cerrar (volver a lista)
-  on(btnCerrar(), "click", ()=>{
-    showForm(false);
-    window.scrollTo({top:0,behavior:"smooth"});
-  });
-
-  // Buscar
-  on(elBuscar(), "input", renderList);
-
-  // Editar / Eliminar desde la tabla
-  on(elTable(), "click", (e)=>{
-    const btn = e.target.closest("button"); if(!btn) return;
-    const i = Number(btn.getAttribute("data-i"));
-    const act = btn.getAttribute("data-act");
-    if(act === "edit"){
-      fillForm(LIST[i]);
-      showForm(true);
-    }else if(act === "del"){
+  on(elTable(),"click",(e)=>{
+    const btn=e.target.closest("button"); if(!btn) return;
+    const i=Number(btn.getAttribute("data-i"));
+    const act=btn.getAttribute("data-act");
+    if(act==="edit"){ fillForm(LIST[i]); showForm(true); }
+    else if(act==="del"){
       if(confirm("¿Eliminar el ítem seleccionado?")){
         LIST.splice(i,1); save().catch(err=>alert(err.message));
       }
     }
   });
 
-  // Importar / Exportar / Limpiar
-  on(btnImport(), "click", ()=> inputFile()?.click());
-  on(inputFile(), "change", e=>{
-    const file = e.target.files?.[0]; if(!file) return;
+  on(btnImport(),"click",()=> inputFile()?.click());
+  on(inputFile(),"change", e=>{
+    const file=e.target.files?.[0]; if(!file) return;
     importFile(file);
-    e.target.value = "";
+    e.target.value="";
   });
-  on(btnExport(), "click", ()=>{
-    const pick = confirm("Aceptar = JSON  |  Cancelar = CSV");
-    if(pick) exportJSON(); else exportCSV();
-  });
-  on(btnClear(), "click", clearAll);
+  on(btnExport(),"click",()=>{ const pick=confirm("Aceptar = JSON  |  Cancelar = CSV"); if(pick) exportJSON(); else exportCSV(); });
+  on(btnClear(),"click", clearAll);
 }
 
 /* ============== Init ============== */
