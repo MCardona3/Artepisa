@@ -1,7 +1,7 @@
 /* inventario.css – Inventario */
 
 /* ===== Anchos de columnas (listado) ===== */
-.ot-table th:nth-child(1),  .ot-table td:nth-child(1)  { width: 12%; }   /* SKU */
+.ot-table th:nth-child(1),  .ot-table td:nth-child(1)  { width: 12%; }   /* #Parte */
 .ot-table th:nth-child(2),  .ot-table td:nth-child(2)  { width: 28%; }   /* Descripción */
 .ot-table th:nth-child(3),  .ot-table td:nth-child(3)  { width: 8%;  }   /* Unidad */
 .ot-table th:nth-child(4),  .ot-table td:nth-child(4)  { width: 10%; }   /* Stock */
@@ -10,10 +10,6 @@
 .ot-table th:nth-child(7),  .ot-table td:nth-child(7)  { width: 12%; }   /* Proveedor */
 .ot-table th:nth-child(8),  .ot-table td:nth-child(8)  { width: 8%;  }   /* Estado */
 .ot-table th:nth-child(9),  .ot-table td:nth-child(9)  { width: 100px; } /* Acciones */
-
-/* Alineación a la derecha para valores numéricos visibles si el HTML no lo trae inline */
-.ot-table td:nth-child(4),
-.ot-table td:nth-child(5){ text-align: right; }
 
 /* ===== Badges opcionales ===== */
 .badge.warn   { border-color:#fde68a; background:#fffbeb; color:#92400e; }
@@ -43,3 +39,16 @@
   .ot-table td,
   .ot-table th    { display: table-cell !important; width: auto !important; }
 }
+
+/* ===== Centrados (sobrescribe cualquier alineación previa) ===== */
+.ot-table th,
+.ot-table td{
+  text-align: center !important;
+  vertical-align: middle;
+}
+
+/* Acciones centradas también */
+.ot-table td:last-child{
+  text-align: center !important;
+}
+
