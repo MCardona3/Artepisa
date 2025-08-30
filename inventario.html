@@ -11,7 +11,6 @@
   <link rel="icon" type="image/png" sizes="16x16" href="./img/arte.png?v=1">
 </head>
 <body class="theme-light">
-  <!-- Guardia: volver al login si no hay sesión -->
   <script>
     const __acct = JSON.parse(sessionStorage.getItem('artepisa_account')||'null');
     if(!__acct){ location.href = 'index.html'; }
@@ -36,10 +35,10 @@
       <button class="btn ghost"  id="inv-export" type="button">Exportar</button>
       <button class="btn ghost"  id="inv-import" type="button">Importar</button>
       <button class="btn danger" id="inv-clear"  type="button">Limpiar</button>
+      <!-- este id es válido porque el JS acepta btn-create O btn-show-form -->
       <button class="btn"        id="btn-show-form" type="button">Crear / Agregar</button>
     </h1>
 
-    <!-- input de archivo oculto (para Importar) -->
     <input id="inv-file" type="file" accept=".json,.csv" hidden>
 
     <div class="actions" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
@@ -69,24 +68,34 @@
   </section>
 
   <!-- FORMULARIO -->
-  <section class="card card-form" id="card-form" style="display:none">
+  <!-- OJO: SIN display:none; el JS alterna la clase "form-only" en #layout -->
+  <section class="card card-form" id="card-form">
     <h2>Formulario de Inventario</h2>
     <div class="form" id="inv-form">
-      <div class="field"><span>SKU</span><input id="f-sku" class="input" placeholder="Código interno"></div>
-      <div class="field"><span>Descripción</span><input id="f-nombre" class="input" placeholder="Descripción del material / pieza"></div>
-      <div class="field"><span>Categoría</span><input id="f-cat" class="input" placeholder="Ej. Aceros, Eléctrico"></div>
+      <!-- IDs que espera inv-graph.js -->
+      <div class="field"><span>SKU</span><input id="i-sku" class="input" placeholder="Código interno" required></div>
+      <div class="field"><span>Descripción</span><input id="i-desc" class="input" placeholder="Descripción del material / pieza"></div>
       <div class="field"><span>Unidad</span>
-        <select id="f-un" class="input">
+        <select id="i-uni" class="input">
           <option value="pza">pza</option>
           <option value="kg">kg</option>
           <option value="m">m</option>
           <option value="jgo">jgo</option>
         </select>
       </div>
-      <div class="field"><span>Stock</span><input id="f-stock" class="input" type="number" step="0.01" value="0"></div>
-      <div class="field"><span>Mínimo</span><input id="f-min" class="input" type="number" step="0.01" value="0"></div>
-      <div class="field"><span>Ubicación</span><input id="f-ubi" class="input" placeholder="Rack / pasillo / caja"></div>
-      <div class="field"><span>Proveedor</span><input id="f-prov" class="input" list="dl-proveedores" placeholder="Proveedor" /><datalist id="dl-proveedores"></datalist></div>
+      <div class="field"><span>Stock</span><input id="i-stock" class="input" type="number" step="0.01" value="0"></div>
+      <div class="field"><span>Mínimo</span><input id="i-min" class="input" type="number" step="0.01" value="0"></div>
+      <div class="field"><span>Ubicación</span><input id="i-ubi" class="input" placeholder="Rack / pasillo / caja"></div>
+      <div class="field"><span>Proveedor</span><input id="i-prov" class="input" list="dl-proveedores" placeholder="Proveedor" /><datalist id="dl-proveedores"></datalist></div>
+      <div class="field"><span>Estado</span>
+        <select id="i-estado" class="input">
+          <option>ACTIVO</option>
+          <option>INACTIVO</option>
+        </select>
+      </div>
+
+      <!-- Tus campos extra (el JS actual los ignora; se pueden soportar luego) -->
+      <div class="field"><span>Categoría</span><input id="f-cat" class="input" placeholder="Ej. Aceros, Eléctrico"></div>
       <div class="field"><span>Costo</span><input id="f-costo" class="input" type="number" step="0.01" placeholder="0.00"></div>
       <div class="field"><span>Material de cliente</span>
         <label style="display:flex;gap:8px;align-items:center">
@@ -114,13 +123,9 @@
   </section>
 </main>
 
-<!-- Scripts -->
 <script src="./js/msal-config.js"></script>
 <script src="https://alcdn.msauth.net/browser/2.38.2/js/msal-browser.min.js"></script>
 <script src="./js/auth.js"></script>
 <script type="module" src="./js/inv-graph.js"></script>
 </body>
 </html>
-
-
-
