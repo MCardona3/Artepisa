@@ -4,7 +4,7 @@ import { gs_getCollection, gs_putCollection } from "./graph-store.js";
 
 /* ============== Estado ============== */
 let ETAG = "";
-let LIST = [];          // [{sku, descripcion, unidad, stock, minimo, ubicacion, proveedor, estado}]
+let LIST = [];          // [{#Parte, descripcion, unidad, stock, minimo, ubicacion, proveedor, estado}]
 let editingIndex = -1;  // índice en edición
 
 /* ============== Helpers DOM ============== */
@@ -31,7 +31,7 @@ const btnClear   = () => $id("inv-clear");
 const inputFile  = () => $id("inv-file");
 
 // Campos de formulario (compat f-* o i-*)
-const fSKU   = () => $id("f-sku")     || $id("i-sku");
+const fSKU   = () => $id("f-#Parte")     || $id("i-#Parte");
 const fDesc  = () => $id("f-nombre")  || $id("i-desc");
 const fUni   = () => $id("f-un")      || $id("i-uni");
 const fStock = () => $id("f-stock")   || $id("i-stock");
@@ -68,7 +68,7 @@ function showForm(show){
 /* ============== Normalización ============== */
 function unify(rec = {}){
   return {
-    sku:        S(rec.sku).trim(),
+    sku:        S(rec.#Parte).trim(),
     descripcion:S(rec.descripcion).trim(),
     unidad:     S(rec.unidad).trim(),
     stock:      N(rec.stock),
@@ -84,7 +84,7 @@ function fillForm(data=null){
   const u = data ? unify(data) : null;
   editingIndex = data ? LIST.indexOf(data) : -1;
 
-  if(fSKU())   fSKU().value   = u?.sku || "";
+  if(f#Parte())   f#Parte().value   = u?.#Parte || "";
   if(fDesc())  fDesc().value  = u?.descripcion || "";
   if(fUni())   fUni().value   = u?.unidad || "pza";
   if(fStock()) fStock().value = (u?.stock ?? 0);
@@ -96,7 +96,7 @@ function fillForm(data=null){
 
 function readForm(){
   return unify({
-    sku:        fSKU()?.value,
+    sku:        f#Parte()?.value,
     descripcion:fDesc()?.value,
     unidad:     fUni()?.value,
     stock:      fStock()?.value,
@@ -120,7 +120,7 @@ function renderList(){
     .filter(x=>{
       if(!q) return true;
       const hay = [
-        x.sku, x.descripcion, x.unidad, x.ubicacion, x.proveedor, x.estado
+        x.#Parte, x.descripcion, x.unidad, x.ubicacion, x.proveedor, x.estado
       ].join(" ").toLowerCase();
       return hay.includes(q);
     });
@@ -128,7 +128,7 @@ function renderList(){
   list.forEach((x,i)=>{
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td class="clip">${S(x.sku)}</td>
+      <td class="clip">${S(x.#Parte)}</td>
       <td class="clamp-2">${S(x.descripcion)}</td>
       <td>${S(x.unidad)}</td>
       <td style="text-align:right">${N(x.stock)}</td>
@@ -170,7 +170,7 @@ function normalizeItem(o){
     norm[kk]=v;
   }
   return unify({
-    sku:         take(norm,"sku","codigo","clave"),
+    #Parte:         take(norm,"sku","codigo","clave"),
     descripcion: take(norm,"descripcion","description","desc"),
     unidad:      take(norm,"unidad","uni"),
     stock:       take(norm,"stock","existencia","qty","cantidad"),
@@ -326,3 +326,4 @@ function mountEvents(){
   try{ mountEvents(); await load(); }
   catch(e){ console.error("Init inventario falló:", e); mountEvents(); }
 })();
+
