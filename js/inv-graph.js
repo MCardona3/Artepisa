@@ -1,4 +1,4 @@
-// js/inv-graph.js — Inventario (OneDrive/SharePoint) — versión estable
+// js/inv-graph.js — Inventario (OneDrive/SharePoint) — versión con toggle listado/formulario
 "use strict";
 import { gs_getCollection, gs_putCollection } from "./graph-store.js";
 
@@ -21,7 +21,7 @@ const elBuscar = () => $id("inv-buscar");
 const elCount  = () => $id("inv-count");
 
 // Botones
-const btnCreate  = () => $id("btn-create") || $id("btn-show-form"); // compat
+const btnCreate  = () => $id("btn-show-form") || $id("btn-create");
 const btnGuardar = () => $id("inv-guardar");
 const btnNuevo   = () => $id("inv-nuevo");
 const btnCerrar  = () => $id("inv-cerrar");
@@ -30,22 +30,19 @@ const btnImport  = () => $id("inv-import");
 const btnClear   = () => $id("inv-clear");
 const inputFile  = () => $id("inv-file");
 
-// Campos de formulario
-const fSKU   = () => $id("i-sku");
-const fDesc  = () => $id("i-desc");
-const fUni   = () => $id("i-uni");
-const fStock = () => $id("i-stock");
-const fMin   = () => $id("i-min");
-const fUbi   = () => $id("i-ubi");
-const fProv  = () => $id("i-prov");
-const fEst   = () => $id("i-estado");
+// Campos de formulario (compat f-* o i-*)
+const fSKU   = () => $id("f-sku")     || $id("i-sku");
+const fDesc  = () => $id("f-nombre")  || $id("i-desc");
+const fUni   = () => $id("f-un")      || $id("i-uni");
+const fStock = () => $id("f-stock")   || $id("i-stock");
+const fMin   = () => $id("f-min")     || $id("i-min");
+const fUbi   = () => $id("f-ubi")     || $id("i-ubi");
+const fProv  = () => $id("f-prov")    || $id("i-prov");
+const fEst   = () => $id("f-estado")  || $id("i-estado");
 
 /* ============== Utilidades ============== */
 const S = v => (v == null ? "" : String(v));
-const N = v => {
-  const n = Number(v);
-  return Number.isFinite(n) ? n : 0;
-};
+const N = v => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
 
 const download=(name,text)=>{
   const b=new Blob([text],{type:"application/octet-stream"});
@@ -55,27 +52,30 @@ const download=(name,text)=>{
   URL.revokeObjectURL(a.href);
 };
 
-// Mostrar/ocultar formulario: usa la clase .form-only (ya la tienes en CSS)
-function showForm(mode){
-  const lay = elLayout(); if(!lay) return;
-  lay.classList.remove("form-only","split");
-  if(mode === "form-only" || mode === "split") lay.classList.add(mode);
-  // por si la página es larga
-  if(mode) elCardForm()?.scrollIntoView({behavior:"smooth", block:"start"});
+/* ===== Toggle listado ↔ formulario =====
+   show=true  -> muestra formulario (oculta listado)
+   show=false -> muestra listado (oculta formulario) */
+function showForm(show){
+  const lay = elLayout();
+  if (lay) lay.classList.toggle("form-only", !!show);
+  // Forzar visibilidad aunque haya inline styles
+  if (elCardForm()) elCardForm().style.display = show ? "" : "none";
+  if (elCardList()) elCardList().style.display = show ? "none" : "";
+  // si abrimos el form, desplazamos el viewport
+  if (show) elCardForm()?.scrollIntoView({behavior:"smooth", block:"start"});
 }
 
 /* ============== Normalización ============== */
 function unify(rec = {}){
-  // Asegura todas las llaves esperadas
   return {
     sku:        S(rec.sku).trim(),
     descripcion:S(rec.descripcion).trim(),
     unidad:     S(rec.unidad).trim(),
     stock:      N(rec.stock),
-    minimo:     N(rec.minimo ?? rec.min),   // por si llega "min"
+    minimo:     N(rec.minimo ?? rec.min),
     ubicacion:  S(rec.ubicacion).trim(),
     proveedor:  S(rec.proveedor).trim(),
-    estado:     S(rec.estado).trim(),       // e.g. ACTIVO / INACTIVO
+    estado:     S(rec.estado).trim(),   // ACTIVO/INACTIVO
   };
 }
 
@@ -86,7 +86,7 @@ function fillForm(data=null){
 
   if(fSKU())   fSKU().value   = u?.sku || "";
   if(fDesc())  fDesc().value  = u?.descripcion || "";
-  if(fUni())   fUni().value   = u?.unidad || "";
+  if(fUni())   fUni().value   = u?.unidad || "pza";
   if(fStock()) fStock().value = (u?.stock ?? 0);
   if(fMin())   fMin().value   = (u?.minimo ?? 0);
   if(fUbi())   fUbi().value   = u?.ubicacion || "";
@@ -150,7 +150,6 @@ function renderList(){
 
 /* ============== Import / Export ============== */
 function parseCSV(text){
-  // Detecta ; o , como separador
   const sep = text.includes(";") && !text.includes(",") ? ";" : ",";
   const lines = text.split(/\r?\n/).filter(l=>l.trim().length);
   if(!lines.length) return [];
@@ -163,7 +162,6 @@ function parseCSV(text){
 const take=(o,...ks)=>{ for(const k of ks){ if(o[k]!=null && o[k]!="") return o[k]; } return ""; };
 
 function normalizeItem(o){
-  // normaliza claves a minúsculas sin acentos/espacios
   const norm={};
   for(const [k,v] of Object.entries(o||{})){
     const kk=k.toString().toLowerCase()
@@ -236,6 +234,8 @@ async function load(){
     console.error("Carga inventario falló:", e);
     ETAG=""; LIST=[];
   }
+  // Modo por defecto: listado
+  showForm(false);
   renderList();
 }
 async function save(){
@@ -247,10 +247,10 @@ async function save(){
 function on(node, ev, fn){ node && node.addEventListener(ev, fn); }
 
 function mountEvents(){
-  // Crear / Agregar -> abre solo formulario
+  // Crear / Agregar -> SOLO formulario
   on(btnCreate(), "click", ()=>{
     fillForm(null);
-    showForm("form-only");
+    showForm(true);
     fSKU()?.focus();
   });
 
@@ -260,7 +260,6 @@ function mountEvents(){
     if(!rec.sku){ alert("El campo SKU es obligatorio."); fSKU()?.focus(); return; }
     if(!rec.descripcion){ alert("La DESCRIPCIÓN es obligatoria."); fDesc()?.focus(); return; }
 
-    // Merge por SKU
     const i = editingIndex >= 0
       ? editingIndex
       : LIST.findIndex(x => S(x.sku) === S(rec.sku));
@@ -270,7 +269,7 @@ function mountEvents(){
     try{
       await save();
       alert("Guardado");
-      showForm(null);
+      showForm(false);                    // ← volver al listado
       window.scrollTo({top:0,behavior:"smooth"});
     }catch(e){
       alert("Error al guardar: " + e.message);
@@ -280,13 +279,13 @@ function mountEvents(){
   // Nuevo (limpia y deja abierto)
   on(btnNuevo(), "click", ()=>{
     fillForm(null);
-    showForm("form-only");
+    showForm(true);
     fSKU()?.focus();
   });
 
   // Cerrar (volver a lista)
   on(btnCerrar(), "click", ()=>{
-    showForm(null);
+    showForm(false);
     window.scrollTo({top:0,behavior:"smooth"});
   });
 
@@ -300,7 +299,7 @@ function mountEvents(){
     const act = btn.getAttribute("data-act");
     if(act === "edit"){
       fillForm(LIST[i]);
-      showForm("form-only");
+      showForm(true);                     // ← abrir formulario
     }else if(act === "del"){
       if(confirm("¿Eliminar el ítem seleccionado?")){
         LIST.splice(i,1); save().catch(err=>alert(err.message));
