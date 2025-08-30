@@ -4,7 +4,7 @@ import { gs_getCollection, gs_putCollection } from "./graph-store.js";
 
 /* ============== Estado ============== */
 let ETAG = "";
-let LIST = [];          // [{parte, descripcion, unidad, stock, minimo, ubicacion, proveedor, estado}]
+let LIST = [];          // [{parte, descripcion, unidad, stock, minimo, ubicacion, proveedor, esCliente, estado}]
 let editingIndex = -1;
 
 /* ============== Helpers DOM ============== */
@@ -39,10 +39,12 @@ const fMin   = () => $id("f-min")    || $id("i-min");
 const fUbi   = () => $id("f-ubi")    || $id("i-ubi");
 const fProv  = () => $id("f-prov")   || $id("i-prov");
 const fEst   = () => $id("f-estado") || $id("i-estado");
+const fEsCli = () => $id("f-escliente") || $id("i-escliente"); // NUEVO
 
 /* ============== Utiles ============== */
 const S=v=>(v==null?"":String(v));
 const N=v=>{ const n=Number(v); return Number.isFinite(n)?n:0; };
+const toBool = (v) => { const s = String(v ?? "").trim().toLowerCase(); return ["si","sí","true","1","x","yes"].includes(s); };
 
 /* Listado ↔ Formulario */
 function showForm(show){
@@ -57,13 +59,14 @@ function showForm(show){
 function unify(rec = {}){
   return {
     // lee parte, sku o "#Parte" pero normaliza a 'parte'
-    parte:      S(rec.parte ?? rec.sku ?? rec["#Parte"]).trim(),
+    parte:      S(rec.parte ?? rec.sku ?? rec["#Parte"] ?? rec["#parte"]).trim(),
     descripcion:S(rec.descripcion).trim(),
     unidad:     S(rec.unidad).trim(),
     stock:      N(rec.stock),
     minimo:     N(rec.minimo ?? rec.min),
     ubicacion:  S(rec.ubicacion).trim(),
     proveedor:  S(rec.proveedor).trim(),
+    esCliente:  !!(rec.esCliente ?? rec.escliente ?? rec.materialCliente ?? rec.materialcliente), // NUEVO
     estado:     S(rec.estado || "ACTIVO").trim(),
   };
 }
@@ -81,6 +84,7 @@ function fillForm(data=null){
   fUbi()   && (fUbi().value   = u?.ubicacion || "");
   fProv()  && (fProv().value  = u?.proveedor || "");
   fEst()   && (fEst().value   = u?.estado || "ACTIVO");
+  if (fEsCli()) fEsCli().checked = !!u?.esCliente; // NUEVO
 }
 
 function readForm(){
@@ -92,6 +96,7 @@ function readForm(){
     minimo:     fMin()?.value,
     ubicacion:  fUbi()?.value,
     proveedor:  fProv()?.value,
+    esCliente:  fEsCli()?.checked,     // NUEVO
     estado:     fEst()?.value,
   });
 }
@@ -108,8 +113,10 @@ function renderList(){
     .map(unify)
     .filter(x=>{
       if(!q) return true;
-      const hay = [x.parte, x.descripcion, x.unidad, x.ubicacion, x.proveedor, x.estado]
-        .join(" ").toLowerCase();
+      const hay = [
+        x.parte, x.descripcion, x.unidad, x.ubicacion, x.proveedor, x.estado,
+        (x.esCliente ? "cliente si" : "cliente no")
+      ].join(" ").toLowerCase();
       return hay.includes(q);
     });
 
@@ -123,6 +130,7 @@ function renderList(){
       <td style="text-align:right">${N(x.minimo)}</td>
       <td>${S(x.ubicacion)}</td>
       <td>${S(x.proveedor)}</td>
+      <td style="text-align:center">${x.esCliente ? "Sí" : "No"}</td>  <!-- NUEVA -->
       <td>${S(x.estado) || "ACTIVO"}</td>
       <td>
         <div class="table-actions">
@@ -165,6 +173,7 @@ function normalizeItem(o){
     minimo:      take(norm,"minimo","min","minimos","minstock"),
     ubicacion:   take(norm,"ubicacion","location","almacen"),
     proveedor:   take(norm,"proveedor","supplier"),
+    esCliente:   toBool(take(norm,"escliente","materialcliente","materialdecliente")), // NUEVO
     estado:      take(norm,"estado","status"),
   });
 }
@@ -212,10 +221,11 @@ function download(name,text){
 }
 function exportJSON(){ download("inventario.json", JSON.stringify(LIST.map(unify),null,2)); }
 function exportCSV(){
-  const cols=["parte","descripcion","unidad","stock","minimo","ubicacion","proveedor","estado"];
-  const rows=[cols.join(",")].concat(LIST.map(unify).map(x=> cols
-    .map(k=>S(x[k]).replace(/"/g,'""')).map(s=>`"${s}"`).join(",")));
-  download("inventario.csv", rows.join("\n"));
+  const header = ["#Parte","Descripción","Unidad","Stock","Mín.","Ubicación","Proveedor","Cliente","Estado"];
+  const rows = LIST.map(unify).map(x => [
+    x.parte, x.descripcion, x.unidad, x.stock, x.minimo, x.ubicacion, x.proveedor, (x.esCliente ? "Sí" : "No"), x.estado
+  ].map(v => String(v ?? "").replace(/"/g,'""')).map(s => `"${s}"`).join(","));
+  download("inventario.csv", ["sep=,", header.join(","), ...rows].join("\n"));
 }
 async function clearAll(){ if(!confirm("¿Vaciar todos los ítems de inventario?")) return; LIST=[]; await save(); }
 
