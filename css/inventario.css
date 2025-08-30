@@ -1,0 +1,18 @@
+/* inventario.css – anchos de columnas para el listado */
+.ot-table th:nth-child(1),  .ot-table td:nth-child(1)  { width: 12%; }  /* SKU */
+.ot-table th:nth-child(2),  .ot-table td:nth-child(2)  { width: 28%; }  /* Descripción */
+.ot-table th:nth-child(3),  .ot-table td:nth-child(3)  { width: 8%;  }  /* Unidad */
+.ot-table th:nth-child(4),  .ot-table td:nth-child(4)  { width: 10%; }  /* Stock */
+.ot-table th:nth-child(5),  .ot-table td:nth-child(5)  { width: 10%; }  /* Mín */
+.ot-table th:nth-child(6),  .ot-table td:nth-child(6)  { width: 12%; }  /* Ubicación */
+.ot-table th:nth-child(7),  .ot-table td:nth-child(7)  { width: 12%; }  /* Proveedor */
+.ot-table th:nth-child(8),  .ot-table td:nth-child(8)  { width: 8%;  }  /* Estado */
+.ot-table th:nth-child(9),  .ot-table td:nth-child(9)  { width: 100px; }/* Acciones */
+
+.badge.warn   { border-color:#fde68a; background:#fffbeb; color:#92400e; }
+.badge.danger { border-color:#fecaca; background:#fef2f2; color:#991b1b; }
+
+.items-row-lote{
+  display:grid; grid-template-columns: 1fr 140px 120px 90px; gap:8px; align-items:center; margin-bottom:6px;
+}
+.items-row-lote input[type="number"]{ text-align:right; }
