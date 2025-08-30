@@ -63,14 +63,39 @@
   display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden;
 }
 
-/* Móvil: tarjetas */
-@media (max-width: 820px){
-  .ot-table thead{ display:none; }
-  .ot-table, .ot-table tbody, .ot-table tr, .ot-table td { display:block; width:100%; }
-  .ot-table tbody tr{ background:#fff; margin:10px 10px 14px; padding:12px 12px 6px; border:1px solid #e8eef6; border-radius:12px; }
-  .ot-table td{ display:grid; grid-template-columns:120px 1fr; gap:8px; border:0; }
-  .ot-table td:last-child{ grid-template-columns:1fr; }
+/* === Parche: mantener tabla tradicional en todos los tamaños === */
+.ot-table thead { 
+  display: table-header-group !important; 
 }
+.ot-table { 
+  display: table !important; 
+  width: 100% !important; 
+  table-layout: fixed; 
+}
+.ot-table tbody { 
+  display: table-row-group !important; 
+}
+.ot-table tr { 
+  display: table-row !important; 
+}
+.ot-table td, 
+.ot-table th { 
+  display: table-cell !important; 
+  width: auto !important; 
+}
+
+/* Desactiva por completo el modo "tarjetas" en móvil */
+@media (max-width: 820px){
+  .ot-table thead { display: table-header-group !important; }
+  .ot-table,
+  .ot-table tbody,
+  .ot-table tr,
+  .ot-table td {
+    display: table !important;
+    width: auto !important;
+  }
+}
+
 /* ===== Modo: solo formulario ===== */
 main.container.form-only { display: block; }
 .form-only #card-list { display: none; }   /* oculta el listado */
