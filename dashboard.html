@@ -76,6 +76,16 @@
           <a class="btn" href="ordenes-compra.html">Entrar</a>
         </div>
       </article>
+
+      <!-- NUEVO: Módulo Inventario -->
+      <article class="module">
+        <h4>Inventario</h4>
+        <p class="muted">Entradas/salidas y control de stock.</p>
+        <div class="actions">
+          <a class="btn" href="inventario.html">Entrar</a>
+        </div>
+      </article>
+      <!-- /NUEVO -->
     </div>
   </section>
 
@@ -96,9 +106,6 @@
     const acct = JSON.parse(sessionStorage.getItem("artepisa_account") || "null");
     document.getElementById("user-name").textContent =
       acct?.name || acct?.username || "Sesión activa";
-
-    // Ejemplo: si guardas contadores en sessionStorage/localStorage, ponlos aquí
-    // document.getElementById("count-clients").textContent = localStorage.getItem("kpi_clients") || 0;
 
     // Cerrar sesión
     document.getElementById("btn-logout")?.addEventListener("click", async () => {
@@ -155,18 +162,17 @@
     .modules{ grid-template-columns:1fr; }
   }
 </style>
-<script>
-    // Redirige a login si no existe MSAL ni getToken
-    (function(){
-      const hasGetter = (window.MSALApp && typeof MSALApp?.getToken === 'function') || (typeof window.getToken === 'function');
-      if(!hasGetter){
-        console.warn('Sin sesión MSAL. Redirigiendo a login...');
-        // Intenta mostrar aviso breve y redirigir
-        setTimeout(()=>{ location.href = 'login.html'; }, 300);
-      }
-    })();
-  </script>
 
+<script>
+  // Redirige a login si no existe MSAL ni getToken
+  (function(){
+    const hasGetter = (window.MSALApp && typeof MSALApp?.getToken === 'function') || (typeof window.getToken === 'function');
+    if(!hasGetter){
+      console.warn('Sin sesión MSAL. Redirigiendo a login...');
+      setTimeout(()=>{ location.href = 'login.html'; }, 300);
+    }
+  })();
+</script>
 
 <!-- MSAL config -->
 <script src="./js/msal-config.js"></script>
@@ -179,5 +185,3 @@
 
 </body>
 </html>
-
-
