@@ -1,4 +1,4 @@
-// js/ot-graph.js — versión estable con normalización y reparación al guardar
+// js/ot-graph.js — versión estable con normalización, reparación y fix de columnas
 "use strict";
 import { gs_getCollection, gs_putCollection } from "./graph-store.js";
 
@@ -181,11 +181,12 @@ function renderList(){
     if(q && !hay.includes(q)) return;
 
     const tr = document.createElement("tr");
+    // ⚠️ IMPORTANTE: clamp-2 se aplica a un DIV interno, no al TD
     tr.innerHTML = `
       <td class="clip">${S(x.num)}</td>
-      <td class="clamp-2">${S(x.cliente)}</td>
-      <td class="clamp-2">${S(x.depto)}</td>
-      <td class="clamp-2">${S(x.encargado)}</td>
+      <td><div class="clamp-2">${S(x.cliente)}</div></td>
+      <td><div class="clamp-2">${S(x.depto)}</div></td>
+      <td><div class="clamp-2">${S(x.encargado)}</div></td>
       <td>${fmtDate(x.emision) || "—"}</td>
       <td>${fmtDate(x.entrega) || "—"}</td>
       <td>${S(x.oc)}</td>
@@ -255,8 +256,8 @@ async function importFile(file){
   LIST.forEach((x,i)=>{ if(x.num) idxByNum.set(String(x.num),i); });
   recs.forEach(r=>{
     const key=r.num?String(r.num):null;
-    if(key && idxByNum.has(key)) LIST[idxByNum.get(key)]=repairMisplaced(unify(r)).rec;
-    else LIST.push(repairMisplaced(unify(r)).rec);
+    const fixed = repairMisplaced(unify(r)).rec;
+    if(key && idxByNum.has(key)) LIST[idxByNum.get(key)]=fixed; else LIST.push(fixed);
   });
 
   try{ await save(); alert(`Importados ${recs.length} registro(s).`); }
@@ -427,7 +428,7 @@ function mountEvents(){
   on(btnExport(),"click",()=>{ const pick=confirm("Aceptar = JSON  |  Cancelar = CSV"); if(pick) exportJSON(); else exportCSV(); });
   on(btnClear(),"click",clearAll);
 
-  // Utilidad para reparar todo desde consola (ejecútala 1 vez si lo necesitas)
+  // Utilidad para reparar todo desde consola
   window.repararOTs = async function(){
     LIST = (Array.isArray(LIST) ? LIST : []).map(r => repairMisplaced(unify(r)).rec);
     await save();
