@@ -1,11 +1,11 @@
-// js/inv-graph.js — Inventario (OneDrive/SharePoint) — versión con toggle listado/formulario
+// js/inv-graph.js — Inventario (OneDrive/SharePoint) — versión estable (sin # en variables)
 "use strict";
 import { gs_getCollection, gs_putCollection } from "./graph-store.js";
 
 /* ============== Estado ============== */
 let ETAG = "";
-let LIST = [];          // [{#Parte, descripcion, unidad, stock, minimo, ubicacion, proveedor, estado}]
-let editingIndex = -1;  // índice en edición
+let LIST = [];          // [{sku, descripcion, unidad, stock, minimo, ubicacion, proveedor, estado}]
+let editingIndex = -1;
 
 /* ============== Helpers DOM ============== */
 const $id = id => document.getElementById(id);
@@ -30,15 +30,15 @@ const btnImport  = () => $id("inv-import");
 const btnClear   = () => $id("inv-clear");
 const inputFile  = () => $id("inv-file");
 
-// Campos de formulario (compat f-* o i-*)
-const fSKU   = () => $id("f-#Parte")     || $id("i-#Parte");
-const fDesc  = () => $id("f-nombre")  || $id("i-desc");
-const fUni   = () => $id("f-un")      || $id("i-uni");
-const fStock = () => $id("f-stock")   || $id("i-stock");
-const fMin   = () => $id("f-min")     || $id("i-min");
-const fUbi   = () => $id("f-ubi")     || $id("i-ubi");
-const fProv  = () => $id("f-prov")    || $id("i-prov");
-const fEst   = () => $id("f-estado")  || $id("i-estado");
+// Campos de formulario (ids esperados en tu HTML)
+const fSKU   = () => $id("f-sku")   || $id("i-sku");
+const fDesc  = () => $id("f-nombre")|| $id("i-desc");
+const fUni   = () => $id("f-un")    || $id("i-uni");
+const fStock = () => $id("f-stock") || $id("i-stock");
+const fMin   = () => $id("f-min")   || $id("i-min");
+const fUbi   = () => $id("f-ubi")   || $id("i-ubi");
+const fProv  = () => $id("f-prov")  || $id("i-prov");
+const fEst   = () => $id("f-estado")|| $id("i-estado");
 
 /* ============== Utilidades ============== */
 const S = v => (v == null ? "" : String(v));
@@ -52,30 +52,37 @@ const download=(name,text)=>{
   URL.revokeObjectURL(a.href);
 };
 
-/* ===== Toggle listado ↔ formulario =====
-   show=true  -> muestra formulario (oculta listado)
-   show=false -> muestra listado (oculta formulario) */
+/* ===== Toggle listado ↔ formulario ===== */
 function showForm(show){
   const lay = elLayout();
   if (lay) lay.classList.toggle("form-only", !!show);
-  // Forzar visibilidad aunque haya inline styles
   if (elCardForm()) elCardForm().style.display = show ? "" : "none";
   if (elCardList()) elCardList().style.display = show ? "none" : "";
-  // si abrimos el form, desplazamos el viewport
   if (show) elCardForm()?.scrollIntoView({behavior:"smooth", block:"start"});
 }
 
 /* ============== Normalización ============== */
 function unify(rec = {}){
+  // Acepta alias como parte / #PARTE / numero_parte..., pero guarda en `sku`
+  const parte =
+    rec.sku ??
+    rec.parte ??
+    rec.PARTE ??
+    rec["#PARTE"] ??
+    rec["#Parte"] ??
+    rec["# parte"] ??
+    rec["numparte"] ??
+    rec["numero_parte"];
+
   return {
-    sku:        S(rec.#Parte).trim(),
-    descripcion:S(rec.descripcion).trim(),
-    unidad:     S(rec.unidad).trim(),
-    stock:      N(rec.stock),
-    minimo:     N(rec.minimo ?? rec.min),
-    ubicacion:  S(rec.ubicacion).trim(),
-    proveedor:  S(rec.proveedor).trim(),
-    estado:     S(rec.estado).trim(),   // ACTIVO/INACTIVO
+    sku:         S(parte).trim(),
+    descripcion: S(rec.descripcion).trim(),
+    unidad:      S(rec.unidad).trim(),
+    stock:       N(rec.stock),
+    minimo:      N(rec.minimo ?? rec.min),
+    ubicacion:   S(rec.ubicacion).trim(),
+    proveedor:   S(rec.proveedor).trim(),
+    estado:      S(rec.estado).trim(),
   };
 }
 
@@ -84,7 +91,7 @@ function fillForm(data=null){
   const u = data ? unify(data) : null;
   editingIndex = data ? LIST.indexOf(data) : -1;
 
-  if(f#Parte())   f#Parte().value   = u?.#Parte || "";
+  if(fSKU())   fSKU().value   = u?.sku || "";
   if(fDesc())  fDesc().value  = u?.descripcion || "";
   if(fUni())   fUni().value   = u?.unidad || "pza";
   if(fStock()) fStock().value = (u?.stock ?? 0);
@@ -96,14 +103,14 @@ function fillForm(data=null){
 
 function readForm(){
   return unify({
-    sku:        f#Parte()?.value,
-    descripcion:fDesc()?.value,
-    unidad:     fUni()?.value,
-    stock:      fStock()?.value,
-    minimo:     fMin()?.value,
-    ubicacion:  fUbi()?.value,
-    proveedor:  fProv()?.value,
-    estado:     fEst()?.value,
+    sku:         fSKU()?.value,
+    descripcion: fDesc()?.value,
+    unidad:      fUni()?.value,
+    stock:       fStock()?.value,
+    minimo:      fMin()?.value,
+    ubicacion:   fUbi()?.value,
+    proveedor:   fProv()?.value,
+    estado:      fEst()?.value,
   });
 }
 
@@ -120,7 +127,7 @@ function renderList(){
     .filter(x=>{
       if(!q) return true;
       const hay = [
-        x.#Parte, x.descripcion, x.unidad, x.ubicacion, x.proveedor, x.estado
+        x.sku, x.descripcion, x.unidad, x.ubicacion, x.proveedor, x.estado
       ].join(" ").toLowerCase();
       return hay.includes(q);
     });
@@ -128,7 +135,7 @@ function renderList(){
   list.forEach((x,i)=>{
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td class="clip">${S(x.#Parte)}</td>
+      <td class="clip">${S(x.sku)}</td>          <!-- Se muestra como “# PARTE” en el encabezado de la tabla -->
       <td class="clamp-2">${S(x.descripcion)}</td>
       <td>${S(x.unidad)}</td>
       <td style="text-align:right">${N(x.stock)}</td>
@@ -170,7 +177,8 @@ function normalizeItem(o){
     norm[kk]=v;
   }
   return unify({
-    #Parte:         take(norm,"sku","codigo","clave"),
+    // Acepta varios nombres para la parte, pero lo guarda en `sku`
+    sku:         take(norm,"sku","parte","#parte","numeroparte","numparte","codigo","clave"),
     descripcion: take(norm,"descripcion","description","desc"),
     unidad:      take(norm,"unidad","uni"),
     stock:       take(norm,"stock","existencia","qty","cantidad"),
@@ -197,7 +205,7 @@ async function importFile(file){
   const recs = arr.map(normalizeItem).filter(x=> x.sku || x.descripcion);
   if(!recs.length){ alert("No se encontraron registros válidos."); return; }
 
-  // merge por SKU
+  // merge por sku
   const idx = new Map();
   LIST.forEach((x,i)=>{ const key=S(x.sku); if(key) idx.set(key,i); });
   recs.forEach(r=>{
@@ -218,8 +226,8 @@ async function importFile(file){
 function exportJSON(){ download("inventario.json", JSON.stringify(LIST.map(unify),null,2)); }
 function exportCSV(){
   const cols=["sku","descripcion","unidad","stock","minimo","ubicacion","proveedor","estado"];
-  const rows=[cols.join(",")].concat(LIST.map(unify).map(x=> cols
-    .map(k=>S(x[k]).replace(/"/g,'""')).map(s=>`"${s}"`).join(",")));
+  const rows=[cols.join(",")]
+    .concat(LIST.map(unify).map(x=> cols.map(k=>S(x[k]).replace(/"/g,'""')).map(s=>`"${s}"`).join(",")));
   download("inventario.csv", rows.join("\n"));
 }
 async function clearAll(){ if(!confirm("¿Vaciar todos los ítems de inventario?")) return; LIST=[]; await save(); }
@@ -234,7 +242,6 @@ async function load(){
     console.error("Carga inventario falló:", e);
     ETAG=""; LIST=[];
   }
-  // Modo por defecto: listado
   showForm(false);
   renderList();
 }
@@ -257,7 +264,7 @@ function mountEvents(){
   // Guardar
   on(btnGuardar(), "click", async ()=>{
     const rec = readForm();
-    if(!rec.sku){ alert("El campo SKU es obligatorio."); fSKU()?.focus(); return; }
+    if(!rec.sku){ alert("El campo # PARTE es obligatorio."); fSKU()?.focus(); return; }
     if(!rec.descripcion){ alert("La DESCRIPCIÓN es obligatoria."); fDesc()?.focus(); return; }
 
     const i = editingIndex >= 0
@@ -269,7 +276,7 @@ function mountEvents(){
     try{
       await save();
       alert("Guardado");
-      showForm(false);                    // ← volver al listado
+      showForm(false);
       window.scrollTo({top:0,behavior:"smooth"});
     }catch(e){
       alert("Error al guardar: " + e.message);
@@ -299,7 +306,7 @@ function mountEvents(){
     const act = btn.getAttribute("data-act");
     if(act === "edit"){
       fillForm(LIST[i]);
-      showForm(true);                     // ← abrir formulario
+      showForm(true);
     }else if(act === "del"){
       if(confirm("¿Eliminar el ítem seleccionado?")){
         LIST.splice(i,1); save().catch(err=>alert(err.message));
@@ -326,4 +333,3 @@ function mountEvents(){
   try{ mountEvents(); await load(); }
   catch(e){ console.error("Init inventario falló:", e); mountEvents(); }
 })();
-
