@@ -113,7 +113,14 @@
   <section class="card card-form" id="card-form">
     <h2>Formulario de OT</h2>
     <div class="form" id="ot-form">
-      <div class="field"><span># OT</span><input id="o-num" type="number" placeholder="(autogenerado)"></div>
+      <div class="field">
+  <span># OT</span>
+  <div style="display:flex; gap:8px; align-items:center">
+    <input id="o-num" type="number" placeholder="(autogenerado)">
+    <button class="btn ghost" id="o-cobros" type="button" title="Abrir cobros de esta OT">Cobros</button>
+  </div>
+</div>
+
       <div class="field"><span>Cliente</span><input id="o-cliente" class="input" placeholder="Cliente" list="dl-clientes" required><datalist id="dl-clientes"></datalist></div>
       <div class="field"><span>Departamento</span><input id="o-depto" class="input" placeholder="Ej. Maquinados"></div>
       <div class="field"><span>Encargado</span><input id="o-enc" class="input" placeholder="Nombre del responsable"></div>
