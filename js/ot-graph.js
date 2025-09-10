@@ -345,17 +345,22 @@ async function clearAll(){ if(!confirm("¿Vaciar todas las Órdenes de Trabajo?"
 /* ================== Print ================== */
 function buildPrintHTML(rec){
   const x = unify(rec);
-  const logoURL=new URL("./img/arte.png?v=1", location.href).href;
-  const items=Array.isArray(x.items)?x.items:[];
-  const rows=items.length? items.map((it,i)=>`
+  const logoURL = new URL("./img/arte.png?v=1", location.href).href;
+  const items = Array.isArray(x.items) ? x.items : [];
+
+  const rows = items.length
+    ? items.map((it,i)=>`
         <tr>
           <td>${i+1}</td>
           <td style="text-align:right">${S(it.cantidad)}</td>
           <td>${S(it.descripcion)}</td>
           <td>${S(it.plano)}</td>
-          <td>${it.adjunto?"Sí":""}</td>
+          <td>${it.adjunto ? "Sí" : ""}</td>
         </tr>`).join("")
     : `<tr><td colspan="5" style="text-align:center;color:#6b7280">Sin partidas</td></tr>`;
+
+  // 👇 Evitamos template literal anidado
+  const subtitulo = x.num ? ("· #" + S(x.num)) : "";
 
   return `<!doctype html><html><head><meta charset="utf-8"><title>OT ${S(x.num)} - Artepisa</title><style>
     @page { size: A4; margin: 16mm; } *{box-sizing:border-box}
@@ -366,7 +371,13 @@ function buildPrintHTML(rec){
     table{width:100%;border-collapse:collapse;margin-top:8px}th,td{border:1px solid #e5e7eb;padding:6px 8px;font-size:12.5px;vertical-align:top}
     th{background:#f3f4f6;text-align:left}
   </style></head><body onload="window.print()">
-    <div class="header"><img src="${logoURL}" alt="ARTEPISA SLP"><div><div class="brand">ARTEPISA SLP</div><div class="muted">Orden de Trabajo ${x.num?`· #${S(x.num)}`:""}</div></div></div>
+    <div class="header">
+      <img src="${logoURL}" alt="ARTEPISA SLP">
+      <div>
+        <div class="brand">ARTEPISA SLP</div>
+        <div class="muted">Orden de Trabajo ${subtitulo}</div>
+      </div>
+    </div>
     <table>
       <tbody>
         <tr><th>Cliente</th><td>${S(x.cliente)}</td><th>Departamento</th><td>${S(x.depto)}</td></tr>
@@ -377,7 +388,10 @@ function buildPrintHTML(rec){
       </tbody>
     </table>
     <h3>Partidas</h3>
-    <table><thead><tr><th>#</th><th style="text-align:right">Cant.</th><th>Descripción</th><th>Plano</th><th>Adjunto</th></tr></thead><tbody>${rows}</tbody></table>
+    <table>
+      <thead><tr><th>#</th><th style="text-align:right">Cant.</th><th>Descripción</th><th>Plano</th><th>Adjunto</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
   </body></html>`;
 }
 function printOT(rec){
