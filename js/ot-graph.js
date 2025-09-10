@@ -1,4 +1,5 @@
-// js/ot-graph.js — versión estable con normalización, reparación y fix de columnas
+// js/ot-graph.js — versión estable con normalización, reparación,
+// datalist de clientes (clienteId) y validación estricta.
 "use strict";
 import { gs_getCollection, gs_putCollection } from "./graph-store.js";
 
@@ -7,42 +8,45 @@ let ETAG = "";
 let LIST = [];
 let editingIndex = -1;
 
+let CLIENTS = [];                 // cache de clientes (de clientes.json)
+const STRICT_CLIENT = true;       // exige que el cliente exista en la lista
+
 /* ================== Helpers DOM ================== */
-const $id=(id)=>document.getElementById(id);
-const elLayout=()=>$id("layout");
-const elCardForm=()=>$id("card-form");
-const elTable=()=>$id("o-tabla");
-const elBuscar=()=>$id("o-buscar");
-const elCount=()=>$id("ot-count");
+const $id = (id) => document.getElementById(id);
+const elLayout   = () => $id("layout");
+const elCardForm = () => $id("card-form");
+const elTable    = () => $id("o-tabla");
+const elBuscar   = () => $id("o-buscar");
+const elCount    = () => $id("ot-count");
 
-const btnShowForm=()=>$id("btn-show-form");
-const btnGuardar=()=>$id("o-guardar");
-const btnNuevo=()=>$id("o-nuevo");
-const btnCerrar=()=>$id("o-cerrar");
-const btnImprimir=()=>$id("o-imprimir");
-const btnExport=()=>$id("o-export");
-const btnImport=()=>$id("o-import");
-const btnClear=()=>$id("o-clear");
-const inputFile=()=>$id("o-file");
+const btnShowForm = () => $id("btn-show-form");
+const btnGuardar  = () => $id("o-guardar");
+const btnNuevo    = () => $id("o-nuevo");
+const btnCerrar   = () => $id("o-cerrar");
+const btnImprimir = () => $id("o-imprimir");
+const btnExport   = () => $id("o-export");
+const btnImport   = () => $id("o-import");
+const btnClear    = () => $id("o-clear");
+const inputFile   = () => $id("o-file");
 
-const fNum=()=>$id("o-num");
-const fCliente=()=>$id("o-cliente");
-const fDepto=()=>$id("o-depto");
-const fEnc=()=>$id("o-enc");
-const fEmision=()=>$id("o-emision");
-const fEntrega=()=>$id("o-entrega");
-const fOC=()=>$id("o-oc");
-const fEst=()=>$id("o-est");
-const fPrio=()=>$id("o-prio");
-const fDesc=()=>$id("o-desc");
+const fNum     = () => $id("o-num");
+const fCliente = () => $id("o-cliente");
+const fDepto   = () => $id("o-depto");
+const fEnc     = () => $id("o-enc");
+const fEmision = () => $id("o-emision");
+const fEntrega = () => $id("o-entrega");
+const fOC      = () => $id("o-oc");
+const fEst     = () => $id("o-est");
+const fPrio    = () => $id("o-prio");
+const fDesc    = () => $id("o-desc");
 
-const itemsBox=()=>$id("items-container");
-const btnAddItem=()=>$id("btn-add-item");
+const itemsBox   = () => $id("items-container");
+const btnAddItem = () => $id("btn-add-item");
 
 /* ===== Mostrar/ocultar formulario por modo =====
    - null       : lista por defecto (oculta form)
    - "form-only": solo formulario (lista oculta)
-   - "split"    : lista + formulario (si algún día lo usas) */
+   - "split"    : lista + formulario */
 function showForm(mode){
   const lay = elLayout(); if (!lay) return;
   lay.classList.remove("split", "form-only");
@@ -50,17 +54,19 @@ function showForm(mode){
 }
 
 /* ================== Utilidades ================== */
-const S=(v)=> (v==null ? "" : String(v));
-const todayISO=()=> new Date().toISOString().slice(0,10);
-const fmtDate=(s)=>{ if(!s) return ""; const d=new Date(s); return isNaN(d) ? "" : d.toISOString().slice(0,10); };
-const fmtDateHuman=(s)=>{ if(!s) return ""; const d=new Date(s); return isNaN(d) ? s : d.toLocaleDateString(undefined,{day:"2-digit",month:"2-digit",year:"numeric"}); };
-const download=(name,text)=>{ const b=new Blob([text],{type:"application/octet-stream"}); const a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download=name; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href); };
+const S = (v) => (v == null ? "" : String(v));
+const todayISO = () => new Date().toISOString().slice(0,10);
+const fmtDate = (s) => { if(!s) return ""; const d = new Date(s); return isNaN(d) ? "" : d.toISOString().slice(0,10); };
+const fmtDateHuman = (s) => { if(!s) return ""; const d = new Date(s); return isNaN(d) ? s : d.toLocaleDateString(undefined,{day:"2-digit",month:"2-digit",year:"numeric"}); };
+const download = (name,text) => { const b=new Blob([text],{type:"application/octet-stream"}); const a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download=name; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href); };
 
 /* ================== Normalización (llaves unificadas) ================== */
 function unify(rec = {}) {
   return {
     num:         rec.num ?? "",
+    // nombre visible del cliente y su id (si existe en clientes.json)
     cliente:     rec.cliente ?? "",
+    clienteId:   rec.clienteId ?? rec.cliente_id ?? rec.idCliente ?? rec.IDCliente ?? "",
     depto:       rec.depto ?? "",
     encargado:   (rec.encargado ?? rec.enc ?? ""),
     emision:     rec.emision ?? "",
@@ -103,6 +109,56 @@ function repairMisplaced(u) {
   return { fixed: touched, rec: x };
 }
 
+/* ================== CLIENTES (datalist + validación) ================== */
+function unifyClient(c = {}) {
+  return {
+    id:     (c.id ?? c.ID ?? c.idCliente ?? c.IDCliente ?? "").toString(),
+    nombre: (c.nombre ?? c.name ?? c.razon ?? c.razon_social ?? "").toString().trim(),
+    rfc:    (c.rfc ?? "").toString(),
+  };
+}
+function matchClientByName(txt){
+  const q = (txt||"").toLowerCase().trim();
+  if(!q) return null;
+  return CLIENTS.find(c => c.nombre.toLowerCase() === q)
+      || CLIENTS.find(c => c.nombre.toLowerCase().includes(q))
+      || null;
+}
+async function loadClientesDatalist(){
+  try{
+    const { items } = await gs_getCollection("clientes");
+    CLIENTS = (Array.isArray(items) ? items : [])
+      .map(unifyClient)
+      .filter(c => c.nombre);
+    const dl = document.getElementById("dl-clientes");
+    if(!dl) return;
+    dl.innerHTML = CLIENTS
+      .map(c => `<option value="${c.nombre.replace(/"/g,'&quot;')}" label="${c.rfc ? RFC: ${c.rfc} : ""}"></option>`)
+      .join("");
+  }catch(_){
+    // si no existe clientes.json, ignorar
+  }
+}
+function enforceClientSelection(){
+  const inp = fCliente();
+  if(!inp) return;
+  const hit = matchClientByName(inp.value);
+  if(!hit){
+    if (STRICT_CLIENT){
+      alert("Selecciona un cliente de la lista guardada.");
+      inp.value = "";
+      inp.dataset.clientId = "";
+      inp.focus();
+    } else {
+      inp.dataset.clientId = "";
+    }
+    return;
+  }
+  // normaliza nombre y guarda id en data-attr
+  inp.value = hit.nombre;
+  inp.dataset.clientId = hit.id || "";
+}
+
 /* ================== PARTIDAS ================== */
 function clearItemsUI(){ if(itemsBox()) itemsBox().innerHTML=""; }
 function addItemRow(item={cantidad:"",descripcion:"",plano:"",adjunto:""}){
@@ -131,7 +187,10 @@ function fillForm(data=null){
   editingIndex = data ? LIST.indexOf(data) : -1;
 
   fNum()     && (fNum().value = u?.num ?? "");
-  fCliente() && (fCliente().value = u?.cliente ?? "");
+  if (fCliente()){
+    fCliente().value = u?.cliente ?? "";
+    fCliente().dataset.clientId = u?.clienteId || "";
+  }
   fDepto()   && (fDepto().value = u?.depto ?? "");
   fEnc()     && (fEnc().value = u?.encargado ?? "");
   fEmision() && (fEmision().value = fmtDate(u?.emision) || todayISO());
@@ -147,18 +206,21 @@ function fillForm(data=null){
 }
 
 function readForm(){
+  const inp = fCliente();
+  const hit = matchClientByName(inp?.value || "");
   return {
-    num: fNum()?.value || undefined,
-    cliente: fCliente()?.value || "",
-    depto: fDepto()?.value || "",
-    encargado: fEnc()?.value || "",
-    emision: fEmision()?.value || "",
-    entrega: fEntrega()?.value || "",
-    oc: fOC()?.value || "",
-    estatus: fEst()?.value || "ABIERTA",
-    prioridad: fPrio()?.value || "NORMAL",
+    num:         fNum()?.value || undefined,
+    clienteId:   hit?.id || (inp?.dataset.clientId || ""),
+    cliente:     hit?.nombre || (inp?.value || "").trim(),
+    depto:       fDepto()?.value || "",
+    encargado:   fEnc()?.value || "",
+    emision:     fEmision()?.value || "",
+    entrega:     fEntrega()?.value || "",
+    oc:          fOC()?.value || "",
+    estatus:     fEst()?.value || "ABIERTA",
+    prioridad:   fPrio()?.value || "NORMAL",
     descripcion: fDesc()?.value || "",
-    items: readItemsFromUI()
+    items:       readItemsFromUI()
   };
 }
 
@@ -181,7 +243,7 @@ function renderList(){
     if(q && !hay.includes(q)) return;
 
     const tr = document.createElement("tr");
-    // ⚠️ IMPORTANTE: clamp-2 se aplica a un DIV interno, no al TD
+    // clamp-2 se aplica a un DIV interno, no al TD
     tr.innerHTML = `
       <td class="clip">${S(x.num)}</td>
       <td><div class="clamp-2">${S(x.cliente)}</div></td>
@@ -204,10 +266,10 @@ function renderList(){
 
 /* ================== Import / Export ================== */
 function parseCSV(text){
-  const sep=text.includes(";")&&!text.includes(",")?";":",";
-  const lines=text.split(/\r?\n/).filter(l=>l.trim().length);
+  const sep = text.includes(";") && !text.includes(",") ? ";" : ",";
+  const lines = text.split(/\r?\n/).filter(l=>l.trim().length);
   if(!lines.length) return [];
-  const head=lines.shift().split(sep).map(s=>s.trim().toLowerCase());
+  const head = lines.shift().split(sep).map(s=>s.trim().toLowerCase());
   return lines.map(line=>{
     const cells=line.split(sep).map(s=>s.replace(/^"|"$/g,"").replace(/""/g,'"').trim());
     const o={}; head.forEach((h,i)=>o[h]=cells[i]??""); return o;
@@ -219,13 +281,16 @@ function normalizeOT(o){
   // normaliza claves a minúsculas sin acentos/espacios
   const norm={};
   for(const [k,v] of Object.entries(o||{})){
-    const kk=k.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g,"");
+    const kk=k.toString().toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+      .replace(/\s+/g,"");
     norm[kk]=v;
   }
-  // salida con llaves unificadas
+  // salida con llaves unificadas (incluye clienteId si viene)
   return {
     num:         take(norm,"num","numot","ot","folio","numero","#"),
     cliente:     take(norm,"cliente","nombre","name"),
+    clienteId:   take(norm,"clienteid","idcliente","id","id_client","cliente_id"),
     depto:       take(norm,"depto","departamento","departamen"),
     encargado:   take(norm,"encargado","enc","responsable","jefe"),
     emision:     take(norm,"emision","fechaemision","fechaemi","fecha"),
@@ -260,7 +325,7 @@ async function importFile(file){
     if(key && idxByNum.has(key)) LIST[idxByNum.get(key)]=fixed; else LIST.push(fixed);
   });
 
-  try{ await save(); alert(`Importados ${recs.length} registro(s).`); }
+  try{ await save(); alert(Importados ${recs.length} registro(s).); }
   catch(e){
     if(String(e).includes("412")){ await load(); await importFile(file); return; }
     alert("Error al guardar tras importar: "+e.message);
@@ -269,24 +334,13 @@ async function importFile(file){
 
 function exportJSON(){ download("ordenes_trabajo.json", JSON.stringify(LIST.map(unify),null,2)); }
 function exportCSV(){
-  const cols=["num","cliente","depto","encargado","emision","entrega","oc","estatus","prioridad","descripcion"];
-  const rows=[cols.join(",")].concat(LIST.map(unify).map(x=> cols.map(k=>S(x[k]).replace(/"/g,'""')).map(s=>`"${s}"`).join(",")));
+  const cols=["num","cliente","clienteId","depto","encargado","emision","entrega","oc","estatus","prioridad","descripcion"];
+  const rows=[cols.join(",")].concat(LIST.map(unify).map(x=>
+    cols.map(k=>S(x[k]).replace(/"/g,'""')).map(s=>"${s}").join(",")
+  ));
   download("ordenes_trabajo.csv", rows.join("\n"));
 }
 async function clearAll(){ if(!confirm("¿Vaciar todas las Órdenes de Trabajo?")) return; LIST=[]; await save(); }
-
-/* ================== Datalist de clientes ================== */
-async function loadClientesDatalist(){
-  try{
-    const {items}=await gs_getCollection("clientes");
-    const lista=Array.isArray(items)?items:[];
-    const dl=$id("dl-clientes"); if(!dl) return;
-    dl.innerHTML=lista
-      .filter(c=>c && (c.nombre || c.name))
-      .map(c=>`<option value="${S(c.nombre||c.name).replace(/"/g,'&quot;')}"></option>`)
-      .join("");
-  }catch(_){ /* si no existe clientes.json, ignorar */ }
-}
 
 /* ================== Print ================== */
 function buildPrintHTML(rec){
@@ -301,7 +355,7 @@ function buildPrintHTML(rec){
           <td>${S(it.plano)}</td>
           <td>${it.adjunto?"Sí":""}</td>
         </tr>`).join("")
-    : `<tr><td colspan="5" style="text-align:center;color:#6b7280">Sin partidas</td></tr>`;
+    : <tr><td colspan="5" style="text-align:center;color:#6b7280">Sin partidas</td></tr>;
 
   return `<!doctype html><html><head><meta charset="utf-8"><title>OT ${S(x.num)} - Artepisa</title><style>
     @page { size: A4; margin: 16mm; } *{box-sizing:border-box}
@@ -312,7 +366,7 @@ function buildPrintHTML(rec){
     table{width:100%;border-collapse:collapse;margin-top:8px}th,td{border:1px solid #e5e7eb;padding:6px 8px;font-size:12.5px;vertical-align:top}
     th{background:#f3f4f6;text-align:left}
   </style></head><body onload="window.print()">
-    <div class="header"><img src="${logoURL}" alt="ARTEPISA SLP"><div><div class="brand">ARTEPISA SLP</div><div class="muted">Orden de Trabajo ${x.num?`· #${S(x.num)}`:""}</div></div></div>
+    <div class="header"><img src="${logoURL}" alt="ARTEPISA SLP"><div><div class="brand">ARTEPISA SLP</div><div class="muted">Orden de Trabajo ${x.num?· #${S(x.num)}:""}</div></div></div>
     <table>
       <tbody>
         <tr><th>Cliente</th><td>${S(x.cliente)}</td><th>Departamento</th><td>${S(x.depto)}</td></tr>
@@ -357,7 +411,7 @@ async function load(){
 
   renderCount();
   renderList();
-  loadClientesDatalist();
+  loadClientesDatalist(); // llena el datalist de clientes
 }
 async function save(){
   ETAG = await gs_putCollection("ot", LIST, ETAG);
@@ -377,21 +431,26 @@ function mountEvents(){
   // Nuevo -> SOLO formulario
   on(btnNuevo(),"click",()=>{ fillForm(null); showForm("form-only"); });
 
+  // Cargar clientes al enfocar y validar selección
+  on(fCliente(),"focus", ()=>{ if(!CLIENTS.length) loadClientesDatalist(); });
+  on(fCliente(),"change", enforceClientSelection);
+  on(fCliente(),"blur",   enforceClientSelection);
+
   // Partidas
   on(btnAddItem(),"click",()=> addItemRow());
 
   // Guardar (normaliza + repara antes de persistir)
   on(btnGuardar(),"click",async ()=>{
-    const raw = readForm();
-
-    if(!raw.cliente || !raw.cliente.trim()){
-      alert("El campo CLIENTE es obligatorio."); fCliente()?.focus(); return;
+    // fuerza cliente válido si STRICT_CLIENT
+    if(STRICT_CLIENT && !matchClientByName(fCliente()?.value||"")){
+      alert("El cliente debe ser uno de la lista guardada.");
+      fCliente()?.focus();
+      return;
     }
 
+    const raw = readForm();
     const normalized     = unify(raw);
     const { rec: fixed } = repairMisplaced(normalized);
-
-    console.log("[OT] guardando:", { raw, normalized, fixed });
 
     if(editingIndex >= 0) LIST[editingIndex] = fixed;
     else LIST.push(fixed);
@@ -425,17 +484,4 @@ function mountEvents(){
   on(btnImprimir(),"click",()=>printOT(readForm()));
   on(btnImport(),"click",()=> inputFile()?.click());
   on(inputFile(),"change",(e)=>{ const file=e.target.files?.[0]; if(!file) return; importFile(file); e.target.value=""; });
-  on(btnExport(),"click",()=>{ const pick=confirm("Aceptar = JSON  |  Cancelar = CSV"); if(pick) exportJSON(); else exportCSV(); });
-  on(btnClear(),"click",clearAll);
-
-  // Utilidad para reparar todo desde consola
-  window.repararOTs = async function(){
-    LIST = (Array.isArray(LIST) ? LIST : []).map(r => repairMisplaced(unify(r)).rec);
-    await save();
-    renderList();
-    alert("Registros reparados.");
-  };
-}
-
-/* ================== Init ================== */
-(async function bootstrap(){ try{ mountEvents(); await load(); }catch(e){ console.error("Init OT falló:",e); mountEvents(); } })();
+  on(btnExport(),"click",()=>{ const pick=confirm("Aceptar = JSON  |  Cancelar = CSV"); if(pick) exportJSON()
