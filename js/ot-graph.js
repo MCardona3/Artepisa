@@ -133,7 +133,7 @@ async function loadClientesDatalist(){
     const dl = document.getElementById("dl-clientes");
     if(!dl) return;
     dl.innerHTML = CLIENTS
-      .map(c => `<option value="${c.nombre.replace(/"/g,'&quot;')}" label="${c.rfc ? RFC: ${c.rfc} : ""}"></option>`)
+      .map(c => `<option value="${c.nombre.replace(/"/g,'&quot;')}" label="${c.rfc ? `RFC: ${c.rfc}` : ""}"></option>`)
       .join("");
   }catch(_){
     // si no existe clientes.json, ignorar
@@ -325,7 +325,7 @@ async function importFile(file){
     if(key && idxByNum.has(key)) LIST[idxByNum.get(key)]=fixed; else LIST.push(fixed);
   });
 
-  try{ await save(); alert(Importados ${recs.length} registro(s).); }
+  try{ await save(); alert(`Importados ${recs.length} registro(s).`); }
   catch(e){
     if(String(e).includes("412")){ await load(); await importFile(file); return; }
     alert("Error al guardar tras importar: "+e.message);
@@ -336,7 +336,7 @@ function exportJSON(){ download("ordenes_trabajo.json", JSON.stringify(LIST.map(
 function exportCSV(){
   const cols=["num","cliente","clienteId","depto","encargado","emision","entrega","oc","estatus","prioridad","descripcion"];
   const rows=[cols.join(",")].concat(LIST.map(unify).map(x=>
-    cols.map(k=>S(x[k]).replace(/"/g,'""')).map(s=>"${s}").join(",")
+    cols.map(k=>S(x[k]).replace(/"/g,'""')).map(s=>`"${s}"`).join(",")
   ));
   download("ordenes_trabajo.csv", rows.join("\n"));
 }
@@ -355,7 +355,7 @@ function buildPrintHTML(rec){
           <td>${S(it.plano)}</td>
           <td>${it.adjunto?"Sí":""}</td>
         </tr>`).join("")
-    : <tr><td colspan="5" style="text-align:center;color:#6b7280">Sin partidas</td></tr>;
+    : `<tr><td colspan="5" style="text-align:center;color:#6b7280">Sin partidas</td></tr>`;
 
   return `<!doctype html><html><head><meta charset="utf-8"><title>OT ${S(x.num)} - Artepisa</title><style>
     @page { size: A4; margin: 16mm; } *{box-sizing:border-box}
@@ -366,7 +366,7 @@ function buildPrintHTML(rec){
     table{width:100%;border-collapse:collapse;margin-top:8px}th,td{border:1px solid #e5e7eb;padding:6px 8px;font-size:12.5px;vertical-align:top}
     th{background:#f3f4f6;text-align:left}
   </style></head><body onload="window.print()">
-    <div class="header"><img src="${logoURL}" alt="ARTEPISA SLP"><div><div class="brand">ARTEPISA SLP</div><div class="muted">Orden de Trabajo ${x.num?· #${S(x.num)}:""}</div></div></div>
+    <div class="header"><img src="${logoURL}" alt="ARTEPISA SLP"><div><div class="brand">ARTEPISA SLP</div><div class="muted">Orden de Trabajo ${x.num?`· #${S(x.num)}`:""}</div></div></div>
     <table>
       <tbody>
         <tr><th>Cliente</th><td>${S(x.cliente)}</td><th>Departamento</th><td>${S(x.depto)}</td></tr>
@@ -484,4 +484,20 @@ function mountEvents(){
   on(btnImprimir(),"click",()=>printOT(readForm()));
   on(btnImport(),"click",()=> inputFile()?.click());
   on(inputFile(),"change",(e)=>{ const file=e.target.files?.[0]; if(!file) return; importFile(file); e.target.value=""; });
-  on(btnExport(),"click",()=>{ const pick=confirm("Aceptar = JSON  |  Cancelar = CSV"); if(pick) exportJSON()
+  on(btnExport(),"click",()=>{ const pick=confirm("Aceptar = JSON  |  Cancelar = CSV"); if(pick) exportJSON(); else exportCSV(); });
+  on(btnClear(),"click",clearAll);
+
+  // Utilidad para reparar todo desde consola
+  window.repararOTs = async function(){
+    LIST = (Array.isArray(LIST) ? LIST : []).map(r => repairMisplaced(unify(r)).rec);
+    await save();
+    renderList();
+    alert("Registros reparados.");
+  };
+}
+
+/* ================== Init ================== */
+(async function bootstrap(){
+  try{ mountEvents(); await load(); }
+  catch(e){ console.error("Init OT falló:",e); mountEvents(); }
+})();
