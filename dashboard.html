@@ -14,7 +14,7 @@
     <img class="brandlogo" src="./img/arte.png?v=1" alt="ARTEPISA SLP">
     <div>
       <div class="brandname">ARTEPISA SLP</div>
-      <div class="muted">Panel principal </div>
+      <div class="muted">Panel principal</div>
     </div>
   </div>
 
@@ -77,12 +77,20 @@
         </div>
       </article>
 
-      <!-- NUEVO: Módulo Inventario -->
       <article class="module">
         <h4>Inventario</h4>
         <p class="muted">Entradas/salidas y control de stock.</p>
         <div class="actions">
           <a class="btn" href="inventario.html">Entrar</a>
+        </div>
+      </article>
+
+      <!-- NUEVO: Módulo Usuarios y privilegios (solo Admin) -->
+      <article class="module" id="mod-usuarios" style="display:none">
+        <h4>Usuarios y privilegios</h4>
+        <p class="muted">Alta de usuarios internos, invitaciones B2B y asignación de grupos.</p>
+        <div class="actions">
+          <a class="btn" href="usuarios.html">Entrar</a>
         </div>
       </article>
       <!-- /NUEVO -->
@@ -98,29 +106,8 @@
   </section>
 </main>
 
-<!-- Scripts (usa el mismo auth.js del login) -->
-<script src="./js/auth.js"></script>
-<script>
-  // Carga de datos básicos desde la sesión (ajústalo si guardas otras propiedades)
-  (function(){
-    const acct = JSON.parse(sessionStorage.getItem("artepisa_account") || "null");
-    document.getElementById("user-name").textContent =
-      acct?.name || acct?.username || "Sesión activa";
-
-    // Cerrar sesión
-    document.getElementById("btn-logout")?.addEventListener("click", async () => {
-      try { if (window.MSALApp && MSALApp.logout) await MSALApp.logout(); }
-      finally {
-        sessionStorage.removeItem("artepisa_account");
-        location.href = "index.html";
-      }
-    });
-  })();
-</script>
-
-<!-- Estilos específicos del panel (reutiliza tu hoja base) -->
+<!-- Estilos específicos del panel -->
 <style>
-  /* pequeñas utilidades para el grid de KPIs y módulos */
   .kpis{
     display:grid;
     grid-template-columns: repeat(3, minmax(0,1fr));
@@ -163,24 +150,54 @@
   }
 </style>
 
+<!-- ===== Librerías y configuración MSAL (orden correcto) ===== -->
+<script src="https://alcdn.msauth.net/browser/2.38.2/js/msal-browser.min.js"></script>
+<script src="./js/msal-config.js"></script>
+<script src="./js/auth.js"></script>
+<!-- Helpers de administración Entra (crear/invitar usuarios, privilegios por grupo) -->
+<script src="./js/entra-admin.js?v=1"></script>
+
 <script>
-  // Redirige a login si no existe MSAL ni getToken
+  // Guard: redirige a login si no hay sesión MSAL
   (function(){
-    const hasGetter = (window.MSALApp && typeof MSALApp?.getToken === 'function') || (typeof window.getToken === 'function');
+    const hasGetter = (window.MSALApp && typeof MSALApp.getToken === 'function') || (typeof window.getToken === 'function');
     if(!hasGetter){
       console.warn('Sin sesión MSAL. Redirigiendo a login...');
       setTimeout(()=>{ location.href = 'login.html'; }, 300);
     }
   })();
+
+  // Inicialización del panel
+  (async function(){
+    try {
+      // Asegura sesión y pinta nombre
+      await MSALApp.requireAuth();
+      const acctSnap = JSON.parse(sessionStorage.getItem("artepisa_account") || "null");
+      document.getElementById("user-name").textContent =
+        acctSnap?.name || acctSnap?.username || "Sesión activa";
+
+      // Mostrar módulo de Usuarios solo a Admin (user.create)
+      const modUsers = document.getElementById("mod-usuarios");
+      if (modUsers && window.EntraAdmin && typeof EntraAdmin.can === "function") {
+        const canCreate = await EntraAdmin.can("user.create");
+        modUsers.style.display = canCreate ? "block" : "none";
+      }
+
+      // Botón salir
+      document.getElementById("btn-logout")?.addEventListener("click", async () => {
+        try { if (window.MSALApp && MSALApp.logout) await MSALApp.logout(); }
+        finally {
+          sessionStorage.removeItem("artepisa_account");
+          location.href = "index.html";
+        }
+      });
+    } catch (e) {
+      console.warn("Error inicializando panel:", e);
+    }
+  })();
 </script>
 
-<!-- MSAL config -->
-<script src="./js/msal-config.js"></script>
-<!-- MSAL library -->
-<script src="https://alcdn.msauth.net/browser/2.38.2/js/msal-browser.min.js"></script>
-<!-- Auth app -->
-<script src="./js/auth.js"></script>
-<!-- Dashboard logic (importa graph-store.js internamente) -->
+<!-- Lógica adicional del panel (si la usas como módulo) -->
 <script type="module" src="./js/dashboard.js"></script>
 
 </body>
