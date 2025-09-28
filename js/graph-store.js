@@ -4,11 +4,14 @@
 const STORE = {
   FOLDER_NAME: "ArtepisaData",
   FILES: {
-    clientes:   "clientes.json",
+    // 🔧 Alias: que "clients" y "clientes" apunten al MISMO archivo
+    clients:    "clients.json",
+    clientes:   "clients.json",
+
     ot:         "ordenes_trabajo.json",
     oc:         "ordenes_compra.json",
     inventario: "inventario.json",
-    cobros:     "cobros.json"          // 👈 NUEVO
+    cobros:     "cobros.json"
   }
 };
 
@@ -40,7 +43,6 @@ async function fetchGraph(url, options, { retries = MAX_RETRIES } = {}) {
       const res = await fetch(url, options);
       if (res.ok) return res;
 
-      // Reintentar en 429 o 5xx
       if (res.status === 429 || (res.status >= 500 && res.status <= 599)) {
         if (attempt >= retries) return res;
         const ra = Number(res.headers.get("Retry-After")) || 0;
@@ -51,7 +53,6 @@ async function fetchGraph(url, options, { retries = MAX_RETRIES } = {}) {
       }
       return res;
     } catch (err) {
-      // red/timeout: reintenta
       if (attempt >= retries) throw err;
       const delay = BASE_DELAY * Math.pow(2, attempt);
       await sleep(delay);
@@ -131,7 +132,7 @@ async function gs_ensureFile(kind){
     method: "PUT",
     headers: authHeaders(token, {
       "Content-Type": "application/json",
-      "If-None-Match": "*"   // crea solo si NO existe
+      "If-None-Match": "*"
     }),
     body: "[]"
   });
@@ -151,11 +152,15 @@ export async function gs_getCollection(kind) {
 
   const base = buildBase(driveId, itemId);
 
-  // 1) Metadatos (para ETag). Si no existe, créalo y vuelve a intentar 1 vez.
+  // 1) Metadatos (para ETag). Reintento extra tras ensureFile (consistencia eventual)
   let meta = await fetchGraph(fileMetaUrl(base, fileName), { headers: authHeaders(token) });
   if (meta.status === 404) {
     await gs_ensureFile(kind);
     meta = await fetchGraph(fileMetaUrl(base, fileName), { headers: authHeaders(token) });
+    if (meta.status === 404) {
+      // Si todavía no aparece, devolvemos etag vacío y colección vacía
+      return { etag: "", items: [] };
+    }
   }
   if (!meta.ok) throw new Error("No se pudo leer metadatos de " + fileName);
   const metaJson = await meta.json();
