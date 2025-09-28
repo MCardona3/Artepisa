@@ -6,29 +6,24 @@
 // ¿Estás en GitHub Pages?
 const IS_GITHUB_PAGES = /\.github\.io$/i.test(location.host);
 
-// ⚠️ Si publicas dentro de un repositorio (https://usuario.github.io/MI_REPO/)
-// pon aquí el nombre EXACTO del repo (tal como aparece en GitHub).
-// Si publicas en la raíz (https://usuario.github.io/), puedes dejarlo igual;
-// el código detecta y NO añade /REPO si no corresponde.
+// Si publicas dentro de un repositorio (https://usuario.github.io/MI_REPO/)
 const REPO = "Artepisa";
 
-/** Determina el "base" correcto:
+/** Base para rutas:
  * - GitHub Pages en raíz: base = ""
  * - GitHub Pages dentro de repo: base = "/REPO"
  * - Localhost / file:// : base = ""
  */
 function resolveBase() {
   if (!IS_GITHUB_PAGES) return "";
-  const p = (location.pathname || "/").replace(/\/+$/, ""); // sin trailing slash
+  const p = (location.pathname || "/").replace(/\/+$/, "");
   const repoPrefix = `/${REPO}`;
-  // Si ya estamos bajo /REPO, úsalo; si no, asumimos raíz de usuario/org
   return p === repoPrefix || p.startsWith(`${repoPrefix}/`) ? repoPrefix : "";
 }
 
 // Normaliza path destino (siempre a /index.html)
 function buildRedirectUri() {
-  // Soporta file://, http(s)://, localhost y GitHub Pages
-  const origin = location.origin === "null" ? "" : location.origin; // p/ file://
+  const origin = location.origin === "null" ? "" : location.origin; // file://
   const base = resolveBase();
   return `${origin}${base}/index.html`;
 }
@@ -38,20 +33,36 @@ const REDIRECT = buildRedirectUri();
 /* ---------------------------------------------
    Config principal MSAL
    --------------------------------------------- */
+
+// ⚠️ PON AQUÍ TU APP (SPA) REGISTRADA EN AZURE
 const CLIENT_ID = "24164079-124e-4f17-a347-2b357984c44f";
-// Para OneDrive personal: usar "consumers" (cuentas Microsoft personales)
-const TENANT_ID = "consumers";
 
-// Scopes mínimos:
-// - Identidad básica       => User.Read
-// - Leer/escribir archivos => Files.ReadWrite (OneDrive personal)
-// - Token de actualización => offline_access
-const DEFAULT_SCOPES = ["User.Read", "Files.ReadWrite", "offline_access"];
+// ⚠️ CAMBIA A TU TENANT (GUID) o usa "organizations" para solo cuentas de trabajo.
+//   - NO uses "consumers" si quieres crear/invitar usuarios o leer grupos.
+const TENANT_ID = "organizations"; // ej: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
 
-// Authority armada desde el tenant (consumers / organizations / <GUID>)
+// Scopes necesarios para:
+// - Identidad básica: User.Read
+// - OneDrive jsons: Files.ReadWrite (opcional, si usas tu storage actual)
+// - Token de actualización: offline_access
+// - Crear usuarios: User.ReadWrite.All (delegado)  *admin consent*
+// - Invitar externos: User.Invite.All (delegado)    *admin consent*
+// - Leer grupos: Group.Read.All (delegado)          *admin consent*
+// - (Opcional para añadir a grupos): Group.ReadWrite.All (delegado) *admin consent*
+const DEFAULT_SCOPES = [
+  "User.Read",
+  "Files.ReadWrite",
+  "offline_access",
+  "User.ReadWrite.All",
+  "User.Invite.All",
+  "Group.Read.All",
+  "Group.ReadWrite.All" // necesario si usarás addUserToGroup
+];
+
+// Authority armada desde el tenant (organizations / <GUID>)
 const AUTHORITY = `https://login.microsoftonline.com/${TENANT_ID}`;
 
-// Exponemos una configuración simple (la usa auth.js)
+// Exponemos configuración (la usa auth.js y entra-admin.js)
 window.MSAL_CONFIG = {
   clientId: CLIENT_ID,
   tenantId: TENANT_ID,
@@ -59,7 +70,17 @@ window.MSAL_CONFIG = {
   postLogoutRedirectUri: REDIRECT,
   scopes: DEFAULT_SCOPES,
 
-  // Opciones MSAL (idénticas a las de auth.js)
+  // IDs de grupos para privilegios (⚠️ reemplaza por tus GUID reales)
+  privilegeGroups: {
+    admin:  "11111111-1111-1111-1111-111111111111",
+    editor: "22222222-2222-2222-2222-222222222222",
+    viewer: "33333333-3333-3333-3333-333333333333"
+  },
+
+  // A dónde volverá el usuario invitado al aceptar la invitación B2B
+  inviteRedirectUrl: REDIRECT,
+
+  // Opciones MSAL
   options: {
     auth: {
       clientId: CLIENT_ID,
@@ -69,8 +90,8 @@ window.MSAL_CONFIG = {
       navigateToLoginRequestUrl: false
     },
     cache: {
-      cacheLocation: "sessionStorage",   // seguro para SPA
-      storeAuthStateInCookie: false      // true solo si Safari viejo da problemas
+      cacheLocation: "sessionStorage",
+      storeAuthStateInCookie: false
     },
     system: {
       loggerOptions: { loggerCallback: () => {}, piiLoggingEnabled: false },
@@ -87,47 +108,35 @@ window.MSAL_CONFIG = {
 
 /* ---------------------------------------------
    Almacenamiento en OneDrive personal compartido
-   ---------------------------------------------
-   Recomendado (gratis):
-   1) Crea en tu OneDrive la carpeta /ArtepisaData
-   2) COMPÁRTELA con "Puede editar" a todos los usuarios
-   3) Cada usuario hace "Agregar acceso directo a Mi OneDrive"
-   4) Todos verán/editarán los mismos JSON en esa carpeta
-*/
+   --------------------------------------------- */
 (function ensureGraphStorage() {
   const DEFAULT_STORAGE = {
-    location: "me",                 // "me" => OneDrive personal del usuario
-    folderPath: "/ArtepisaData"     // carpeta compartida (o acceso directo)
+    location: "me",
+    folderPath: "/ArtepisaData"
   };
-
-  // Normaliza el path (debe iniciar con /)
   function normalizePath(p) {
     if (!p) return DEFAULT_STORAGE.folderPath;
     return p.startsWith("/") ? p : `/${p}`;
   }
-
   const incoming = window.GRAPH_STORAGE || {};
   const merged = {
     location: incoming.location === "site" ? "site" : "me",
-    siteId: incoming.siteId || "", // solo para SharePoint (no necesario en OneDrive personal)
+    siteId: incoming.siteId || "",
     folderPath: normalizePath(incoming.folderPath || DEFAULT_STORAGE.folderPath)
   };
-
   window.GRAPH_STORAGE = merged;
 })();
 
 /* ---------------------------------------------
    Tips rápidos
    ---------------------------------------------
-   - Si usas SharePoint en vez de OneDrive:
-     window.GRAPH_STORAGE = {
-       location: "site",
-       siteId: "<TU_SITE_ID>",
-       folderPath: "/ArtepisaData"
-     };
-
+   - Da *Admin consent* en Azure Portal para:
+     User.ReadWrite.All, User.Invite.All, Group.Read.All y (si aplicas grupos) Group.ReadWrite.All.
+   - Si NO quieres depender de Graph para leer grupos, en el manifest de la app
+     puedes poner: groupMembershipClaims: "SecurityGroup" (los IDs de grupos vendrán en el ID token).
    - GitHub Pages:
-     * En raíz:  https://<usuario>.github.io/           → REDIRECT será /index.html
-     * En repo:  https://<usuario>.github.io/<REPO>/    → REDIRECT será /<REPO>/index.html
-     Registra EXACTAMENTE ese Redirect URI en Azure Portal (App Registration).
+     * En raíz:  https://<usuario>.github.io/           → REDIRECT = /index.html
+     * En repo:  https://<usuario>.github.io/<REPO>/    → REDIRECT = /<REPO>/index.html
+     Registra EXACTAMENTE ese Redirect URI en App Registration.
 */
+
