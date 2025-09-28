@@ -44,6 +44,39 @@
       <thead><tr><th>Correo</th><th>Nombre</th><th>Rol</th><th>Activo</th><th></th></tr></thead>
       <tbody id="u-tabla"></tbody>
     </table>
+
+    <hr/>
+    <h3>Alta en Entra ID (Azure AD)</h3>
+    <p class="muted">Crear cuenta interna o invitar externa (requiere privilegios de Admin y consentimiento de administrador en la app).</p>
+
+    <div class="grid-2">
+      <div class="card soft">
+        <h4>Crear usuario interno</h4>
+        <div class="form">
+          <div class="field"><span>UPN (correo interno)</span><input id="ad-upn" type="email" placeholder="nuevo@tu-dominio.com"></div>
+          <div class="field"><span>Nombre para mostrar</span><input id="ad-name" placeholder="Nombre Apellidos"></div>
+          <div class="field"><span>Alias (mailNickname)</span><input id="ad-nick" placeholder="nombre.apellidos"></div>
+          <div class="field"><span>Contraseña inicial</span><input id="ad-pass" type="password" placeholder="Contraseña temporal"></div>
+          <div class="actions">
+            <button class="btn" id="ad-create" type="button">Crear usuario</button>
+          </div>
+          <p id="ad-create-msg" class="muted"></p>
+        </div>
+      </div>
+
+      <div class="card soft">
+        <h4>Invitar usuario externo (B2B)</h4>
+        <div class="form">
+          <div class="field"><span>Email externo</span><input id="ad-inv-email" type="email" placeholder="proveedor@empresa.com"></div>
+          <div class="field"><span>Nombre (opcional)</span><input id="ad-inv-name" placeholder="Proveedor ACME"></div>
+          <div class="actions">
+            <button class="btn" id="ad-invite" type="button">Enviar invitación</button>
+          </div>
+          <p id="ad-invite-msg" class="muted"></p>
+        </div>
+      </div>
+    </div>
+
   </section>
 
   <section class="card" id="card-no-admin" style="display:none">
@@ -63,6 +96,7 @@
 <script src="./js/roles.js?v=1"></script>
 
 <!-- Lógica de esta página -->
+<script src="./js/entra-admin.js?v=1"></script>
 <script src="./js/usuarios.js?v=1"></script>
 </body>
 </html>
