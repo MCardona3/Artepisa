@@ -34,21 +34,13 @@ const REDIRECT = buildRedirectUri();
    Config principal MSAL
    --------------------------------------------- */
 
-// ⚠️ PON AQUÍ TU APP (SPA) REGISTRADA EN AZURE
-const CLIENT_ID = "24164079-124e-4f17-a347-2b357984c44f";
+// ✅ Tu App registrada (ArtepisaApp-Org)
+const CLIENT_ID = "4882a8ea-d988-4de9-8216-f5420a81e4f7";
 
-// ⚠️ CAMBIA A TU TENANT (GUID) o usa "organizations" para solo cuentas de trabajo.
-//   - NO uses "consumers" si quieres crear/invitar usuarios o leer grupos.
-const TENANT_ID = "organizations"; // ej: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+// ✅ Tu Tenant GUID
+const TENANT_ID = "09e74d4b-149d-4c7c-a670-6d0442be52ea";
 
-// Scopes necesarios para:
-// - Identidad básica: User.Read
-// - OneDrive jsons: Files.ReadWrite (opcional, si usas tu storage actual)
-// - Token de actualización: offline_access
-// - Crear usuarios: User.ReadWrite.All (delegado)  *admin consent*
-// - Invitar externos: User.Invite.All (delegado)    *admin consent*
-// - Leer grupos: Group.Read.All (delegado)          *admin consent*
-// - (Opcional para añadir a grupos): Group.ReadWrite.All (delegado) *admin consent*
+// Scopes necesarios
 const DEFAULT_SCOPES = [
   "User.Read",
   "Files.ReadWrite",
@@ -56,13 +48,13 @@ const DEFAULT_SCOPES = [
   "User.ReadWrite.All",
   "User.Invite.All",
   "Group.Read.All",
-  "Group.ReadWrite.All" // necesario si usarás addUserToGroup
+  "Group.ReadWrite.All"
 ];
 
-// Authority armada desde el tenant (organizations / <GUID>)
+// Authority armada desde el tenant (GUID)
 const AUTHORITY = `https://login.microsoftonline.com/${TENANT_ID}`;
 
-// Exponemos configuración (la usa auth.js y entra-admin.js)
+// Exponemos configuración
 window.MSAL_CONFIG = {
   clientId: CLIENT_ID,
   tenantId: TENANT_ID,
@@ -70,11 +62,11 @@ window.MSAL_CONFIG = {
   postLogoutRedirectUri: REDIRECT,
   scopes: DEFAULT_SCOPES,
 
-  // IDs de grupos para privilegios (⚠️ reemplaza por tus GUID reales)
+  // ✅ Tus grupos reales
   privilegeGroups: {
-    admin:  "11111111-1111-1111-1111-111111111111",
-    editor: "22222222-2222-2222-2222-222222222222",
-    viewer: "33333333-3333-3333-3333-333333333333"
+    admin:  "cca1198c-cc4a-48f0-9c6c-c832ce7d9207",
+    editor: "c7f7e4f6-55ef-402d-877d-5888128fae77",
+    viewer: "75735ceb-f8ea-4a6d-ac48-ba5bcbc28558"
   },
 
   // A dónde volverá el usuario invitado al aceptar la invitación B2B
@@ -130,13 +122,12 @@ window.MSAL_CONFIG = {
 /* ---------------------------------------------
    Tips rápidos
    ---------------------------------------------
-   - Da *Admin consent* en Azure Portal para:
-     User.ReadWrite.All, User.Invite.All, Group.Read.All y (si aplicas grupos) Group.ReadWrite.All.
-   - Si NO quieres depender de Graph para leer grupos, en el manifest de la app
-     puedes poner: groupMembershipClaims: "SecurityGroup" (los IDs de grupos vendrán en el ID token).
+   - Ya diste Admin consent ✅ para todos los scopes críticos.
+   - En el manifest puedes usar:
+     "groupMembershipClaims": "SecurityGroup"
+     para que los IDs de grupos vengan en el ID token.
    - GitHub Pages:
      * En raíz:  https://<usuario>.github.io/           → REDIRECT = /index.html
      * En repo:  https://<usuario>.github.io/<REPO>/    → REDIRECT = /<REPO>/index.html
-     Registra EXACTAMENTE ese Redirect URI en App Registration.
 */
 
