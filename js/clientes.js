@@ -1,55 +1,54 @@
-// js/clientes.js (versión mejorada con modo form-only + móvil)
+// js/clientes.js (versión mejorada con modo form-only + móvil + contador + resiliencia)
 (function () {
   const $ = (s) => document.querySelector(s);
   let cache = [];
-  let editingKey = null; // clave de edición = nombre normalizado
-  const LS_KEY = "clients"; // espejo localStorage
-
-  // Media query para reconocer móvil (coincide con el CSS)
+  let editingKey = null;            // clave de edición = nombre normalizado
+  const LS_KEY = "clients";         // espejo localStorage
   const mqlMobile = window.matchMedia("(max-width: 820px)");
-// --- Helpers de campos ---
-const fId       = () => document.getElementById("c-id");
-const fNombre   = () => document.getElementById("c-nombre");
-const fTelefono = () => document.getElementById("c-telefono");
-const fDir      = () => document.getElementById("c-direccion");
-const fRFC      = () => document.getElementById("c-rfc");
-const fEstado   = () => document.getElementById("c-estado");
-const fCtoNom   = () => document.getElementById("c-contacto");
-const fCtoTel   = () => document.getElementById("c-contacto-tel");
 
-// Quita readonly/disabled en todos los inputs del formulario de clientes
-function setEditable(on = true) {
-  [
-    fId(), fNombre(), fTelefono(), fDir(),
-    fRFC(), fEstado(), fCtoNom(), fCtoTel()
-  ].forEach(el => {
-    if (!el) return;
-    el.readOnly = !on;
-    el.disabled = false;                // por si alguien lo deshabilitó
-    el.classList.toggle('is-readonly', !on); // si usas una clase visual
-    el.style.pointerEvents = on ? '' : 'auto'; // por si CSS bloqueó eventos
-  });
-}
+  // --- Helpers de campos ---
+  const fId       = () => document.getElementById("c-id");
+  const fNombre   = () => document.getElementById("c-nombre");
+  const fTelefono = () => document.getElementById("c-telefono");
+  const fDir      = () => document.getElementById("c-direccion");
+  const fRFC      = () => document.getElementById("c-rfc");
+  const fEstado   = () => document.getElementById("c-estado");
+  const fCtoNom   = () => document.getElementById("c-contacto");
+  const fCtoTel   = () => document.getElementById("c-contacto-tel");
+
+  // Quita readonly/disabled en todos los inputs del formulario de clientes
+  function setEditable(on = true) {
+    [fId(), fNombre(), fTelefono(), fDir(), fRFC(), fEstado(), fCtoNom(), fCtoTel()].forEach((el) => {
+      if (!el) return;
+      el.readOnly = !on;
+      el.disabled = false; // por si alguien lo deshabilitó
+      el.classList.toggle("is-readonly", !on);
+      el.style.pointerEvents = on ? "" : "auto";
+    });
+  }
+
+  // Emite el contador global de clientes (para badge en clientes.html)
+  function broadcastCount() {
+    try {
+      const ev = new CustomEvent("clientes:count", { detail: { count: sanitizeCache(cache).length } });
+      document.dispatchEvent(ev);
+    } catch {}
+  }
 
   // ---------- Helpers UI ----------
   function showForm(show) {
     const layout = $("#layout");
     if (!layout) return;
     if (show) {
-      // Modo SOLO formulario: oculta #card-list y centra #card-form
-      layout.classList.add("form-only");
-      // Lleva el scroll arriba para que se vea el form completo
+      layout.classList.add("form-only"); // oculta lista y centra form
       setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
     } else {
-      layout.classList.remove("form-only"); // vuelve a mostrar la lista
-      // Reaplica la lógica móvil de mostrar/ocultar lista según el buscador
-      updateMobileListVisibility();
-      // focus al buscador si existe
+      layout.classList.remove("form-only");
+      updateMobileListVisibility(); // re-aplica lógica móvil
       $("#c-buscar")?.focus();
     }
   }
 
-  // Mostrar/ocultar lista en móvil según el valor del buscador
   function updateMobileListVisibility() {
     const layout = $("#layout");
     if (!layout) return;
@@ -62,7 +61,6 @@ function setEditable(on = true) {
     }
   }
 
-  // Debounce utilitario
   function debounce(fn, wait = 200) {
     let t;
     return (...args) => {
@@ -75,10 +73,9 @@ function setEditable(on = true) {
   const norm = (s) => (s || "").trim().replace(/\s+/g, " ").toLowerCase();
   const S = (v) => (v == null ? "" : String(v));
 
-  // --- Teléfonos: solo dígitos, máscara 1 ó 2 números (10 ó 20), formateo y normalización ---
+  // --- Teléfonos: máscara y normalización ---
   const onlyDigits = (s) => String(s ?? "").replace(/\D+/g, "");
 
-  // Formato progresivo para 10 dígitos: 3-3-4
   function maskLiveTen(d) {
     d = onlyDigits(d).slice(0, 10);
     const n = d.length;
@@ -87,48 +84,42 @@ function setEditable(on = true) {
     return d.slice(0, 3) + "-" + d.slice(3, 6) + (n > 6 ? "-" + d.slice(6) : "");
   }
 
-  // 10 dígitos exactos a 3-3-4
   function formatTen(d) {
     d = onlyDigits(d);
     if (d.length !== 10) return d;
     return d.replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3");
   }
 
-  // En vivo: 1 ó 2 teléfonos. Inserta " / " al pasar de 10 dígitos.
   function maskLiveMxMulti(v) {
-    let d = onlyDigits(v).slice(0, 20); // máx 20 (dos números)
+    let d = onlyDigits(v).slice(0, 20);
     if (d.length <= 10) return maskLiveTen(d);
     const left = d.slice(0, 10);
     const right = d.slice(10);
     return formatTen(left) + " / " + maskLiveTen(right);
   }
 
-  // En blur: formato final bonito
   function formatPhonePair(v) {
     const d = onlyDigits(v);
     if (d.length === 10) return formatTen(d);
     if (d.length === 20) return formatTen(d.slice(0, 10)) + " / " + formatTen(d.slice(10));
-    return d; // otros largos -> sólo dígitos
+    return d;
   }
 
-  // Normaliza para GUARDAR: "" | "dddddddddd" | "dddddddddd/dddddddddd"
-  // Devuelve "" si vacío, y null si inválido (≠10 y ≠20 dígitos)
   function normalizePhones(val) {
     const d = onlyDigits(val);
     if (d.length === 0) return "";
     if (d.length === 10) return d;
     if (d.length === 20) return d.slice(0, 10) + "/" + d.slice(10);
-    return null;
+    return null; // inválido
   }
 
-  // Adjunta máscara y validación de teclado/pegado
   function attachPhoneMaskMulti(el) {
     if (!el) return;
     el.addEventListener("keydown", (e) => {
       const allow = ["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab", "Enter", "Home", "End"];
       if (allow.includes(e.key)) return;
-      if (/^\d$/.test(e.key)) return; // dígitos
-      if (e.key === "/") return; // permitir "/"
+      if (/^\d$/.test(e.key)) return;
+      if (e.key === "/") return;
       e.preventDefault();
     });
     const applyMask = () => {
@@ -185,7 +176,10 @@ function setEditable(on = true) {
       const next = (nums.length ? Math.max(...nums) : 0) + 1;
       return String(next);
     } else {
-      const nums = ids.map((x) => (x.match(/^C(\d+)$/i) || [])[1]).filter(Boolean).map((n) => parseInt(n, 10));
+      const nums = ids
+        .map((x) => (x.match(/^C(\d+)$/i) || [])[1])
+        .filter(Boolean)
+        .map((n) => parseInt(n, 10));
       const next = (nums.length ? Math.max(...nums) : 0) + 1;
       return "C" + String(next).padStart(4, "0");
     }
@@ -194,11 +188,11 @@ function setEditable(on = true) {
   // --- Orden por ID ascendente (soporta "123" y "C0123") ---
   function idNumericValue(id) {
     const s = (id ?? "").toString().trim();
-    if (!s) return Number.POSITIVE_INFINITY; // vacíos al final
-    if (/^\d+$/.test(s)) return parseInt(s, 10); // "123"
-    const m = s.match(/^C(\d+)$/i); // "C0123"
+    if (!s) return Number.POSITIVE_INFINITY;
+    if (/^\d+$/.test(s)) return parseInt(s, 10);
+    const m = s.match(/^C(\d+)$/i);
     if (m) return parseInt(m[1], 10);
-    const digits = s.replace(/\D+/g, ""); // rescate: toma dígitos
+    const digits = s.replace(/\D+/g, "");
     return digits ? parseInt(digits, 10) : Number.POSITIVE_INFINITY;
   }
   function compareByIdAsc(a, b) {
@@ -237,12 +231,13 @@ function setEditable(on = true) {
 
     editingKey = c.Nombre ? norm(c.Nombre) : null;
     $("#c-nombre").disabled = !!editingKey;
+    setEditable(true); // asegura edición del resto de campos
 
-    showForm(true);           // ← activa modo form-only
+    showForm(true);
     $("#c-nombre")?.focus();
   }
 
-  // ---------- Esquema de columnas (un solo lugar) ----------
+  // ---------- Esquema de columnas ----------
   const COLUMNS = [
     { key: "IDCliente", label: "ID" },
     { key: "Nombre", label: "Nombre" },
@@ -254,7 +249,7 @@ function setEditable(on = true) {
     { key: "TelefonoCon", label: "Teléfono de Contacto", formatter: (v) => formatPhonePair(v) }
   ];
 
-  // ---------- Render de tabla (pro + responsivo) ----------
+  // ---------- Render de tabla ----------
   function render(q = "") {
     const tb = $("#c-tabla");
     tb.innerHTML = "";
@@ -295,6 +290,7 @@ function setEditable(on = true) {
       tdEmpty.textContent = "No se encontraron clientes.";
       tr.appendChild(tdEmpty);
       tb.appendChild(tr);
+      broadcastCount();
       return;
     }
 
@@ -307,7 +303,7 @@ function setEditable(on = true) {
         const raw = c[col.key];
         const value = col.formatter ? col.formatter(S(raw)) : S(raw);
         cell.textContent = value;
-        cell.title = value; // tooltip en desktop
+        cell.title = value;
         tr.appendChild(cell);
       });
 
@@ -322,24 +318,22 @@ function setEditable(on = true) {
       acc.appendChild(btn);
       tr.appendChild(acc);
 
-      // Doble click = editar (desktop)
       tr.addEventListener("dblclick", () => fillForm(c));
-
       tb.appendChild(tr);
     });
+
+    broadcastCount();
   }
 
   // ---------- Persistencia con fallback (Graph -> localStorage) ----------
   async function load() {
     try {
-      if (window.MSALApp && MSALApp.requireAuth) {
-        try {
-          await MSALApp.requireAuth();
-        } catch (e) {
-          console.warn("MSAL auth falló:", e);
-        }
+      if (window.MSALApp?.requireAuth) {
+        try { await MSALApp.requireAuth(); } catch (e) { console.warn("MSAL auth falló:", e); }
       }
-      const data = await ArtepisaData.loadCollection("clients");
+      const data = (window.ArtepisaData?.loadCollection)
+        ? await ArtepisaData.loadCollection("clients")
+        : null;
       cache = sanitizeCache(data);
       if (!cache.length) {
         const local = JSON.parse(localStorage.getItem(LS_KEY) || "[]");
@@ -348,18 +342,23 @@ function setEditable(on = true) {
         localStorage.setItem(LS_KEY, JSON.stringify(cache));
       }
       render("");
-      showForm(false); // entra solo lista
+      showForm(false);
+      broadcastCount();
     } catch (e) {
       console.warn("loadCollection falló -> uso localStorage:", e);
       cache = sanitizeCache(JSON.parse(localStorage.getItem(LS_KEY) || "[]"));
       render("");
       showForm(false);
+      broadcastCount();
     }
   }
+
   async function save() {
     localStorage.setItem(LS_KEY, JSON.stringify(sanitizeCache(cache)));
     try {
-      await ArtepisaData.saveCollection("clients", sanitizeCache(cache));
+      if (window.ArtepisaData?.saveCollection) {
+        await ArtepisaData.saveCollection("clients", sanitizeCache(cache));
+      }
     } catch (e) {
       console.warn("saveCollection falló (guardado local OK):", e);
     }
@@ -375,24 +374,19 @@ function setEditable(on = true) {
       .replace(/\s+/g, " ")
       .trim();
 
-  // Localiza fin del primer registro respetando comillas
   function findFirstRecordEnd(text) {
     let inQ = false;
     for (let i = 0; i < text.length; i++) {
       const ch = text[i];
       if (ch === '"') {
-        if (inQ && text[i + 1] === '"') {
-          i++;
-          continue;
-        }
-        inQ = !inQ;
-        continue;
+        if (inQ && text[i + 1] === '"') { i++; continue; }
+        inQ = !inQ; continue;
       }
       if (!inQ && (ch === "\n" || ch === "\r")) return i;
     }
     return text.length;
   }
-  // Delimitador más probable (coma, ; o tab) en el primer registro
+
   function detectDelimiter(text) {
     const end = findFirstRecordEnd(text);
     const first = text.slice(0, end);
@@ -403,7 +397,7 @@ function setEditable(on = true) {
     };
     return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0] || ",";
   }
-  // Parser de tabla con comillas y MULTILÍNEA
+
   function parseTable(text, delim) {
     const rows = [];
     let row = [];
@@ -412,46 +406,20 @@ function setEditable(on = true) {
     for (let i = 0; i < text.length; i++) {
       const ch = text[i];
       if (inQ) {
-        if (ch === '"' && text[i + 1] === '"') {
-          cell += '"';
-          i++;
-          continue;
-        }
-        if (ch === '"') {
-          inQ = false;
-          continue;
-        }
-        cell += ch;
-        continue;
+        if (ch === '"' && text[i + 1] === '"') { cell += '"'; i++; continue; }
+        if (ch === '"') { inQ = false; continue; }
+        cell += ch; continue;
       }
-      if (ch === '"') {
-        inQ = true;
-        continue;
-      }
-      if (ch === delim) {
-        row.push(cell);
-        cell = "";
-        continue;
-      }
-      if (ch === "\r") {
-        continue;
-      }
-      if (ch === "\n") {
-        row.push(cell);
-        rows.push(row);
-        row = [];
-        cell = "";
-        continue;
-      }
+      if (ch === '"') { inQ = true; continue; }
+      if (ch === delim) { row.push(cell); cell = ""; continue; }
+      if (ch === "\r") { continue; }
+      if (ch === "\n") { row.push(cell); rows.push(row); row = []; cell = ""; continue; }
       cell += ch;
     }
-    if (cell.length || row.length) {
-      row.push(cell);
-      rows.push(row);
-    }
+    if (cell.length || row.length) { row.push(cell); rows.push(row); }
     return rows;
   }
-  // Convierte CSV/TSV en objetos con alias de encabezados
+
   function csvToObjectsFlex(text) {
     text = stripBOM(text);
     const delim = detectDelimiter(text);
@@ -469,27 +437,27 @@ function setEditable(on = true) {
     };
 
     const iNombre = idx("nombre", "razon social", "razonsocial", "name");
-    const iID = idx("idcliente", "idcliente ", "id", "codigo", "codigo cliente", "clave", "id");
-    const iTel = idx("telefono", "tel", "phone", "telefono1");
-    const iDir = idx("direccion", "domicilio", "address");
-    const iRFC = idx("rfc", "tax id", "taxid");
-    const iEst = idx("estado", "state", "provincia", "estado/provincia");
-    const iNomC = idx("nombrecont", "nombrecontacto", "contacto", "contactname");
-    const iTelC = idx("telefonocon", "telefonocontacto", "contacto tel", "contactphone");
+    const iID     = idx("idcliente", "idcliente ", "id", "codigo", "codigo cliente", "clave", "id");
+    const iTel    = idx("telefono", "tel", "phone", "telefono1");
+    const iDir    = idx("direccion", "domicilio", "address");
+    const iRFC    = idx("rfc", "tax id", "taxid");
+    const iEst    = idx("estado", "state", "provincia", "estado/provincia");
+    const iNomC   = idx("nombrecont", "nombrecontacto", "contacto", "contactname");
+    const iTelC   = idx("telefonocon", "telefonocontacto", "contacto tel", "contactphone");
 
     const out = [];
     for (let r = 1; r < table.length; r++) {
       const cols = table[r];
       if (!cols || cols.every((c) => !c || !String(c).trim())) continue;
       out.push({
-        IDCliente: iID >= 0 ? S(cols[iID]).trim() : "",
-        Nombre: iNombre >= 0 ? S(cols[iNombre]).trim() : "",
-        Telefono: iTel >= 0 ? S(cols[iTel]).trim() : "",
-        Direccion: iDir >= 0 ? S(cols[iDir]).trim() : "",
-        RFC: iRFC >= 0 ? S(cols[iRFC]).trim().toUpperCase() : "",
-        Estado: iEst >= 0 ? S(cols[iEst]).trim() : "",
+        IDCliente:  iID   >= 0 ? S(cols[iID]).trim()   : "",
+        Nombre:     iNombre>=0 ? S(cols[iNombre]).trim(): "",
+        Telefono:   iTel  >= 0 ? S(cols[iTel]).trim()  : "",
+        Direccion:  iDir  >= 0 ? S(cols[iDir]).trim()  : "",
+        RFC:        iRFC  >= 0 ? S(cols[iRFC]).trim().toUpperCase() : "",
+        Estado:     iEst  >= 0 ? S(cols[iEst]).trim()  : "",
         NombreCont: iNomC >= 0 ? S(cols[iNomC]).trim() : "",
-        TelefonoCon: iTelC >= 0 ? S(cols[iTelC]).trim() : ""
+        TelefonoCon:iTelC >= 0 ? S(cols[iTelC]).trim() : ""
       });
     }
     return out;
@@ -499,52 +467,37 @@ function setEditable(on = true) {
   document.addEventListener("DOMContentLoaded", async () => {
     await load();
 
-    // Reaccionar a cambios de tamaño (por si rotan el teléfono)
     mqlMobile.addEventListener?.("change", updateMobileListVisibility);
 
-    // Activar máscaras de teléfono
     attachPhoneMaskMulti(document.getElementById("c-telefono"));
     attachPhoneMaskMulti(document.getElementById("c-contacto-tel"));
 
-    // Mostrar formulario vacío al pulsar "Crear / Agregar"
     $("#btn-show-form")?.addEventListener("click", () => {
       fillForm({});
       editingKey = null;
       $("#c-nombre").disabled = false;
+      setEditable(true);
     });
 
-    // Cerrar formulario (botón y tecla ESC)
-    $("#c-cerrar")?.addEventListener("click", () => showForm(false));
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") showForm(false);
+    $("#c-cerrar")?.addEventListener("click", () => {
+      showForm(false);
+      setEditable(true);
+      $("#c-nombre").disabled = false;
     });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") { showForm(false); setEditable(true); } });
 
-    // Guardar / actualizar (click y Enter en inputs del form)
+    // Guardar / actualizar
     const handleSave = async () => {
       const c = readForm();
-      if (!c.Nombre) {
-        alert("Nombre obligatorio");
-        $("#c-nombre").focus();
-        return;
-      }
+      if (!c.Nombre) { alert("Nombre obligatorio"); $("#c-nombre").focus(); return; }
 
-      // Normaliza teléfonos: "" | 10 dígitos | 10/10 (20 dígitos)
-      const telNorm = normalizePhones(c.Telefono);
+      const telNorm  = normalizePhones(c.Telefono);
       const telcNorm = normalizePhones(c.TelefonoCon);
-      if (telNorm === null) {
-        alert("Teléfono del cliente inválido. Debe tener 10 dígitos o 2 teléfonos de 10 (20 en total).");
-        $("#c-telefono").focus();
-        return;
-      }
-      if (telcNorm === null) {
-        alert("Teléfono de contacto inválido. Debe tener 10 dígitos o 2 teléfonos de 10 (20 en total).");
-        $("#c-contacto-tel").focus();
-        return;
-      }
-      c.Telefono = telNorm;
-      c.TelefonoCon = telcNorm;
+      if (telNorm === null)  { alert("Teléfono del cliente inválido. Debe tener 10 dígitos o 2 teléfonos de 10 (20 en total)."); $("#c-telefono").focus(); return; }
+      if (telcNorm === null) { alert("Teléfono de contacto inválido. Debe tener 10 dígitos o 2 teléfonos de 10 (20 en total)."); $("#c-contacto-tel").focus(); return; }
+      c.Telefono   = telNorm;
+      c.TelefonoCon= telcNorm;
 
-      // NO tocar ID existente; generar solo si está vacío
       if (!c.IDCliente) c.IDCliente = nextClientId();
 
       const key = norm(c.Nombre);
@@ -567,12 +520,11 @@ function setEditable(on = true) {
       cache = sanitizeCache(cache);
       await save();
       render($("#c-buscar").value);
+      broadcastCount();
 
-      // Cierra el formulario (vuelve a lista) y enfoca buscador
       showForm(false);
       $("#c-buscar")?.focus();
 
-      // Formateo visual
       $("#c-telefono").value = formatPhonePair(c.Telefono);
       $("#c-contacto-tel").value = formatPhonePair(c.TelefonoCon);
 
@@ -580,24 +532,19 @@ function setEditable(on = true) {
     };
 
     $("#c-guardar")?.addEventListener("click", handleSave);
-    // Enter guarda cuando el foco está en un input del form
     document.querySelectorAll("#card-form input").forEach((inp) => {
       inp.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          handleSave();
-        }
+        if (e.key === "Enter") { e.preventDefault(); handleSave(); }
       });
     });
 
-    // Nuevo (limpia y mantiene visible el form)
     $("#c-nuevo").addEventListener("click", () => {
       fillForm({});
       editingKey = null;
       $("#c-nombre").disabled = false;
+      setEditable(true);
     });
 
-    // Eliminar
     $("#c-eliminar").addEventListener("click", async () => {
       const name = $("#c-nombre").value.trim();
       if (!name) return;
@@ -607,6 +554,7 @@ function setEditable(on = true) {
         await save();
         fillForm({});
         render($("#c-buscar").value);
+        broadcastCount();
         editingKey = null;
         $("#c-nombre").disabled = false;
         showForm(false);
@@ -614,15 +562,10 @@ function setEditable(on = true) {
       }
     });
 
-    // Buscar (con debounce) + visibilidad móvil
-    $("#c-buscar").addEventListener(
-      "input",
-      debounce((e) => {
-        render(e.target.value);
-      }, 200)
-    );
+    $("#c-buscar").addEventListener("input", debounce((e) => {
+      render(e.target.value);
+    }, 200));
 
-    // Exportar
     $("#c-exportar").addEventListener("click", () => {
       const json = JSON.stringify(sanitizeCache(cache), null, 2);
       const a = document.createElement("a");
@@ -632,7 +575,7 @@ function setEditable(on = true) {
       URL.revokeObjectURL(a.href);
     });
 
-    // -------- Importar (CSV/TSV/JSON) preservando IDs y generando únicos por lote --------
+    // Importar (CSV/TSV/JSON) preservando IDs y generando únicos
     $("#c-importar").addEventListener("change", async (e) => {
       const f = e.target.files[0];
       if (!f) return;
@@ -659,7 +602,6 @@ function setEditable(on = true) {
           if (id) used.add(id);
         });
 
-        // esquema actual (NUM o C####)
         const scheme = (() => {
           const ids = Array.from(used);
           const num = ids.filter((x) => /^\d+$/.test(x)).length;
@@ -669,7 +611,6 @@ function setEditable(on = true) {
           return "C";
         })();
 
-        // consecutivo inicial
         let next = 1;
         if (scheme === "NUM") {
           const max = Array.from(used)
@@ -684,7 +625,6 @@ function setEditable(on = true) {
           next = max + 1;
         }
 
-        // generador único por lote
         const allocId = () => {
           if (scheme === "NUM") {
             while (used.has(String(next))) next++;
@@ -702,7 +642,6 @@ function setEditable(on = true) {
           }
         };
 
-        // Merge por Nombre (preserva ID si viene; si no, asigna único). Normaliza teléfonos.
         const map = new Map(sanitizeCache(cache).map((c) => [norm(c.Nombre), c]));
         data.forEach((raw) => {
           const c = sanitizeCache([raw])[0] || {};
@@ -710,7 +649,6 @@ function setEditable(on = true) {
 
           const telNorm = normalizePhones(c.Telefono);
           const telcNorm = normalizePhones(c.TelefonoCon);
-          // Si vienen inválidos, deja vacío
           const TelOut = telNorm === null ? "" : telNorm;
           const TelCOut = telcNorm === null ? "" : telcNorm;
 
@@ -731,6 +669,7 @@ function setEditable(on = true) {
         cache = sanitizeCache([...map.values()]);
         await save();
         render($("#c-buscar").value);
+        broadcastCount();
         alert("Importación completada (IDs preservados y únicos)");
       } catch (err) {
         console.error(err);
@@ -740,36 +679,27 @@ function setEditable(on = true) {
       }
     });
 
-    // -------- Botón Limpiar (local y nube si disponible) --------
+    // Limpiar (local y nube si disponible)
     const btnReset = document.getElementById("c-reset");
     btnReset?.addEventListener("click", async () => {
-      if (
-        !confirm(
-          "¿Borrar TODOS los clientes?\n• Se eliminarán del almacenamiento local.\n• Si hay sesión con OneDrive/SharePoint, también se vaciará la colección en la nube."
-        )
-      )
-        return;
+      if (!confirm("¿Borrar TODOS los clientes?\n• Se eliminarán del almacenamiento local.\n• Si hay sesión con OneDrive/SharePoint, también se vaciará la colección en la nube.")) return;
 
       const originalText = btnReset.textContent;
       btnReset.disabled = false;
       btnReset.textContent = "Limpiando…";
 
       try {
-        // 1) local
-        localStorage.removeItem("clients");
-        // 2) nube (no interrumpir si falla)
-        try {
-          await ArtepisaData.saveCollection("clients", []);
-        } catch (e) {
-          console.warn("No se pudo limpiar en nube:", e);
-        }
-        // 3) UI
+        localStorage.removeItem(LS_KEY);
+        try { if (window.ArtepisaData?.saveCollection) await ArtepisaData.saveCollection("clients", []); }
+        catch (e) { console.warn("No se pudo limpiar en nube:", e); }
+
         cache = [];
         editingKey = null;
         render("");
         fillForm({});
         $("#c-nombre").disabled = false;
         showForm(false);
+        broadcastCount();
         alert("Clientes eliminados.");
       } finally {
         btnReset.disabled = false;
