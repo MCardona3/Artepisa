@@ -126,7 +126,7 @@ function matchClientByName(txt){
 }
 async function loadClientesDatalist(){
   try{
-    const { items } = await gs_getCollection("clientes");
+    const { items } = await gs_getCollection("clients");
     CLIENTS = (Array.isArray(items) ? items : [])
       .map(unifyClient)
       .filter(c => c.nombre);
