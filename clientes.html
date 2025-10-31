@@ -6,35 +6,52 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="./css/style.css" />
   <style>
-    /* ====== Layout original ====== */
-    main.container { display:block; }
+    /* ====== Layout ====== */
+    main.container {
+      display: block;
+    }
     main.container.split {
       display: grid;
       grid-template-columns: minmax(380px, 1fr) minmax(420px, 1fr);
       gap: 16px;
       align-items: start;
     }
-    .card-form { display:none; }
-    .split .card-form { display:block; }
+    .card-form {
+      display: none;
+    }
+    .split .card-form {
+      display: block;
+    }
 
     /* ====== Modo solo formulario ====== */
-    main.container.form-only #card-list { display:none; }
+    main.container.form-only #card-list {
+      display: none;
+    }
     main.container.form-only #card-form {
-      display:block;
+      display: block;
       grid-column: 1 / -1;
       max-width: 860px;
       margin-inline: auto;
     }
 
-    /* Responsive */
-    @media (max-width: 980px){
-      main.container.split { grid-template-columns: 1fr; }
+    /* ====== Responsive ====== */
+    @media (max-width: 980px) {
+      main.container.split {
+        grid-template-columns: 1fr;
+      }
     }
 
+    /* ====== Elementos UI ====== */
     .badge {
-      display:inline-flex; align-items:center; gap:6px;
-      padding:2px 10px; border-radius:999px; font-size:.85rem;
-      background:#eef5ff; color:#1f54b1; border:1px solid #d9e7ff;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      background: #eef5ff;
+      color: #1f54b1;
+      border: 1px solid #d9e7ff;
     }
 
     /* ====== Paginación ====== */
@@ -53,6 +70,11 @@
       padding: 4px 10px;
       border-radius: 4px;
       cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .pagination button:hover:not(.active) {
+      background: #eaeaea;
     }
 
     .pagination button.active {
@@ -65,43 +87,43 @@
 <body class="theme-light">
   <!-- Guardia de sesión -->
   <script>
-    const __acct = JSON.parse(sessionStorage.getItem('artepisa_account')||'null');
-    if(!__acct){ location.href = 'index.html'; }
+    const __acct = JSON.parse(sessionStorage.getItem('artepisa_account') || 'null');
+    if (!__acct) location.href = 'index.html';
   </script>
 
   <header class="brand">
     <div class="logo">
-      <img class="brandlogo" src="./img/arte.png?v=1" alt="ARTEPISA SLP">
+      <img class="brandlogo" src="./img/arte.png?v=1" alt="ARTEPISA SLP" />
       <div>
         <div class="brandname">ARTEPISA SLP</div>
         <div class="muted">Clientes</div>
       </div>
     </div>
-    <a class="btn ghost" href="dashboard.html">Volver</a>
+    <a class="btn ghost" href="dashboard.html" aria-label="Volver al panel">Volver</a>
   </header>
 
   <main class="container tablewide" id="layout">
     <!-- LISTA -->
     <section class="card" id="card-list">
-      <h2 style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <h2 class="flex-wrap" style="display:flex;align-items:center;gap:8px;">
         <span style="flex:1">Clientes</span>
         <span class="badge" id="c-contador" title="Total de clientes">0</span>
         <button class="btn" id="btn-show-form" type="button" title="Crear o agregar cliente">Crear / Agregar</button>
       </h2>
 
       <div class="actions" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
-        <input id="c-buscar" class="input" placeholder="Buscar por nombre, dirección, RFC, estado o contacto…" style="flex:1;min-width:240px" autocomplete="off">
+        <input id="c-buscar" class="input" placeholder="Buscar por nombre, dirección, RFC, estado o contacto…" style="flex:1;min-width:240px" autocomplete="off" />
         <button class="btn ghost" id="c-exportar" type="button" title="Exportar JSON">Exportar</button>
 
         <label class="btn ghost" for="c-importar" title="Importar JSON/CSV/TSV">Importar
-          <input id="c-importar" type="file" accept=".json,.csv,.tsv,text/csv,text/tab-separated-values,application/json" style="display:none">
+          <input id="c-importar" type="file" accept=".json,.csv,.tsv,text/csv,application/json" style="display:none" />
         </label>
 
         <button class="btn danger" id="c-reset" type="button" title="Borrar todos los clientes">Limpiar</button>
       </div>
 
       <div class="table-wrap">
-        <table class="table">
+        <table class="table" aria-label="Lista de clientes">
           <thead>
             <tr>
               <th>ID</th>
@@ -121,13 +143,14 @@
 
       <!-- Selector y paginación -->
       <div style="margin-top:8px;text-align:center">
-        <label>Mostrar 
+        <label for="page-size">Mostrar
           <select id="page-size">
             <option>5</option>
             <option selected>10</option>
             <option>20</option>
             <option>50</option>
-          </select> registros por página
+          </select>
+          registros por página
         </label>
       </div>
 
@@ -137,78 +160,68 @@
     <!-- FORMULARIO -->
     <section class="card card-form" id="card-form">
       <h3>Formulario</h3>
-      <div class="form">
+      <form class="form" id="cliente-form" novalidate>
         <div class="field">
           <label for="c-id">IDCliente</label>
-          <input id="c-id" class="input" placeholder="(auto)" readonly>
+          <input id="c-id" class="input" placeholder="(auto)" readonly />
           <small class="help">Se conserva el ID del archivo importado; si falta, se genera.</small>
         </div>
 
         <div class="field">
           <label for="c-nombre">Nombre</label>
-          <input id="c-nombre" class="input" placeholder="Razón social o nombre comercial" autocomplete="off">
+          <input id="c-nombre" class="input" placeholder="Razón social o nombre comercial" autocomplete="off" required />
         </div>
 
         <div class="field">
           <label for="c-telefono">Teléfono</label>
-          <input id="c-telefono" class="input"
-                 inputmode="numeric"
-                 autocomplete="tel"
-                 maxlength="27"
-                 data-phone-mask
-                 placeholder="4441234567 o 4441234567/4449876543">
+          <input id="c-telefono" class="input" inputmode="numeric" autocomplete="tel" maxlength="27" data-phone-mask placeholder="4441234567 o 4441234567/4449876543" />
           <small class="help">10 dígitos o 2 teléfonos (20 dígitos) separados por “/”.</small>
         </div>
 
         <div class="field">
           <label for="c-direccion">Dirección</label>
-          <input id="c-direccion" class="input" placeholder="Calle, #, Colonia, Ciudad" autocomplete="off">
+          <input id="c-direccion" class="input" placeholder="Calle, #, Colonia, Ciudad" autocomplete="off" />
         </div>
 
         <div class="field">
           <label for="c-rfc">RFC</label>
-          <input id="c-rfc" class="input" placeholder="ABC123456XYZ" autocomplete="off">
+          <input id="c-rfc" class="input" placeholder="ABC123456XYZ" autocomplete="off" pattern="[A-ZÑ&]{3,4}[0-9]{6}[A-Z0-9]{3}" title="Formato válido de RFC" />
         </div>
 
         <div class="field">
           <label for="c-estado">Estado</label>
-          <input id="c-estado" class="input" placeholder="San Luis Potosí" autocomplete="off">
+          <input id="c-estado" class="input" placeholder="San Luis Potosí" autocomplete="off" />
         </div>
 
         <div class="field">
           <label for="c-contacto">Nombre de Contacto</label>
-          <input id="c-contacto" class="input" placeholder="Persona de contacto" autocomplete="off">
+          <input id="c-contacto" class="input" placeholder="Persona de contacto" autocomplete="off" />
         </div>
 
         <div class="field">
           <label for="c-contacto-tel">Teléfono de Contacto</label>
-          <input id="c-contacto-tel" class="input"
-                 inputmode="numeric"
-                 autocomplete="tel"
-                 maxlength="27"
-                 data-phone-mask
-                 placeholder="4441234567 o 4441234567/4449876543">
+          <input id="c-contacto-tel" class="input" inputmode="numeric" autocomplete="tel" maxlength="27" data-phone-mask placeholder="4441234567 o 4441234567/4449876543" />
           <small class="help">10 dígitos o 2 teléfonos (20 dígitos) separados por “/”.</small>
         </div>
 
         <div class="actions" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <button class="btn" id="c-guardar" type="button">Guardar</button>
+          <button class="btn" id="c-guardar" type="submit">Guardar</button>
           <button class="btn ghost" id="c-nuevo" type="button">Nuevo</button>
           <button class="btn danger" id="c-eliminar" type="button">Eliminar</button>
           <span style="flex:1"></span>
           <button class="btn ghost" id="c-cerrar" type="button" title="Ocultar formulario">Cerrar</button>
         </div>
-      </div>
+      </form>
     </section>
   </main>
 
-  <!-- MSAL + módulos -->
+  <!-- Librerías -->
   <script src="https://alcdn.msauth.net/browser/2.38.2/js/msal-browser.min.js"></script>
   <script src="./js/msal-config.js"></script>
   <script src="./js/auth.js"></script>
   <script src="./js/graph.js"></script>
   <script src="./js/data.js"></script>
-  <script src="./js/clientes.js?v=10"></script>
+  <script src="./js/clientes.js?v=11"></script>
 
   <!-- Contador reactivo -->
   <script>
@@ -219,82 +232,78 @@
     });
   </script>
 
-  <!-- === Paginación integrada === -->
+  <!-- Paginación -->
   <script>
-  (function(){
-    const tabla = document.getElementById('c-tabla');
-    const paginacion = document.getElementById('paginacion');
-    const selectPageSize = document.getElementById('page-size');
+    (function(){
+      const tabla = document.getElementById('c-tabla');
+      const paginacion = document.getElementById('paginacion');
+      const selectPageSize = document.getElementById('page-size');
 
-    let filasPorPagina = parseInt(selectPageSize.value, 10);
-    let paginaActual = 1;
-    let datos = [];
+      let filasPorPagina = parseInt(selectPageSize.value, 10);
+      let paginaActual = 1;
+      let datos = [];
 
-    // Expone renderizador para clientes.js
-    window.ClientesUI = window.ClientesUI || {};
-    window.ClientesUI.renderTabla = function(clientes) {
-      datos = clientes;
-      renderPagina(1);
-    };
+      window.ClientesUI = window.ClientesUI || {};
+      window.ClientesUI.renderTabla = function(clientes = []) {
+        datos = clientes;
+        renderPagina(1);
+      };
 
-    selectPageSize.addEventListener('change', e => {
-      filasPorPagina = parseInt(e.target.value, 10);
-      renderPagina(1);
-    });
+      selectPageSize.addEventListener('change', e => {
+        filasPorPagina = parseInt(e.target.value, 10);
+        renderPagina(1);
+      });
 
-    function renderPagina(num) {
-      paginaActual = num;
-      tabla.innerHTML = "";
-      const inicio = (num - 1) * filasPorPagina;
-      const fin = inicio + filasPorPagina;
-      const paginaDatos = datos.slice(inicio, fin);
+      function renderPagina(num) {
+        paginaActual = num;
+        tabla.innerHTML = "";
+        const inicio = (num - 1) * filasPorPagina;
+        const fin = inicio + filasPorPagina;
+        const paginaDatos = datos.slice(inicio, fin);
 
-      for (const c of paginaDatos) {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${c.id ?? ""}</td>
-          <td>${c.nombre ?? ""}</td>
-          <td>${c.telefono ?? ""}</td>
-          <td>${c.direccion ?? ""}</td>
-          <td>${c.rfc ?? ""}</td>
-          <td>${c.estado ?? ""}</td>
-          <td>${c.contacto ?? ""}</td>
-          <td>${c.contactoTel ?? ""}</td>
-          <td><button class="btn ghost btn-edit" data-id="${c.id}">✏️</button></td>
-        `;
-        tabla.appendChild(tr);
+        for (const c of paginaDatos) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${c.id ?? ""}</td>
+            <td>${c.nombre ?? ""}</td>
+            <td>${c.telefono ?? ""}</td>
+            <td>${c.direccion ?? ""}</td>
+            <td>${c.rfc ?? ""}</td>
+            <td>${c.estado ?? ""}</td>
+            <td>${c.contacto ?? ""}</td>
+            <td>${c.contactoTel ?? ""}</td>
+            <td><button class="btn ghost btn-edit" data-id="${c.id}" title="Editar">✏️</button></td>
+          `;
+          tabla.appendChild(tr);
+        }
+
+        renderControles();
+        document.dispatchEvent(new CustomEvent("clientes:count", { detail: { count: datos.length }}));
       }
 
-      renderControles();
-      document.dispatchEvent(new CustomEvent("clientes:count", { detail: { count: datos.length }}));
-    }
+      function renderControles() {
+        const totalPaginas = Math.ceil(datos.length / filasPorPagina);
+        paginacion.innerHTML = "";
+        if (totalPaginas <= 1) return;
 
-    function renderControles() {
-      const totalPaginas = Math.ceil(datos.length / filasPorPagina);
-      paginacion.innerHTML = "";
-      if (totalPaginas <= 1) return;
+        const crearBoton = (texto, onClick, activo = false, disabled = false) => {
+          const btn = document.createElement("button");
+          btn.textContent = texto;
+          if (activo) btn.classList.add("active");
+          btn.disabled = disabled;
+          btn.onclick = onClick;
+          return btn;
+        };
 
-      const btnPrev = document.createElement("button");
-      btnPrev.textContent = "⟨ Anterior";
-      btnPrev.disabled = paginaActual === 1;
-      btnPrev.onclick = () => renderPagina(paginaActual - 1);
-      paginacion.appendChild(btnPrev);
+        paginacion.appendChild(crearBoton("⟨ Anterior", () => renderPagina(paginaActual - 1), false, paginaActual === 1));
 
-      for (let i = 1; i <= totalPaginas; i++) {
-        const btn = document.createElement("button");
-        btn.textContent = i;
-        if (i === paginaActual) btn.classList.add("active");
-        btn.onclick = () => renderPagina(i);
-        paginacion.appendChild(btn);
+        for (let i = 1; i <= totalPaginas; i++) {
+          paginacion.appendChild(crearBoton(i, () => renderPagina(i), i === paginaActual));
+        }
+
+        paginacion.appendChild(crearBoton("Siguiente ⟩", () => renderPagina(paginaActual + 1), false, paginaActual === totalPaginas));
       }
-
-      const btnNext = document.createElement("button");
-      btnNext.textContent = "Siguiente ⟩";
-      btnNext.disabled = paginaActual === totalPaginas;
-      btnNext.onclick = () => renderPagina(paginaActual + 1);
-      paginacion.appendChild(btnNext);
-    }
-  })();
+    })();
   </script>
 </body>
 </html>
