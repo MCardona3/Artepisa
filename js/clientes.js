@@ -214,7 +214,7 @@
     [fId(), fNombre(), fTelefono(), fDir(), fRFC(), fEstado(), fCtoNom(), fCtoTel()].forEach((el) => (el.value = ""));
     setEditable(true);
     showForm(true);
-    fId().focus();
+    fNombre().focus();
   }
 
   // --- Guardar cliente ---
@@ -259,7 +259,7 @@
     localStorage.setItem(LS_KEY, JSON.stringify(sanitizeCache(cache)));
     try {
       if (window.ArtepisaData?.saveCollection)
-        await ArtepisaData.saveCollection("clients", sanitizeCache(cache));
+        await ArtepisaData.saveCollection(CFG.collection || "clients", sanitizeCache(cache));
     } catch (e) {
       console.warn("saveCollection falló (guardado local OK):", e);
     }
@@ -387,8 +387,18 @@
       paginaActual = 1;
       render(e.target.value);
     }, 200));
-    $("#btn-nuevo")?.addEventListener("click", nuevoCliente);
-    $("#btn-guardar")?.addEventListener("click", guardarCliente);
+    $("#c-nuevo")?.addEventListener("click", nuevoCliente);
+    $("#btn-show-form")?.addEventListener("click", nuevoCliente);
+    $("#c-cerrar")?.addEventListener("click", ()=> showForm(false));
+    $("#c-eliminar")?.addEventListener("click", async ()=>{
+      if(!editingKey){ alert("Selecciona un cliente para eliminar."); return; }
+      const i = cache.findIndex(x=>x.IDCliente===editingKey);
+      if(i>=0){ if(confirm("¿Eliminar cliente?")){ cache.splice(i,1); await save(); render(($("#c-buscar")?.value)||""); showForm(false);} }
+    });
+    document.getElementById("cliente-form")?.addEventListener("submit", (e)=>{ e.preventDefault(); guardarCliente(); });
+    $("#c-guardar")?.addEventListener("click", (e)=>{ e.preventDefault(); guardarCliente(); });
     attachImportExport();
   });
 })();
+
+  document.getElementById("page-size")?.addEventListener("change", (e)=>{ filasPorPagina = parseInt(e.target.value||"10",10); paginaActual=1; render($("#c-buscar")?.value||""); });
