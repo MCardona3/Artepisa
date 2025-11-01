@@ -1,0 +1,64 @@
+/* inventario.css – Inventario */
+
+/* ===== Anchos de columnas (listado) ===== */
+.ot-table th:nth-child(1),  .ot-table td:nth-child(1)  { width: 12%; }   /* #Parte */
+.ot-table th:nth-child(2),  .ot-table td:nth-child(2)  { width: 28%; }   /* Descripción */
+.ot-table th:nth-child(3),  .ot-table td:nth-child(3)  { width: 8%;  }   /* Unidad */
+.ot-table th:nth-child(4),  .ot-table td:nth-child(4)  { width: 10%; }   /* Stock */
+.ot-table th:nth-child(5),  .ot-table td:nth-child(5)  { width: 10%; }   /* Mín */
+.ot-table th:nth-child(6),  .ot-table td:nth-child(6)  { width: 12%; }   /* Ubicación */
+.ot-table th:nth-child(7),  .ot-table td:nth-child(7)  { width: 12%; }   /* Proveedor */
+.ot-table th:nth-child(8),  .ot-table td:nth-child(8)  { width: 8%;  }   /* Cliente (Sí/No) */
+.ot-table th:nth-child(9),  .ot-table td:nth-child(9)  { width: 8%;  }   /* Estado */
+.ot-table th:nth-child(10), .ot-table td:nth-child(10) { width: 100px; } /* Acciones */
+
+/* Alineaciones */
+.ot-table td:nth-child(3),
+.ot-table td:nth-child(4),
+.ot-table td:nth-child(5),
+.ot-table td:nth-child(8),
+.ot-table td:nth-child(9){ text-align: center; }
+
+
+/* ===== Badges opcionales ===== */
+.badge.warn   { border-color:#fde68a; background:#fffbeb; color:#92400e; }
+.badge.danger { border-color:#fecaca; background:#fef2f2; color:#991b1b; }
+
+/* ===== Filas de lotes en el formulario ===== */
+.items-row-lote{
+  display:grid;
+  grid-template-columns: 1fr 140px 120px 90px;
+  gap:8px;
+  align-items:center;
+  margin-bottom:6px;
+}
+.items-row-lote input[type="number"]{ text-align:right; }
+
+/* ===== Toggle listado ↔ formulario (usa #layout.form-only) ===== */
+#card-form { display: none; }
+#layout.form-only #card-list { display: none; }
+#layout.form-only #card-form { display: block; }
+
+/* ===== Mantener formato de tabla en móvil (evita “tarjetas”) ===== */
+@media (max-width: 820px){
+  .ot-table { display: table !important; width: 100% !important; table-layout: fixed; }
+  .ot-table thead { display: table-header-group !important; }
+  .ot-table tbody { display: table-row-group !important; }
+  .ot-table tr    { display: table-row !important; }
+  .ot-table td,
+  .ot-table th    { display: table-cell !important; width: auto !important; }
+}
+
+/* ===== Centrados (sobrescribe cualquier alineación previa) ===== */
+.ot-table th,
+.ot-table td{
+  text-align: center !important;
+  vertical-align: middle;
+}
+
+/* Acciones centradas también */
+.ot-table td:last-child{
+  text-align: center !important;
+}
+
+

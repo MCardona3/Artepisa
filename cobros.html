@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Cobros · Artepisa SLP</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="./css/style.css" />
+  <link rel="stylesheet" href="./css/ordenes.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="./img/arte.png?v=1">
+  <link rel="icon" type="image/png" sizes="16x16" href="./img/arte.png?v=1">
+  <style>
+    /* Toggle listado ↔ formulario (igual que otros módulos) */
+    #card-form { display:none; }
+    #layout.form-only #card-list { display:none; }
+    #layout.form-only #card-form { display:block; }
+
+    .grid2 { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+    .grid3 { display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; }
+    .muted small { color:#6b7280 }
+  </style>
+</head>
+<body class="theme-light">
+  <script>
+    const __acct = JSON.parse(sessionStorage.getItem('artepisa_account')||'null');
+    if(!__acct){ location.href = 'index.html'; }
+  </script>
+
+<header class="brand">
+  <div class="logo">
+    <img class="brandlogo" src="./img/arte.png?v=1" alt="ARTEPISA SLP">
+    <div>
+      <div class="brandname">ARTEPISA SLP</div>
+      <div class="muted">Módulo de Cobros</div>
+    </div>
+  </div>
+  <a class="btn ghost" href="dashboard.html">Volver</a>
+</header>
+
+<main class="container tablewide" id="layout">
+  <!-- LISTADO -->
+  <section class="card" id="card-list">
+    <h1 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span style="flex:1">Cobros</span>
+      <button class="btn ghost"  id="cob-export" type="button">Exportar</button>
+      <button class="btn ghost"  id="cob-import" type="button">Importar</button>
+      <button class="btn danger" id="cob-clear"  type="button">Limpiar</button>
+      <button class="btn"        id="btn-show-form" type="button">Crear / Agregar</button>
+    </h1>
+
+    <!-- Filtro por OT (si viene ?ot=###) -->
+    <div id="filter-ot" style="display:none;margin-bottom:8px">
+      <span class="badge">Filtro OT: <b id="filter-ot-value"></b></span>
+      <button id="btn-clear-filter" class="btn ghost" type="button">Quitar filtro</button>
+    </div>
+
+    <input id="cob-file" type="file" accept=".json,.csv,.tsv,text/csv,application/json" hidden>
+
+    <div class="actions" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+      <input id="cob-buscar" class="input" placeholder="Buscar por OT, cliente, concepto, factura…" style="flex:1;min-width:260px">
+    </div>
+
+    <div class="table-wrap ot-wrap">
+      <table class="table ot-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>OT</th>
+            <th>Cliente</th>
+            <th>Concepto</th>
+            <th>Monto</th>
+            <th>Factura</th>
+            <th>Tipo</th>
+            <th>Estado</th>
+            <th>Emisión</th>
+            <th>Cobro</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="cob-tabla"></tbody>
+      </table>
+    </div>
+
+    <p>Total registros: <strong id="cob-count">0</strong></p>
+    <p class="muted" id="cob-resumen" style="display:none"></p>
+  </section>
+
+  <!-- FORMULARIO -->
+  <section class="card card-form" id="card-form">
+    <h2>Formulario de Cobro</h2>
+    <div class="form" id="cob-form">
+      <div class="grid3">
+        <div class="field">
+          <span>OT</span>
+          <input id="f-ot" class="input" list="dl-ots" placeholder="No. de OT" />
+          <datalist id="dl-ots"></datalist>
+        </div>
+        <div class="field">
+          <span>Cliente</span>
+          <input id="f-cliente" class="input" placeholder="Cliente" readonly>
+        </div>
+        <div class="field">
+          <span>Concepto</span>
+          <input id="f-concepto" class="input" placeholder="Anticipo / Pago parcial / Factura final…">
+        </div>
+      </div>
+
+      <div class="grid3">
+        <div class="field">
+          <span>Monto</span>
+          <input id="f-monto" class="input" type="number" step="0.01" placeholder="0.00">
+        </div>
+        <div class="field">
+          <span>Moneda</span>
+          <select id="f-moneda" class="input">
+            <option>MXN</option>
+            <option>USD</option>
+          </select>
+        </div>
+        <div class="field">
+          <span>Factura</span>
+          <input id="f-factura" class="input" placeholder="Folio de factura (si aplica)">
+        </div>
+      </div>
+
+      <div class="grid3">
+        <div class="field">
+          <span>Tipo</span>
+          <select id="f-tipo" class="input">
+            <option>PARCIAL</option>
+            <option>COMPLETA</option>
+          </select>
+        </div>
+        <div class="field">
+          <span>% (si parcial)</span>
+          <input id="f-porc" class="input" type="number" step="0.01" placeholder="0">
+        </div>
+        <div class="field">
+          <span>Estado</span>
+          <select id="f-estado" class="input">
+            <option>PENDIENTE</option>
+            <option>FACTURADO</option>
+            <option>COBRADO</option>
+            <option>CANCELADO</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid3">
+        <div class="field">
+          <span>Emisión</span>
+          <input id="f-emision" class="input" type="date">
+        </div>
+        <div class="field">
+          <span>Cobro</span>
+          <input id="f-cobro" class="input" type="date">
+        </div>
+        <div class="field">
+          <span>Método</span>
+          <input id="f-metodo" class="input" placeholder="Transferencia / Efectivo / Depósito">
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="field">
+          <span>Periodo (inicio)</span>
+          <input id="f-per-ini" class="input" type="date">
+        </div>
+        <div class="field">
+          <span>Periodo (fin)</span>
+          <input id="f-per-fin" class="input" type="date">
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="field">
+          <span>Referencia</span>
+          <input id="f-ref" class="input" placeholder="Referencia bancaria / interna">
+        </div>
+        <div class="field">
+          <span>Notas</span>
+          <input id="f-notas" class="input" placeholder="Observaciones">
+        </div>
+      </div>
+
+      <div class="actions" style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <button class="btn" id="cob-guardar" type="button">Guardar</button>
+        <button class="btn ghost" id="cob-nuevo" type="button">Nuevo</button>
+        <span style="flex:1"></span>
+        <button class="btn ghost" id="cob-cerrar" type="button">Cerrar</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- MSAL + Auth -->
+<script src="./js/msal-config.js"></script>
+
+  <script src="./config/base.config.js"></script>
+  <script src="./config/files.config.js"></script>
+  <script src="./config/cobros.config.js.config.js"></script>
+  <script src="./js/roles.js"></script>
+<script src="https://alcdn.msauth.net/browser/2.38.2/js/msal-browser.min.js"></script>
+<script src="./js/auth.js"></script>
+
+<!-- Lógica Cobros -->
+<script type="module" src="./js/cobros-graph.js"></script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      try { if (window.Roles?.init) await window.Roles.init(); } catch(_){}
+      const cfg = (window.ModuleConfig && window.ModuleConfig.cobros)?.ui || {};
+      if (window.Roles?.disableIfBelow && cfg.editMinRole) {
+        const editSelectors = ["#btn-guardar","#btn-nuevo","#o-guardar","#o-nuevo","#inv-guardar","#inv-nuevo","#cob-guardar","#cob-nuevo"];
+        Roles.disableIfBelow(editSelectors, cfg.editMinRole);
+      }
+      if (window.Roles?.hideIfBelow && Array.isArray(cfg.adminOnlySelectors)) {
+        Roles.hideIfBelow(cfg.adminOnlySelectors, "ADMIN");
+      }
+    });
+  </script>
+
+</body>
+</html>

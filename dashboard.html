@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Artepisa SLP · Panel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="./css/style.css" />
+  <link rel="stylesheet" href="css/ordenes.css"/>
+</head>
+
+<body class="theme-light">
+<header class="brand">
+  <div class="logo">
+    <img class="brandlogo" src="./img/arte.png?v=1" alt="ARTEPISA SLP">
+    <div>
+      <div class="brandname">ARTEPISA SLP</div>
+      <div class="muted">Panel principal</div>
+    </div>
+  </div>
+
+  <!-- Botón salir tipo pill -->
+  <button id="btn-logout" class="btn ghost" type="button">Salir</button>
+</header>
+
+<main class="container">
+  <!-- Tarjeta: bienvenida -->
+  <section class="card" id="welcome">
+    <h2>Menú principal</h2>
+    <p class="muted">Usuario: <b id="user-name">—</b></p>
+  </section>
+
+  <!-- Tarjeta: KPIs/resumen -->
+  <section class="card" style="margin-top:20px">
+    <h3>Resumen</h3>
+    <div class="kpis">
+      <div class="kpi">
+        <div class="kpi-title">Clientes</div>
+        <div class="kpi-value" id="count-clients">0</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-title">Órdenes de Trabajo</div>
+        <div class="kpi-value" id="count-ot">0</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-title">Órdenes de Compra</div>
+        <div class="kpi-value" id="count-oc">0</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tarjeta: módulos -->
+  <section class="card" style="margin-top:20px">
+    <h3>Módulos</h3>
+
+    <div class="modules">
+      <article class="module">
+        <h4>Clientes</h4>
+        <p class="muted">Altas, edición y consulta de clientes.</p>
+        <div class="actions">
+          <a class="btn" href="clientes.html">Entrar</a>
+        </div>
+      </article>
+
+      <article class="module">
+        <h4>Órdenes de Trabajo</h4>
+        <p class="muted">Captura, consulta y seguimiento de OT.</p>
+        <div class="actions">
+          <a class="btn" href="ordenes-trabajo.html">Entrar</a>
+        </div>
+      </article>
+
+      <article class="module">
+        <h4>Órdenes de Compra</h4>
+        <p class="muted">Registro y control de OC.</p>
+        <div class="actions">
+          <a class="btn" href="ordenes-compra.html">Entrar</a>
+        </div>
+      </article>
+
+      <article class="module">
+        <h4>Inventario</h4>
+        <p class="muted">Entradas/salidas y control de stock.</p>
+        <div class="actions">
+          <a class="btn" href="inventario.html">Entrar</a>
+        </div>
+      </article>
+
+      <!-- NUEVO: Módulo Usuarios y privilegios (solo Admin) -->
+      <article class="module" id="mod-usuarios" style="display:none">
+        <h4>Usuarios y privilegios</h4>
+        <p class="muted">Alta de usuarios internos, invitaciones B2B y asignación de grupos.</p>
+        <div class="actions">
+          <a class="btn" href="usuarios.html">Entrar</a>
+        </div>
+      </article>
+      <!-- /NUEVO -->
+    </div>
+  </section>
+    <article class="module">
+        <h4>Facturacion</h4>
+        <p class="muted">Captura, consulta.</p>
+        <div class="actions">
+          <a class="btn" href=" Facturacion.html">Entrar</a>
+        </div>
+      </article>
+
+  <!-- Tarjeta: actividad reciente (placeholder) -->
+  <section class="card" style="margin-top:20px">
+    <h3>Actividad reciente</h3>
+    <ul class="recent">
+      <li class="muted">Sin actividad por el momento.</li>
+    </ul>
+  </section>
+</main>
+
+<!-- Estilos específicos del panel -->
+<style>
+  .kpis{
+    display:grid;
+    grid-template-columns: repeat(3, minmax(0,1fr));
+    gap:12px;
+    margin-top:12px;
+  }
+  .kpi{
+    background:#fff;
+    border:1px solid #e7edf3;
+    border-radius:12px;
+    padding:14px;
+    box-shadow: 0 4px 14px rgba(16,24,40,.05);
+  }
+  .kpi-title{ color:#5b6577; font-weight:600; font-size:.95rem; }
+  .kpi-value{ font-size:1.6rem; font-weight:800; margin-top:4px; }
+
+  .modules{
+    display:grid;
+    grid-template-columns: repeat(3, minmax(0,1fr));
+    gap:16px;
+    margin-top:12px;
+  }
+  .module{
+    background:#fff;
+    border:1px solid #e7edf3;
+    border-radius:12px;
+    padding:16px;
+    box-shadow: 0 4px 14px rgba(16,24,40,.05);
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .module h4{ margin:0; }
+  .recent{ margin:.25rem 0 0 1rem; }
+  @media (max-width: 960px){
+    .kpis{ grid-template-columns:1fr 1fr 1fr; }
+    .modules{ grid-template-columns:1fr 1fr; }
+  }
+  @media (max-width: 640px){
+    .kpis{ grid-template-columns:1fr; }
+    .modules{ grid-template-columns:1fr; }
+  }
+</style>
+
+<!-- ===== Librerías y configuración MSAL (orden correcto) ===== -->
+<script src="https://alcdn.msauth.net/browser/2.38.2/js/msal-browser.min.js"></script>
+<script src="./js/msal-config.js"></script>
+  <script src="./config/files.config.js"></script>
+<script src="./js/auth.js"></script>
+<!-- Helpers de administración Entra (crear/invitar usuarios, privilegios por grupo) -->
+<script src="./js/entra-admin.js?v=1"></script>
+
+<script>
+  // Guard: redirige a login si no hay sesión MSAL
+  (function(){
+    const hasGetter = (window.MSALApp && typeof MSALApp.getToken === 'function') || (typeof window.getToken === 'function');
+    if(!hasGetter){
+      console.warn('Sin sesión MSAL. Redirigiendo a login...');
+      setTimeout(()=>{ location.href = 'login.html'; }, 300);
+    }
+  })();
+
+  // Inicialización del panel
+  (async function(){
+    try {
+      // Asegura sesión y pinta nombre
+      await MSALApp.requireAuth();
+      const acctSnap = JSON.parse(sessionStorage.getItem("artepisa_account") || "null");
+      document.getElementById("user-name").textContent =
+        acctSnap?.name || acctSnap?.username || "Sesión activa";
+
+      // Mostrar módulo de Usuarios solo a Admin (user.create)
+      const modUsers = document.getElementById("mod-usuarios");
+      if (modUsers && window.EntraAdmin && typeof EntraAdmin.can === "function") {
+        const canCreate = await EntraAdmin.can("user.create");
+        modUsers.style.display = canCreate ? "block" : "none";
+      }
+
+      // Botón salir
+      document.getElementById("btn-logout")?.addEventListener("click", async () => {
+        try { if (window.MSALApp && MSALApp.logout) await MSALApp.logout(); }
+        finally {
+          sessionStorage.removeItem("artepisa_account");
+          location.href = "index.html";
+        }
+      });
+    } catch (e) {
+      console.warn("Error inicializando panel:", e);
+    }
+  })();
+</script>
+
+<!-- Lógica adicional del panel (si la usas como módulo) -->
+<script type="module" src="./js/dashboard.js"></script>
+
+</body>
+</html>

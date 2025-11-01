@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Usuarios y Privilegios · Artepisa SLP</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body class="theme-light">
+<header class="brand">
+  <div class="logo">
+    <img class="brandlogo" src="./img/arte.png?v=1" alt="ARTEPISA SLP">
+    <div>
+      <div class="brandname">ARTEPISA SLP</div>
+      <div class="muted">Usuarios y privilegios</div>
+    </div>
+  </div>
+  <a class="btn ghost" href="dashboard.html">Volver</a>
+</header>
+
+<main class="container">
+  <!-- Solo visible para Admin -->
+  <section class="card" id="card-admin" style="display:none">
+    <h2>Usuarios y privilegios</h2>
+    <p class="muted" id="admin-msg">Solo Administradores pueden crear/editar usuarios.</p>
+
+    <!-- Tu gestión local (si la usas) -->
+    <div class="form">
+      <div class="field">
+        <span>Correo (UPN)</span>
+        <input id="u-email" type="email" placeholder="usuario@empresa.com" autocomplete="off">
+      </div>
+      <div class="field">
+        <span>Nombre</span>
+        <input id="u-nombre" placeholder="Nombre a mostrar" autocomplete="off">
+      </div>
+      <div class="field">
+        <span>Rol</span>
+        <select id="u-rol">
+          <option value="admin">Admin</option>
+          <option value="editor" selected>Editor</option>
+          <option value="viewer">Viewer</option>
+        </select>
+      </div>
+      <div class="field">
+        <span>Activo</span>
+        <label class="pill"><input id="u-activo" type="checkbox" checked> &nbsp; Sí</label>
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="u-guardar" type="button">Guardar</button>
+        <button class="btn ghost" id="u-nuevo" type="button">Nuevo</button>
+        <button class="btn danger" id="u-eliminar" type="button">Eliminar</button>
+        <span class="spacer"></span>
+        <input id="u-buscar" placeholder="Buscar por correo o nombre…" style="min-width:240px">
+      </div>
+    </div>
+
+    <table style="margin-top:10px">
+      <thead><tr><th>Correo</th><th>Nombre</th><th>Rol</th><th>Activo</th><th></th></tr></thead>
+      <tbody id="u-tabla"></tbody>
+    </table>
+
+    <hr/>
+    <h3>Alta en Entra ID (Azure AD)</h3>
+    <p class="muted">Crear cuenta interna o invitar externa (requiere privilegios de Admin y consentimiento de administrador en la app).</p>
+
+    <div class="grid-2">
+      <!-- Crear usuario interno -->
+      <div class="card soft">
+        <h4>Crear usuario interno</h4>
+        <div class="form">
+          <div class="field"><span>UPN (correo interno)</span><input id="ad-upn" type="email" placeholder="nuevo@tu-dominio.onmicrosoft.com" autocomplete="off"></div>
+          <div class="field"><span>Nombre para mostrar</span><input id="ad-name" placeholder="Nombre Apellidos" autocomplete="off"></div>
+          <div class="field"><span>Alias (mailNickname)</span><input id="ad-nick" placeholder="nombre.apellidos" autocomplete="off"></div>
+          <div class="field"><span>Contraseña inicial</span><input id="ad-pass" type="password" placeholder="Contraseña temporal"></div>
+          <div class="field">
+            <span>Rol inicial</span>
+            <select id="ad-role">
+              <option value="editor" selected>Editor</option>
+              <option value="viewer">Viewer</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <div class="actions">
+            <button class="btn" id="ad-create" type="button">Crear usuario</button>
+          </div>
+          <p id="ad-create-msg" class="muted"></p>
+        </div>
+      </div>
+
+      <!-- Invitar usuario externo -->
+      <div class="card soft">
+        <h4>Invitar usuario externo (B2B)</h4>
+        <div class="form">
+          <div class="field"><span>Email externo</span><input id="ad-inv-email" type="email" placeholder="proveedor@empresa.com" autocomplete="off"></div>
+          <div class="field"><span>Nombre (opcional)</span><input id="ad-inv-name" placeholder="Proveedor ACME" autocomplete="off"></div>
+          <div class="field">
+            <span>Asignar grupo (opcional)</span>
+            <select id="ad-invite-role">
+              <option value="">— Sin grupo —</option>
+              <option value="editor" selected>Editor</option>
+              <option value="viewer">Viewer</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <div class="actions">
+            <button class="btn" id="ad-invite" type="button">Enviar invitación</button>
+          </div>
+          <p id="ad-invite-msg" class="muted"></p>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- Mensaje para quien no es Admin -->
+  <section class="card" id="card-no-admin" style="display:none">
+    <h2>Usuarios y privilegios</h2>
+    <p class="error">No tienes permisos para administrar usuarios.</p>
+  </section>
+</main>
+
+<!-- ===== Librerías y configuración MSAL (orden correcto) ===== -->
+<script src="https://alcdn.msauth.net/browser/2.38.2/js/msal-browser.min.js"></script>
+<script src="./js/msal-config.js"></script>
+
+  <script src="./config/base.config.js"></script>
+  <script src="./config/files.config.js"></script>
+  <script src="./config/usuarios.config.js.config.js"></script>
+  <script src="./js/roles.js"></script>
+<script src="./js/auth.js"></script>
+
+<!-- (Opcional) módulos propios si los usas en esta página -->
+<script src="./js/graph.js"></script>
+<script src="./js/data.js"></script>
+<script src="./js/roles.js?v=1"></script>
+
+<!-- Helpers de administración Entra (crear/invitar/asignar grupos) -->
+<script src="./js/entra-admin.js?v=1"></script>
+
+<!-- Lógica de esta página -->
+<script src="./js/usuarios.js?v=1"></script>
+
+<!-- Gate de privilegios: muestra/oculta secciones al cargar -->
+<script>
+  (async () => {
+    try {
+      await MSALApp.requireAuth();
+      const isAdmin = (await EntraAdmin.getPrivileges()).isAdmin;
+      document.getElementById("card-admin").style.display    = isAdmin ? "block" : "none";
+      document.getElementById("card-no-admin").style.display = isAdmin ? "none"  : "block";
+      if (!isAdmin) return;
+
+      // Mensaje de contexto
+      const acct = JSON.parse(sessionStorage.getItem("artepisa_account") || "null");
+      const name = acct?.name || acct?.username || "Usuario";
+      const g = MSAL_CONFIG.privilegeGroups;
+      document.getElementById("admin-msg").textContent =
+        `${name} (Admin). Grupos: Admin=${g.admin.slice(0,8)}…, Editor=${g.editor.slice(0,8)}…, Viewer=${g.viewer.slice(0,8)}…`;
+    } catch (e) {
+      console.warn("Error evaluando privilegios:", e);
+      document.getElementById("card-admin").style.display = "none";
+      document.getElementById("card-no-admin").style.display = "block";
+    }
+  })();
+</script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      try { if (window.Roles?.init) await window.Roles.init(); } catch(_){}
+      const cfg = (window.ModuleConfig && window.ModuleConfig.usuarios)?.ui || {};
+      if (window.Roles?.disableIfBelow && cfg.editMinRole) {
+        const editSelectors = ["#btn-guardar","#btn-nuevo","#o-guardar","#o-nuevo","#inv-guardar","#inv-nuevo","#cob-guardar","#cob-nuevo"];
+        Roles.disableIfBelow(editSelectors, cfg.editMinRole);
+      }
+      if (window.Roles?.hideIfBelow && Array.isArray(cfg.adminOnlySelectors)) {
+        Roles.hideIfBelow(cfg.adminOnlySelectors, "ADMIN");
+      }
+    });
+  </script>
+
+</body>
+</html>
