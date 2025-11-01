@@ -1,4 +1,4 @@
-// js/clientes.js (versión con paginación + modo form-only + móvil + contador + resiliencia)
+// js/clientes.js (versión mejorada con paginador visual moderno + UX refinada)
 (function () {
   const $ = (s) => document.querySelector(s);
   let cache = [];
@@ -6,19 +6,19 @@
   const LS_KEY = "clients";
   const mqlMobile = window.matchMedia("(max-width: 820px)");
 
-  // --- Config de paginación ---
+  // --- Configuración de paginación ---
   let paginaActual = 1;
   let filasPorPagina = 10;
 
   // --- Helpers de campos ---
-  const fId = () => document.getElementById("c-id");
-  const fNombre = () => document.getElementById("c-nombre");
-  const fTelefono = () => document.getElementById("c-telefono");
-  const fDir = () => document.getElementById("c-direccion");
-  const fRFC = () => document.getElementById("c-rfc");
-  const fEstado = () => document.getElementById("c-estado");
-  const fCtoNom = () => document.getElementById("c-contacto");
-  const fCtoTel = () => document.getElementById("c-contacto-tel");
+  const fId = () => $("#c-id");
+  const fNombre = () => $("#c-nombre");
+  const fTelefono = () => $("#c-telefono");
+  const fDir = () => $("#c-direccion");
+  const fRFC = () => $("#c-rfc");
+  const fEstado = () => $("#c-estado");
+  const fCtoNom = () => $("#c-contacto");
+  const fCtoTel = () => $("#c-contacto-tel");
 
   function setEditable(on = true) {
     [fId(), fNombre(), fTelefono(), fDir(), fRFC(), fEstado(), fCtoNom(), fCtoTel()].forEach((el) => {
@@ -30,13 +30,17 @@
     });
   }
 
+  // --- Contador de registros global ---
   function broadcastCount() {
     try {
-      const ev = new CustomEvent("clientes:count", { detail: { count: sanitizeCache(cache).length } });
+      const ev = new CustomEvent("clientes:count", {
+        detail: { count: sanitizeCache(cache).length }
+      });
       document.dispatchEvent(ev);
     } catch {}
   }
 
+  // --- Vista form-only (modo edición móvil) ---
   function showForm(show) {
     const layout = $("#layout");
     if (!layout) return;
@@ -70,6 +74,7 @@
     };
   }
 
+  // --- Normalización ---
   const norm = (s) => (s || "").trim().replace(/\s+/g, " ").toLowerCase();
   const S = (v) => (v == null ? "" : String(v));
   const onlyDigits = (s) => String(s ?? "").replace(/\D+/g, "");
@@ -83,18 +88,11 @@
   function formatPhonePair(v) {
     const d = onlyDigits(v);
     if (d.length === 10) return formatTen(d);
-    if (d.length === 20) return formatTen(d.slice(0, 10)) + " / " + formatTen(d.slice(10));
+    if (d.length === 20) return `${formatTen(d.slice(0, 10))} / ${formatTen(d.slice(10))}`;
     return d;
   }
-  function normalizePhones(val) {
-    const d = onlyDigits(val);
-    if (d.length === 0) return "";
-    if (d.length === 10) return d;
-    if (d.length === 20) return d.slice(0, 10) + "/" + d.slice(10);
-    return null;
-  }
 
-  // --- Normalización de datos ---
+  // --- Sanitización de caché ---
   function sanitizeCache(arr) {
     return (Array.isArray(arr) ? arr : [])
       .filter((x) => x && typeof x === "object")
@@ -120,6 +118,7 @@
     const digits = s.replace(/\D+/g, "");
     return digits ? parseInt(digits, 10) : Number.POSITIVE_INFINITY;
   }
+
   function compareByIdAsc(a, b) {
     const av = idNumericValue(a.IDCliente);
     const bv = idNumericValue(b.IDCliente);
@@ -139,58 +138,71 @@
     { key: "TelefonoCon", label: "Teléfono de Contacto", formatter: (v) => formatPhonePair(v) }
   ];
 
-  // --- Paginación ---
+  // --- Render de paginación ---
   function renderPaginacion(list) {
-    const pagDiv = document.getElementById("paginacion");
+    const pagDiv = $("#paginacion");
     if (!pagDiv) return;
     pagDiv.innerHTML = "";
 
     const totalPaginas = Math.ceil(list.length / filasPorPagina);
     if (totalPaginas <= 1) return;
 
-    const makeBtn = (txt, disabled, page) => {
-      const b = document.createElement("button");
-      b.textContent = txt;
-      b.disabled = !!disabled;
-      if (page !== undefined) b.onclick = () => {
-        paginaActual = page;
-        render($("#c-buscar").value);
-      };
-      return b;
+    const createBtn = (label, page, disabled = false) => {
+      const btn = document.createElement("button");
+      btn.className = "page-btn";
+      btn.textContent = label;
+      btn.disabled = disabled;
+      if (!disabled && page !== undefined) {
+        btn.addEventListener("click", () => {
+          paginaActual = page;
+          render($("#c-buscar").value);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+      }
+      return btn;
     };
 
-    pagDiv.appendChild(makeBtn("⟨", paginaActual === 1, paginaActual - 1));
+    // Controles
+    pagDiv.className = "pagination";
+    const pageControls = document.createElement("div");
+    pageControls.className = "page-controls";
+
+    pageControls.appendChild(createBtn("⟨", paginaActual - 1, paginaActual === 1));
+
     for (let i = 1; i <= totalPaginas; i++) {
-      const b = makeBtn(i, false, i);
+      if (totalPaginas > 6 && Math.abs(i - paginaActual) > 2 && i !== 1 && i !== totalPaginas) {
+        if (i === 2 || i === totalPaginas - 1) {
+          const span = document.createElement("span");
+          span.textContent = "...";
+          span.style.padding = "0 6px";
+          pageControls.appendChild(span);
+        }
+        continue;
+      }
+      const b = createBtn(i, i);
       if (i === paginaActual) b.classList.add("active");
-      pagDiv.appendChild(b);
+      pageControls.appendChild(b);
     }
-    pagDiv.appendChild(makeBtn("⟩", paginaActual === totalPaginas, paginaActual + 1));
+
+    pageControls.appendChild(createBtn("⟩", paginaActual + 1, paginaActual === totalPaginas));
+    pagDiv.appendChild(pageControls);
   }
 
   // --- Render principal ---
   function render(q = "") {
     const tb = $("#c-tabla");
+    if (!tb) return;
     tb.innerHTML = "";
 
     const needle = norm(q);
     const list = sanitizeCache(cache)
-      .filter((c) => {
-        if (!needle) return true;
-        return (
-          norm(c.Nombre).includes(needle) ||
-          norm(c.Direccion).includes(needle) ||
-          norm(c.RFC).includes(needle) ||
-          norm(c.Estado).includes(needle) ||
-          norm(c.NombreCont).includes(needle) ||
-          norm(c.IDCliente).includes(needle) ||
-          norm(c.Telefono).includes(needle) ||
-          norm(c.TelefonoCon).includes(needle)
-        );
-      })
+      .filter((c) =>
+        !needle ||
+        [c.Nombre, c.Direccion, c.RFC, c.Estado, c.NombreCont, c.IDCliente, c.Telefono, c.TelefonoCon]
+          .some((v) => norm(v).includes(needle))
+      )
       .sort(compareByIdAsc);
 
-    // --- Paginación aplicada ---
     const totalPaginas = Math.ceil(list.length / filasPorPagina);
     if (paginaActual > totalPaginas) paginaActual = totalPaginas || 1;
     const inicio = (paginaActual - 1) * filasPorPagina;
@@ -199,29 +211,31 @@
 
     if (!pageList.length) {
       const tr = document.createElement("tr");
-      const tdEmpty = document.createElement("td");
-      tdEmpty.colSpan = COLUMNS.length + 1;
-      tdEmpty.style.textAlign = "center";
-      tdEmpty.style.padding = "18px";
-      tdEmpty.style.color = "#5b6577";
-      tdEmpty.textContent = "No se encontraron clientes.";
-      tr.appendChild(tdEmpty);
+      const td = document.createElement("td");
+      td.colSpan = COLUMNS.length + 1;
+      td.style.textAlign = "center";
+      td.style.padding = "24px";
+      td.innerHTML = `
+        <div style="opacity:0.75">
+          <svg width="32" height="32" fill="none" stroke="#999" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          <div style="margin-top:6px;">No se encontraron clientes.</div>
+        </div>`;
+      tr.appendChild(td);
       tb.appendChild(tr);
-      broadcastCount();
       renderPaginacion(list);
+      broadcastCount();
       return;
     }
 
     pageList.forEach((c) => {
       const tr = document.createElement("tr");
       COLUMNS.forEach((col) => {
-        const cell = document.createElement("td");
-        cell.setAttribute("data-label", col.label);
-        const raw = c[col.key];
-        const value = col.formatter ? col.formatter(S(raw)) : S(raw);
-        cell.textContent = value;
-        cell.title = value;
-        tr.appendChild(cell);
+        const td = document.createElement("td");
+        td.setAttribute("data-label", col.label);
+        const val = col.formatter ? col.formatter(S(c[col.key])) : S(c[col.key]);
+        td.textContent = val;
+        td.title = val;
+        tr.appendChild(td);
       });
       const acc = document.createElement("td");
       acc.className = "table-actions";
@@ -248,20 +262,16 @@
         : null;
       cache = sanitizeCache(data);
       if (!cache.length) {
-        const local = JSON.parse(localStorage.getItem(LS_KEY) || "[]");
-        cache = sanitizeCache(local);
+        cache = sanitizeCache(JSON.parse(localStorage.getItem(LS_KEY) || "[]"));
       } else {
         localStorage.setItem(LS_KEY, JSON.stringify(cache));
       }
-      render("");
-      showForm(false);
-      broadcastCount();
     } catch {
       cache = sanitizeCache(JSON.parse(localStorage.getItem(LS_KEY) || "[]"));
-      render("");
-      showForm(false);
-      broadcastCount();
     }
+    render("");
+    showForm(false);
+    broadcastCount();
   }
 
   async function save() {
@@ -278,7 +288,7 @@
   // --- Inicio ---
   document.addEventListener("DOMContentLoaded", async () => {
     await load();
-    $("#c-buscar").addEventListener("input", debounce((e) => {
+    $("#c-buscar")?.addEventListener("input", debounce((e) => {
       paginaActual = 1;
       render(e.target.value);
     }, 200));
